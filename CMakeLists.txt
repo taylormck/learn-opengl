@@ -12,12 +12,15 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "GLFW lib only")
-add_subdirectory(glfw build)
+add_subdirectory(glfw)
 
 # Set up GLAD
-include_directories("${GLFW_SOUCE_DIR}/deps")
-set(GLAD_GL "${GLFW_SOURCE_DIR}/deps/glad/gl.h")
+option(GLFW-CMAKE-STARTER-USE-GLFW-GLAD "Use GLAD from GLFW" ON)
+include_directories("glfw/deps")
+set(GLAD_GL "glfw/deps/glad/gl.h")
 
-add_executable(app WIN32 main.cpp ${GLAD_GL})
+# Set up application
+# set(MAIN_SRC main.cpp)
+add_executable(app main.cpp ${GLAD_GL})
 
 target_link_libraries(app ${OPENGL_LIBRARIES} glfw)
