@@ -12,7 +12,7 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "GLFW lib only")
-add_subdirectory(../glfw build)
+add_subdirectory(glfw build)
 
 # Set up GLAD
 include_directories("${GLFW_SOUCE_DIR}/deps")
