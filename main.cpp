@@ -47,42 +47,26 @@ int main() {
     }
 
     std::filesystem::path root = std::filesystem::current_path();
-    std::string identityVertexShaderPath = root.string() + "/../shaders/vertex/identity.glsl";
-    std::string upsideDownVertexShaderPath = root.string() + "/../shaders/vertex/upsideDown.glsl";
-    std::string orangeFragmentShaderPath = root.string() + "/../shaders/fragment/orange.glsl";
-    // std::string blueFragmentShaderPath = root.string() + "/../shaders/fragment/blue.glsl";
+    // std::string identityVertexShaderPath = root.string() + "/../shaders/vertex/identity.glsl";
+    std::string horizontalOffsetVertextShaderPath = root.string() + "/../shaders/vertex/horizontalOffset.glsl";
     std::string oscillatingGreenFragmentShaderPath = root.string() + "/../shaders/fragment/oscillatingGreen.glsl";
 
-    Shader orangeShader(identityVertexShaderPath, orangeFragmentShaderPath);
-    // Shader blueShader(upsideDownVertexShaderPath, blueFragmentShaderPath);
-    Shader oscillatingGreenShader(upsideDownVertexShaderPath, oscillatingGreenFragmentShaderPath);
+    Shader oscillatingGreenShader(horizontalOffsetVertextShaderPath, oscillatingGreenFragmentShaderPath);
 
 
-    float verticesLeft[] = {
-        -0.9f, -0.5f, 0.0f,
-        0.0f, -0.5f, 0.0f,
-        -0.45f, 0.5f, 0.0f
+    float vertices[] = {
+        -0.5f, -0.5f, 0.0f,
+        0.5f, -0.5f, 0.0f,
+        0.0f, 0.5f, 0.0f
     };
 
-    float verticesRight[] = {
-        0.0f, -0.5f, 0.0f,
-        0.9f, -0.5f, 0.0f,
-        0.45f, 0.5f, 0.0f
-    };
+    unsigned int VBO, VAO;
+    glGenVertexArrays(1, &VAO);
+    glGenBuffers(1, &VBO);
 
-    unsigned int VBOs[2], VAOs[2];
-    glGenVertexArrays(2, VAOs);
-    glGenBuffers(2, VBOs);
-
-    glBindVertexArray(VAOs[0]);
-    glBindBuffer(GL_ARRAY_BUFFER, VBOs[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verticesLeft), verticesLeft, GL_STATIC_DRAW);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    glBindVertexArray(VAOs[1]);
-    glBindBuffer(GL_ARRAY_BUFFER, VAOs[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(verticesRight), verticesRight, GL_STATIC_DRAW);
+    glBindVertexArray(VAO);
+    glBindBuffer(GL_ARRAY_BUFFER, VBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(float), (void*)0);
     glEnableVertexAttribArray(0);
 
@@ -98,19 +82,17 @@ int main() {
         glClearColor(0.4f, 0.3f, 0.4f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw left triangle
-        orangeShader.use();
-        glBindVertexArray(VAOs[0]);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
-
         // Draw right triangle
         float timeValue = glfwGetTime();
-        float intensity = (sin(timeValue) / 2.0f) + 0.5f;
+        float sineTime = sin(timeValue);
+        float intensity = (sineTime / 2.0f) + 0.5f;
+        float horizontalOffset = ((1.0f - sineTime) / 2.0f) - 0.5f;
 
         oscillatingGreenShader.use();
         oscillatingGreenShader.setFloat("intensity", intensity);
+        oscillatingGreenShader.setFloat("horizontalOffset", horizontalOffset);
 
-        glBindVertexArray(VAOs[1]);
+        glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         glfwSwapBuffers(window);
