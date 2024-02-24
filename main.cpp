@@ -47,11 +47,12 @@ int main() {
     }
 
     std::filesystem::path root = std::filesystem::current_path();
-    // std::string identityVertexShaderPath = root.string() + "/../shaders/vertex/identity.glsl";
-    std::string horizontalOffsetVertextShaderPath = root.string() + "/../shaders/vertex/horizontalOffset.glsl";
-    std::string oscillatingGreenFragmentShaderPath = root.string() + "/../shaders/fragment/oscillatingGreen.glsl";
+    std::string shaderFolder = root.string() + "/../shaders/";
 
-    Shader oscillatingGreenShader(horizontalOffsetVertextShaderPath, oscillatingGreenFragmentShaderPath);
+    Shader myShader(
+        shaderFolder + "vertex/identityOut.vert",
+        shaderFolder + "fragment/positionColor.frag"
+    );
 
 
     float vertices[] = {
@@ -82,16 +83,7 @@ int main() {
         glClearColor(0.4f, 0.3f, 0.4f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        // Draw right triangle
-        float timeValue = glfwGetTime();
-        float sineTime = sin(timeValue);
-        float intensity = (sineTime / 2.0f) + 0.5f;
-        float horizontalOffset = ((1.0f - sineTime) / 2.0f) - 0.5f;
-
-        oscillatingGreenShader.use();
-        oscillatingGreenShader.setFloat("intensity", intensity);
-        oscillatingGreenShader.setFloat("horizontalOffset", horizontalOffset);
-
+        myShader.use();
         glBindVertexArray(VAO);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
