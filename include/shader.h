@@ -22,13 +22,13 @@ private:
 
             shaderStream << shaderFile.rdbuf();
             shaderCode = shaderStream.str();
+
+            shaderFile.close();
         }
         catch (const std::ifstream::failure& e) {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
             std::cout << "code: " << e.code() << "\nwhat: " << e.what() << std::endl;
         }
-
-        shaderFile.close();
 
         return shaderCode.c_str();
     }

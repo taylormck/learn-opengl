@@ -47,11 +47,12 @@ int main() {
 
     std::filesystem::path root = std::filesystem::current_path();
     std::string identityVertexShaderPath = root.string() + "\\..\\shaders\\vertex\\identity.glsl";
+    std::string upsideDownVertexShaderPath = root.string() + "\\..\\shaders\\vertex\\upsideDown.glsl";
     std::string orangeFragmentShaderPath = root.string() + "\\..\\shaders\\fragment\\orange.glsl";
     std::string blueFragmentShaderPath = root.string() + "\\..\\shaders\\fragment\\blue.glsl";
 
     Shader orangeShader(identityVertexShaderPath, orangeFragmentShaderPath);
-    Shader blueShader(identityVertexShaderPath, blueFragmentShaderPath);
+    Shader blueShader(upsideDownVertexShaderPath, blueFragmentShaderPath);
 
     float verticesLeft[] = {
         -0.9f, -0.5f, 0.0f,
