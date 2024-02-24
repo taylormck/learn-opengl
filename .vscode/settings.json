@@ -7,5 +7,8 @@
         "opengl",
         "Programiv",
         "Shaderiv"
-    ]
+    ],
+    "files.associations": {
+        "ostream": "cpp"
+    }
 }
