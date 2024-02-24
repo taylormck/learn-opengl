@@ -10,7 +10,7 @@ class Shader {
 private:
     static const unsigned short infoLogSize = 512;
 
-    const char* _readShaderFile(std::string path) {
+    std::string readShaderFile(std::string path) {
         std::string shaderCode;
         std::ifstream shaderFile;
 
@@ -30,7 +30,7 @@ private:
             std::cout << "code: " << e.code() << "\nwhat: " << e.what() << std::endl;
         }
 
-        return shaderCode.c_str();
+        return shaderCode;
     }
 
     void compileShader(unsigned int shader, const char* shaderCode) {
@@ -67,8 +67,8 @@ public:
 
     Shader(std::string vertexPath, std::string fragmentPath) {
         std::cout << "--- creating new shader ---" << "\nvertex path: " << vertexPath << "\nfragmentPath: " << fragmentPath << std::endl;
-        const char* vertexShaderCode = _readShaderFile(vertexPath);
-        const char* fragmentShaderCode = _readShaderFile(fragmentPath);
+        std::string vertexShaderCode = readShaderFile(vertexPath);
+        std::string fragmentShaderCode = readShaderFile(fragmentPath);
 
         std::cout << "--- shaders read ---\n" << "vertex:\n" << vertexShaderCode << "\nfragment:\n" << fragmentShaderCode << std::endl;
 
@@ -77,8 +77,8 @@ public:
 
         std::cout << "compiling shaders" << std::endl;
 
-        compileShader(vertex, vertexShaderCode);
-        compileShader(fragment, fragmentShaderCode);
+        compileShader(vertex, vertexShaderCode.c_str());
+        compileShader(fragment, fragmentShaderCode.c_str());
 
         std::cout << "creating shader program" << std::endl;
 
