@@ -107,9 +107,8 @@ int main() {
         float timeValue = glfwGetTime();
         float intensity = (sin(timeValue) / 2.0f) + 0.5f;
 
-        int intensityUniformLocation = glGetUniformLocation(oscillatingGreenShader.id, "intensity");
         oscillatingGreenShader.use();
-        glUniform1f(intensityUniformLocation, intensity);
+        oscillatingGreenShader.setFloat("intensity", intensity);
 
         glBindVertexArray(VAOs[1]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
