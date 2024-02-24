@@ -66,24 +66,16 @@ public:
     unsigned int id;
 
     Shader(std::string vertexPath, std::string fragmentPath) {
-        std::cout << "--- creating new shader ---" << "\nvertex path: " << vertexPath << "\nfragmentPath: " << fragmentPath << std::endl;
         std::string vertexShaderCode = readShaderFile(vertexPath);
         std::string fragmentShaderCode = readShaderFile(fragmentPath);
-
-        std::cout << "--- shaders read ---\n" << "vertex:\n" << vertexShaderCode << "\nfragment:\n" << fragmentShaderCode << std::endl;
 
         unsigned int vertex = glCreateShader(GL_VERTEX_SHADER);
         unsigned int fragment = glCreateShader(GL_FRAGMENT_SHADER);
 
-        std::cout << "compiling shaders" << std::endl;
-
         compileShader(vertex, vertexShaderCode.c_str());
         compileShader(fragment, fragmentShaderCode.c_str());
 
-        std::cout << "creating shader program" << std::endl;
-
         id = glCreateProgram();
-
         linkProgram(vertex, fragment);
 
         glDeleteShader(vertex);
