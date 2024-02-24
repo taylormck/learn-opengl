@@ -1,5 +1,6 @@
 #include <iostream>
 #include <filesystem>
+#include <math.h>
 
 #define GLAD_GL_IMPLEMENTATION
 #include <glad/gl.h>
@@ -49,10 +50,13 @@ int main() {
     std::string identityVertexShaderPath = root.string() + "/../shaders/vertex/identity.glsl";
     std::string upsideDownVertexShaderPath = root.string() + "/../shaders/vertex/upsideDown.glsl";
     std::string orangeFragmentShaderPath = root.string() + "/../shaders/fragment/orange.glsl";
-    std::string blueFragmentShaderPath = root.string() + "/../shaders/fragment/blue.glsl";
+    // std::string blueFragmentShaderPath = root.string() + "/../shaders/fragment/blue.glsl";
+    std::string oscillatingGreenFragmentShaderPath = root.string() + "/../shaders/fragment/oscillatingGreen.glsl";
 
     Shader orangeShader(identityVertexShaderPath, orangeFragmentShaderPath);
-    Shader blueShader(upsideDownVertexShaderPath, blueFragmentShaderPath);
+    // Shader blueShader(upsideDownVertexShaderPath, blueFragmentShaderPath);
+    Shader oscillatingGreenShader(upsideDownVertexShaderPath, oscillatingGreenFragmentShaderPath);
+
 
     float verticesLeft[] = {
         -0.9f, -0.5f, 0.0f,
@@ -100,7 +104,13 @@ int main() {
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
         // Draw right triangle
-        blueShader.use();
+        float timeValue = glfwGetTime();
+        float intensity = (sin(timeValue) / 2.0f) + 0.5f;
+
+        int intensityUniformLocation = glGetUniformLocation(oscillatingGreenShader.id, "intensity");
+        oscillatingGreenShader.use();
+        glUniform1f(intensityUniformLocation, intensity);
+
         glBindVertexArray(VAOs[1]);
         glDrawArrays(GL_TRIANGLES, 0, 3);
 
