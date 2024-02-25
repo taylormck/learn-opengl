@@ -2,10 +2,12 @@
     "C_Cpp.default.compilerPath": "C:\\msys64\\ucrt64\\bin\\g++.exe",
     "cmake.configureOnOpen": true,
     "cSpell.words": [
+        "awesomeface",
         "framebuffer",
         "glfw",
         "mipmap",
         "opengl",
+        "Parameteri",
         "Programiv",
         "Shaderiv",
         "stbi"

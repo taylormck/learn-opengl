@@ -54,7 +54,7 @@ int main() {
 
     Shader myShader(
         shaderFolder + "vertex/identityTextured.vert",
-        shaderFolder + "fragment/coloredTexture.frag"
+        shaderFolder + "fragment/doubleTexture.frag"
     );
 
 
@@ -99,13 +99,21 @@ int main() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
-    // Load the texture
-    unsigned int texture;
-    glGenTextures(1, &texture);
-    glBindTexture(GL_TEXTURE_2D, texture);
-
+    // Load the textures
     std::string textureFolder = root.string() + "/../textures/";
     int width, height, nrChannels;
+    stbi_set_flip_vertically_on_load(true);
+
+    unsigned int textures[2];
+    glGenTextures(2, textures);
+
+    glBindTexture(GL_TEXTURE_2D, textures[0]);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
     unsigned char* textureData = stbi_load((textureFolder + "container.jpeg").c_str(), &width, &height, &nrChannels, 0);
 
     if (textureData) {
@@ -113,10 +121,32 @@ int main() {
         glGenerateMipmap(GL_TEXTURE_2D);
     }
     else {
-        std::cout << "Failed to load texture data" << std::endl;
+        std::cout << "Failed to load texture data: " << "container.jpeg" << std::endl;
     }
 
     stbi_image_free(textureData);
+
+    glBindTexture(GL_TEXTURE_2D, textures[1]);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    textureData = stbi_load((textureFolder + "awesomeface.png").c_str(), &width, &height, &nrChannels, 0);
+    if (textureData) {
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
+        glGenerateMipmap(GL_TEXTURE_2D);
+    }
+    else {
+        std::cout << "Failed to load texture data: " << "awesomeface.pgn" << std::endl;
+    }
+
+    stbi_image_free(textureData);
+
+    myShader.use();
+    myShader.setInt("texture1", 0);
+    myShader.setInt("texture2", 1);
 
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
@@ -127,9 +157,11 @@ int main() {
         glClearColor(0.4f, 0.3f, 0.4f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT);
 
-        glBindTexture(GL_TEXTURE_2D, texture);
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, textures[0]);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, textures[1]);
 
-        myShader.use();
         glBindVertexArray(VAO);
         // glDrawArrays(GL_TRIANGLES, 0, 3);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
@@ -137,6 +169,10 @@ int main() {
         glfwSwapBuffers(window);
         glfwPollEvents();
     }
+
+    glDeleteVertexArrays(1, &VAO);
+    glDeleteBuffers(1, &VBO);
+    glDeleteBuffers(1, &EBO);
 
     glfwTerminate();
     return 0;
