@@ -162,6 +162,9 @@ int main() {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, textures[1]);
 
+        float visibility = sin(glfwGetTime()) / 2.0f + 0.5f;;
+        myShader.setFloat("visibility", visibility);
+
         glBindVertexArray(VAO);
         // glDrawArrays(GL_TRIANGLES, 0, 3);
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
