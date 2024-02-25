@@ -11,6 +11,10 @@
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
+#include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
+#include <glm/gtc/type_ptr.hpp>
+
 #include "shader.h"
 
 const unsigned int SCR_WIDTH = 800;
@@ -148,6 +152,9 @@ int main() {
     myShader.setInt("texture1", 0);
     myShader.setInt("texture2", 1);
 
+    glm::mat4 topLeftTransform = glm::mat4(1.0f);
+    topLeftTransform = glm::translate(topLeftTransform, glm::vec3(-0.5f, 0.5f, 0.0f));
+
     // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     while (!glfwWindowShouldClose(window)) {
@@ -162,11 +169,23 @@ int main() {
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, textures[1]);
 
-        float visibility = sin(glfwGetTime()) / 2.0f + 0.5f;;
+        float sinTime = sin(glfwGetTime());
+        float visibility = sinTime / 2.0f + 0.5f;
         myShader.setFloat("visibility", visibility);
+
+        glm::mat4 transform = glm::mat4(1.0f);
+        transform = glm::rotate(transform, (float)glfwGetTime(), glm::vec3(1.0f, 0.0f, 0.0f));
+
+        unsigned int transformLocation = glGetUniformLocation(myShader.id, "transform");
+        glUniformMatrix4fv(transformLocation, 1, GL_FALSE, glm::value_ptr(transform));
+
 
         glBindVertexArray(VAO);
         // glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
+
+        glm::mat4 scaledTopLeftTransform = glm::scale(topLeftTransform, glm::vec3(abs(sinTime), abs(sinTime), 1.0f));
+        glUniformMatrix4fv(transformLocation, 1, GL_FALSE, glm::value_ptr(scaledTopLeftTransform));
         glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, 0);
 
         glfwSwapBuffers(window);
