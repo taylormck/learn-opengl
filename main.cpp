@@ -23,10 +23,17 @@ float lastFrameTime = 0.0f;
 constexpr unsigned int SCR_WIDTH = 800;
 constexpr unsigned int SCR_HEIGHT = 600;
 
-glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 10.0f);
-glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+float lastX = 400, lastY = 300;
+constexpr float mouseSensitivity = 0.01f;
 constexpr float cameraSpeed = 5.0f;
+constexpr float cameraPitchLowerBoundary = -1.0f * M_PI_2 + 1.0f;
+constexpr float cameraPitchUpperBoundary = M_PI_2 - 1.0f;
+
+float cameraYaw = -M_PI_2;
+float cameraPitch = 0.0f;
+glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 10.0f);
+glm::vec3 cameraDirection = glm::normalize(glm::vec3(0.0f, 0.0f, -1.0f));
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -50,6 +57,24 @@ void processInput(GLFWwindow* window) {
     if (glm::dot(cameraMovement, cameraMovement)) {
         cameraPosition += glm::normalize(cameraMovement) * cameraSpeed * deltaTime;
     }
+}
+
+void mouseCallback(GLFWwindow* window, double xPosition, double yPosition) {
+    float xOffset = (xPosition - lastX) * mouseSensitivity;
+    float yOffset = (yPosition - lastY) * mouseSensitivity;
+    lastX = xPosition;
+    lastY = yPosition;
+
+    cameraYaw += xOffset;
+    cameraPitch = std::clamp(cameraPitch - yOffset, cameraPitchLowerBoundary, cameraPitchUpperBoundary);
+    
+    glm::vec3 newCameraDirection = glm::vec3(
+        cos(cameraYaw) * cos(cameraPitch),
+        sin(cameraPitch),
+        sin(cameraYaw) * cos(cameraPitch)
+    );
+
+    cameraDirection = glm::normalize(newCameraDirection);
 }
 
 void framebuffer_size_callback(__attribute__((unused))GLFWwindow* window, int width, int height) {
@@ -81,6 +106,8 @@ int main() {
     }
 
     glEnable(GL_DEPTH_TEST);
+    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window, mouseCallback);
 
     std::filesystem::path root = std::filesystem::current_path();
     std::string shaderFolder = root.string() + "/../shaders/";
@@ -239,6 +266,10 @@ int main() {
 
         myShader.use();
 
+
+        glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraDirection, cameraUp);
+        myShader.setMat4("view", view);
+            
         glBindVertexArray(VAO);
 
 
@@ -252,9 +283,6 @@ int main() {
 
             myShader.setMat4("model", model);
 
-            glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraDirection, cameraUp);
-            myShader.setMat4("view", view);
-            
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 
