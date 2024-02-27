@@ -17,12 +17,39 @@
 
 #include "shader.h"
 
+float deltaTime = 0.0f;
+float lastFrameTime = 0.0f;
+
 constexpr unsigned int SCR_WIDTH = 800;
 constexpr unsigned int SCR_HEIGHT = 600;
+
+glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 10.0f);
+glm::vec3 cameraDirection = glm::vec3(0.0f, 0.0f, -1.0f);
+glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+constexpr float cameraSpeed = 5.0f;
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
+
+    glm::vec3 cameraMovement = glm::vec3(0.0f, 0.0f, 0.0f);
+
+    if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
+        cameraMovement += cameraDirection;
+    }
+    if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
+        cameraMovement -= cameraDirection;
+    }
+    if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
+        cameraMovement -= glm::cross(cameraDirection, cameraUp);
+    }
+    if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
+        cameraMovement += glm::cross(cameraDirection, cameraUp);
+    }
+
+    if (glm::dot(cameraMovement, cameraMovement)) {
+        cameraPosition += glm::normalize(cameraMovement) * cameraSpeed * deltaTime;
+    }
 }
 
 void framebuffer_size_callback(__attribute__((unused))GLFWwindow* window, int width, int height) {
@@ -62,16 +89,6 @@ int main() {
         shaderFolder + "vertex/modelViewProjection.vert",
         shaderFolder + "fragment/doubleTexture.frag"
     );
-
-
-    // Vertices with texture and color
-    // float vertices[] = {
-    //     // vertices          // colors          // texture coordinates
-    //      0.5f,  0.5f, 0.0f,  1.0f, 0.0f, 0.0f,  1.0f, 1.0f, // top right
-    //      0.5f, -0.5f, 0.0f,  0.0f, 1.0f, 0.0f,  1.0f, 0.0f, // bottom right
-    //     -0.5f, -0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 0.0f, // bottom left
-    //     -0.5f,  0.5f, 0.0f,  0.0f, 0.0f, 1.0f,  0.0f, 1.0f, // top left
-    // };
 
     // Cube vertices, with texture
     float vertices[] = {
@@ -128,7 +145,8 @@ int main() {
         glm::vec3(1.3f, -2.0f, -2.5f),
         glm::vec3(1.5f, 2.0f, -2.5f),
         glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)};
+        glm::vec3(-1.3f, 1.0f, -1.5f)
+    };
 
     unsigned int VBO, VAO;
     glGenVertexArrays(1, &VAO);
@@ -199,15 +217,15 @@ int main() {
     myShader.setInt("texture1", 0);
     myShader.setInt("texture2", 1);
 
-    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
     glm::mat4 projection = glm::perspective((float)M_PI_4, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-
-    myShader.setMat4("view", view);
     myShader.setMat4("projection", projection);
-
     myShader.setFloat("visibility", 0.2);
 
     while (!glfwWindowShouldClose(window)) {
+        const float currentTime = glfwGetTime();
+        deltaTime = currentTime - lastFrameTime;
+        lastFrameTime = currentTime;
+
         processInput(window);
 
         // Render
@@ -223,22 +241,19 @@ int main() {
 
         glBindVertexArray(VAO);
 
-        float time = glfwGetTime();
 
         for (unsigned int i = 0; i < 10; i++) {
             glm::mat4 model = glm::mat4(1.0f);
 
             model = glm::translate(model, cubePositions[i]);
 
-            if (i % 3 == 0) {
-                model = glm::rotate(model, time, glm::vec3(1.0f, 1.0f, 1.0f));
-            }
-            else {
-                float angle = 20.0f * i;
-                model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
-            }
+            float angle = 20.0f * i;
+            model = glm::rotate(model, currentTime + angle, glm::vec3(1.0f, 1.0f, 1.0f));
 
             myShader.setMat4("model", model);
+
+            glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraDirection, cameraUp);
+            myShader.setMat4("view", view);
             
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
