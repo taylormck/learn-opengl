@@ -199,19 +199,13 @@ int main() {
     myShader.setInt("texture1", 0);
     myShader.setInt("texture2", 1);
 
-    unsigned int modelLocation = glGetUniformLocation(myShader.id, "model");
-    unsigned int viewLocation = glGetUniformLocation(myShader.id, "view");
-    unsigned int projectionLocation = glGetUniformLocation(myShader.id, "projection");
-
-    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -3.0f));
+    glm::mat4 view = glm::translate(glm::mat4(1.0f), glm::vec3(0.0f, 0.0f, -5.0f));
     glm::mat4 projection = glm::perspective((float)M_PI_4, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
 
     myShader.setMat4("view", view);
     myShader.setMat4("projection", projection);
 
     myShader.setFloat("visibility", 0.2);
-
-    // glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 
     while (!glfwWindowShouldClose(window)) {
         processInput(window);
@@ -229,12 +223,20 @@ int main() {
 
         glBindVertexArray(VAO);
 
+        float time = glfwGetTime();
+
         for (unsigned int i = 0; i < 10; i++) {
             glm::mat4 model = glm::mat4(1.0f);
+
             model = glm::translate(model, cubePositions[i]);
 
-            float angle = 20.0f * i;
-            model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+            if (i % 3 == 0) {
+                model = glm::rotate(model, time, glm::vec3(1.0f, 1.0f, 1.0f));
+            }
+            else {
+                float angle = 20.0f * i;
+                model = glm::rotate(model, angle, glm::vec3(1.0f, 0.3f, 0.5f));
+            }
 
             myShader.setMat4("model", model);
             
