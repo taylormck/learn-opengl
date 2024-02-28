@@ -2,11 +2,11 @@
 #include <filesystem>
 #include <math.h>
 
-#define GLAD_GL_IMPLEMENTATION
-#include <glad/gl.h>
-
 #define GLFW_INCLUDE_NONE
 #include <GLFW/glfw3.h>
+
+#define GLAD_GL_IMPLEMENTATION
+#include <glad/gl.h>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -16,6 +16,7 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "shader.h"
+#include "camera.h"
 
 float deltaTime = 0.0f;
 float lastFrameTime = 0.0f;
@@ -24,16 +25,8 @@ constexpr unsigned int SCR_WIDTH = 800;
 constexpr unsigned int SCR_HEIGHT = 600;
 
 float lastX = 400, lastY = 300;
-constexpr float mouseSensitivity = 0.01f;
-constexpr float cameraSpeed = 5.0f;
-constexpr float cameraPitchLowerBoundary = -1.0f * M_PI_2 + 1.0f;
-constexpr float cameraPitchUpperBoundary = M_PI_2 - 1.0f;
 
-float cameraYaw = -M_PI_2;
-float cameraPitch = 0.0f;
-glm::vec3 cameraPosition = glm::vec3(0.0f, 0.0f, 10.0f);
-glm::vec3 cameraDirection = glm::normalize(glm::vec3(0.0f, 0.0f, -1.0f));
-glm::vec3 cameraUp = glm::vec3(0.0f, 1.0f, 0.0f);
+Camera camera (glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -42,42 +35,35 @@ void processInput(GLFWwindow* window) {
     glm::vec3 cameraMovement = glm::vec3(0.0f, 0.0f, 0.0f);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cameraMovement += cameraDirection;
+        cameraMovement += camera.Front;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cameraMovement -= cameraDirection;
+        cameraMovement -= camera.Front;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cameraMovement -= glm::cross(cameraDirection, cameraUp);
+        cameraMovement -= camera.Right;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cameraMovement += glm::cross(cameraDirection, cameraUp);
+        cameraMovement += camera.Right;
     }
 
-    if (glm::dot(cameraMovement, cameraMovement)) {
-        cameraPosition += glm::normalize(cameraMovement) * cameraSpeed * deltaTime;
-    }
+    camera.ProcessKeyboard(cameraMovement, deltaTime);
 }
 
 void mouseCallback(GLFWwindow* window, double xPosition, double yPosition) {
-    float xOffset = (xPosition - lastX) * mouseSensitivity;
-    float yOffset = (yPosition - lastY) * mouseSensitivity;
+    float xOffset = (xPosition - lastX);
+    float yOffset = (yPosition - lastY);
     lastX = xPosition;
     lastY = yPosition;
 
-    cameraYaw += xOffset;
-    cameraPitch = std::clamp(cameraPitch - yOffset, cameraPitchLowerBoundary, cameraPitchUpperBoundary);
-    
-    glm::vec3 newCameraDirection = glm::vec3(
-        cos(cameraYaw) * cos(cameraPitch),
-        sin(cameraPitch),
-        sin(cameraYaw) * cos(cameraPitch)
-    );
-
-    cameraDirection = glm::normalize(newCameraDirection);
+    camera.ProcessMouseMovement(xOffset, yOffset);
 }
 
-void framebuffer_size_callback(__attribute__((unused))GLFWwindow* window, int width, int height) {
+void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
+    camera.ProcessMouseScroll(yOffset);
+}
+
+void framebufferSizeCallback(__attribute__((unused))GLFWwindow* window, int width, int height) {
     // make sure the viewport matches the new window dimensions; note that width and 
     // height will be significantly larger than specified on retina displays.
     glViewport(0, 0, width, height);
@@ -98,7 +84,7 @@ int main() {
     }
 
     glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebuffer_size_callback);
+    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
 
     if (!gladLoadGL(glfwGetProcAddress)) {
         std::cout << "Failed to load GLAD" << std::endl;
@@ -266,12 +252,10 @@ int main() {
 
         myShader.use();
 
-
-        glm::mat4 view = glm::lookAt(cameraPosition, cameraPosition + cameraDirection, cameraUp);
+        glm::mat4 view = camera.GetViewMatrix();
         myShader.setMat4("view", view);
             
         glBindVertexArray(VAO);
-
 
         for (unsigned int i = 0; i < 10; i++) {
             glm::mat4 model = glm::mat4(1.0f);
