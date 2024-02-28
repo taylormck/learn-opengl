@@ -2,14 +2,6 @@
 #include <filesystem>
 #include <math.h>
 
-
-// TODO sort out the import of gl.h
-#define GLAD_GL_IMPLEMENTATION
-#include <glad/gl.h>
-
-#define GLFW_INCLUDE_NONE
-#include <GLFW/glfw3.h>
-
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
 
@@ -20,13 +12,15 @@
 #include "shader.h"
 #include "camera.h"
 
-float deltaTime = 0.0f;
-float lastFrameTime = 0.0f;
+#include "openGLCommon.h"
 
-constexpr unsigned int SCR_WIDTH = 800;
-constexpr unsigned int SCR_HEIGHT = 600;
+GLfloat deltaTime = 0.0f;
+GLfloat lastFrameTime = 0.0f;
 
-float lastX = 400, lastY = 300;
+constexpr GLuint SCR_WIDTH = 800;
+constexpr GLuint SCR_HEIGHT = 600;
+
+GLfloat lastX = 400, lastY = 300;
 
 Camera camera (glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
@@ -52,7 +46,7 @@ void processInput(GLFWwindow* window) {
     camera.ProcessKeyboard(cameraMovement, deltaTime);
 }
 
-void mouseCallback(GLFWwindow* window, double xPosition, double yPosition) {
+void mouseCallback([[maybe_unused]]GLFWwindow* window, double xPosition, double yPosition) {
     float xOffset = (xPosition - lastX);
     float yOffset = (yPosition - lastY);
     lastX = xPosition;
@@ -61,7 +55,7 @@ void mouseCallback(GLFWwindow* window, double xPosition, double yPosition) {
     camera.ProcessMouseMovement(xOffset, yOffset);
 }
 
-void scrollCallback(GLFWwindow* window, double xOffset, double yOffset) {
+void scrollCallback([[maybe_unused]]GLFWwindow* window, double xOffset, double yOffset) {
     camera.ProcessMouseScroll(yOffset);
 }
 

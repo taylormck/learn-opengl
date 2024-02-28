@@ -1,14 +1,12 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
-#ifndef GLAD_GL_IMPLEMENTATION
-#include <glad/gl.h>
-#endif
+#include <iostream>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include <iostream>
+#include "openGLCommon.h"
 
 constexpr float DEFAULT_YAW = -M_PI_2;
 constexpr float DEFAULT_PITCH = 0.0f;
