@@ -10,40 +10,41 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "shader.h"
-#include "camera.h"
+#include "camera/Camera.h"
+#include "camera/FlyingCamera.h"
 
 #include "openGLCommon.h"
 
-GLfloat deltaTime = 0.0f;
-GLfloat lastFrameTime = 0.0f;
+float deltaTime = 0.0f;
+float lastFrameTime = 0.0f;
 
-constexpr GLuint SCR_WIDTH = 800;
-constexpr GLuint SCR_HEIGHT = 600;
+constexpr unsigned int SCR_WIDTH = 800;
+constexpr unsigned int SCR_HEIGHT = 600;
 
-GLfloat lastX = 400, lastY = 300;
+float lastX = 400, lastY = 300;
 
-Camera camera (glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+Camera* camera = new FlyingCamera(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
-    glm::vec3 cameraMovement = glm::vec3(0.0f, 0.0f, 0.0f);
+    glm::vec3 movementInput = glm::vec3(0.0f, 0.0f, 0.0f);
 
     if (glfwGetKey(window, GLFW_KEY_W) == GLFW_PRESS) {
-        cameraMovement += camera.Front;
+        movementInput.z += 1.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_S) == GLFW_PRESS) {
-        cameraMovement -= camera.Front;
+        movementInput.z -= 1.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_A) == GLFW_PRESS) {
-        cameraMovement -= camera.Right;
+        movementInput.x -= 1.0f;
     }
     if (glfwGetKey(window, GLFW_KEY_D) == GLFW_PRESS) {
-        cameraMovement += camera.Right;
+        movementInput.x += 1.0f;
     }
 
-    camera.ProcessKeyboard(cameraMovement, deltaTime);
+    camera->ProcessKeyboard(movementInput, deltaTime);
 }
 
 void mouseCallback([[maybe_unused]]GLFWwindow* window, double xPosition, double yPosition) {
@@ -52,11 +53,11 @@ void mouseCallback([[maybe_unused]]GLFWwindow* window, double xPosition, double 
     lastX = xPosition;
     lastY = yPosition;
 
-    camera.ProcessMouseMovement(xOffset, yOffset);
+    camera->ProcessMouseMovement(xOffset, yOffset);
 }
 
 void scrollCallback([[maybe_unused]]GLFWwindow* window, [[maybe_unused]]double xOffset, double yOffset) {
-    camera.ProcessMouseScroll(yOffset);
+    camera->ProcessMouseScroll(yOffset);
 }
 
 void framebufferSizeCallback(__attribute__((unused))GLFWwindow* window, int width, int height) {
@@ -101,7 +102,7 @@ int main() {
     );
 
     // Cube vertices, with texture
-    float vertices[] = {
+    GLfloat vertices[] = {
         -0.5f, -0.5f, -0.5f, 0.0f, 0.0f,
         0.5f, -0.5f, -0.5f, 1.0f, 0.0f,
         0.5f, 0.5f, -0.5f, 1.0f, 1.0f,
@@ -168,11 +169,11 @@ int main() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
 
     // texture coordinate attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(float), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(float)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -248,10 +249,10 @@ int main() {
         myShader.use();
 
 
-        glm::mat4 projection = glm::perspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        glm::mat4 projection = glm::perspective(camera->Zoom(), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         myShader.setMat4("projection", projection);
 
-        glm::mat4 view = camera.GetViewMatrix();
+        glm::mat4 view = camera->GetViewMatrix();
         myShader.setMat4("view", view);
             
         glBindVertexArray(VAO);
