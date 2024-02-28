@@ -1,6 +1,10 @@
 #ifndef SHADER_H
 #define SHADER_H
 
+#ifndef GLAD_GL_IMPLEMENTATION
+#include <glad/gl.h>
+#endif
+
 #include <string>
 #include <fstream>
 #include <sstream>
