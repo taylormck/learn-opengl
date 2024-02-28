@@ -55,7 +55,7 @@ void mouseCallback([[maybe_unused]]GLFWwindow* window, double xPosition, double 
     camera.ProcessMouseMovement(xOffset, yOffset);
 }
 
-void scrollCallback([[maybe_unused]]GLFWwindow* window, double xOffset, double yOffset) {
+void scrollCallback([[maybe_unused]]GLFWwindow* window, [[maybe_unused]]double xOffset, double yOffset) {
     camera.ProcessMouseScroll(yOffset);
 }
 
