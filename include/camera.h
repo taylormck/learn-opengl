@@ -13,6 +13,7 @@ constexpr float DEFAULT_PITCH = 0.0f;
 constexpr float DEFAULT_SPEED = 5.0f;
 constexpr float DEFAULT_MOUSE_SENSITIVITY = 0.01f;
 constexpr float DEFAULT_ZOOM = M_PI_4;
+constexpr float DEFAULT_ZOOM_SENSITIVITY = 0.01f;
 
 constexpr float cameraPitchLowerBoundary = -1.0f * M_PI_2 + 1.0f;
 constexpr float cameraPitchUpperBoundary = M_PI_2 - 1.0f;
@@ -31,6 +32,7 @@ class Camera {
         float MovementSpeed;
         float MouseSensitivity;
         float Zoom;
+        float ZoomSensitivity;
 
         Camera(
             glm::vec3 position = glm::vec3(0.0f, 0.0f, 0.0f),
@@ -38,7 +40,7 @@ class Camera {
             float yaw = DEFAULT_YAW,
             float pitch = DEFAULT_PITCH
         ): Front(glm::vec3(0.0f, 0.0f, -1.0f)), MovementSpeed(DEFAULT_SPEED),
-        MouseSensitivity(DEFAULT_MOUSE_SENSITIVITY), Zoom(DEFAULT_ZOOM) {
+        MouseSensitivity(DEFAULT_MOUSE_SENSITIVITY), Zoom(DEFAULT_ZOOM), ZoomSensitivity(DEFAULT_ZOOM_SENSITIVITY) {
             Position = position;
             WorldUp = glm::normalize(up);
             Yaw = yaw;
@@ -72,7 +74,7 @@ class Camera {
         }
 
         void ProcessMouseScroll(float yOffset) {
-            Zoom = std::clamp(Zoom + yOffset, glm::radians(1.0f), (float)M_PI_4);
+            Zoom = std::clamp(Zoom + (yOffset * ZoomSensitivity), glm::radians(1.0f), (float)M_PI_4);
         }
 
     private:

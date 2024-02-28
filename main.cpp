@@ -90,6 +90,7 @@ int main() {
     glEnable(GL_DEPTH_TEST);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouseCallback);
+    glfwSetScrollCallback(window, scrollCallback);
 
     std::filesystem::path root = std::filesystem::current_path();
     std::string shaderFolder = root.string() + "/../shaders/";
@@ -226,8 +227,6 @@ int main() {
     myShader.setInt("texture1", 0);
     myShader.setInt("texture2", 1);
 
-    glm::mat4 projection = glm::perspective((float)M_PI_4, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
-    myShader.setMat4("projection", projection);
     myShader.setFloat("visibility", 0.2);
 
     while (!glfwWindowShouldClose(window)) {
@@ -247,6 +246,10 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, textures[1]);
 
         myShader.use();
+
+
+        glm::mat4 projection = glm::perspective(camera.Zoom, (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
+        myShader.setMat4("projection", projection);
 
         glm::mat4 view = camera.GetViewMatrix();
         myShader.setMat4("view", view);
