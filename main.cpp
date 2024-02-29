@@ -12,6 +12,7 @@
 #include "shader.h"
 #include "camera/Camera.h"
 #include "camera/FlyingCamera.h"
+#include "camera/FPSCamera.h"
 
 #include "openGLCommon.h"
 
@@ -23,7 +24,7 @@ constexpr unsigned int SCR_HEIGHT = 600;
 
 float lastX = 400, lastY = 300;
 
-Camera* camera = new FlyingCamera(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+Camera* camera = new FPSCamera(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -247,7 +248,6 @@ int main() {
         glBindTexture(GL_TEXTURE_2D, textures[1]);
 
         myShader.use();
-
 
         glm::mat4 projection = glm::perspective(camera->Zoom(), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         myShader.setMat4("projection", projection);
