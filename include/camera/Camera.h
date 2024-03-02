@@ -9,6 +9,7 @@
 
 class Camera {
 public:
+    virtual ~Camera() {};
     virtual glm::mat4 GetViewMatrix() const = 0;
     virtual float Zoom() const = 0;
 

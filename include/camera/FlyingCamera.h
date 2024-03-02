@@ -12,7 +12,6 @@
 
 class FlyingCamera: public Camera {
 private:
-
     static constexpr float DEFAULT_YAW = -glm::half_pi<float>();
     static constexpr float DEFAULT_PITCH = 0.0f;
     static constexpr float DEFAULT_SPEED = 5.0f;
@@ -63,6 +62,8 @@ public:
         _pitch = pitch;
         UpdateCameraVectors();
     }
+
+    ~FlyingCamera() {}
 
     glm::mat4 GetViewMatrix() const {
         return glm::lookAt<float>(_position, _position + _front, _up);

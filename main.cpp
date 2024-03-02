@@ -1,6 +1,7 @@
 #include <iostream>
 #include <filesystem>
 #include <math.h>
+#include <memory>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -24,7 +25,7 @@ constexpr unsigned int SCR_HEIGHT = 600;
 
 float lastX = 400, lastY = 300;
 
-Camera* camera = new FPSCamera(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+std::unique_ptr<Camera> camera = std::make_unique<FPSCamera>(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -73,7 +74,7 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Taylor's Attempt to Learn OpenGL", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Open GL Practice", NULL, NULL);
 
     if (!window) {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -174,7 +175,7 @@ int main() {
     glEnableVertexAttribArray(0);
 
     // texture coordinate attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -195,7 +196,13 @@ int main() {
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
 
-    unsigned char* textureData = stbi_load((textureFolder + "container.jpeg").c_str(), &width, &height, &nrChannels, 0);
+    unsigned char* textureData = stbi_load(
+        (textureFolder + "container.jpeg").c_str(),
+        &width,
+        &height,
+        &nrChannels,
+        0
+    );
 
     if (textureData) {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);

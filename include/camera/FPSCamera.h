@@ -67,6 +67,8 @@ public:
         UpdateCameraVectors();
     }
 
+    ~FPSCamera() {}
+
     glm::mat4 GetViewMatrix() const
     {
         return glm::lookAt<float>(_position, _position + _front, _up);
