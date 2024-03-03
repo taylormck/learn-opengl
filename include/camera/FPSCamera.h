@@ -99,7 +99,7 @@ public:
 
         if (constrainPitch)
         {
-            _pitch = std::clamp(_pitch - yOffset, CAMERA_PITCH_LOWER_BOUNDARY, CAMERA_PITCH_UPPER_BOUNDARY);
+            _pitch = glm::clamp(_pitch - yOffset, CAMERA_PITCH_LOWER_BOUNDARY, CAMERA_PITCH_UPPER_BOUNDARY);
         }
 
         UpdateCameraVectors();
@@ -107,7 +107,7 @@ public:
 
     void ProcessMouseScroll(float yOffset)
     {
-        _zoom = std::clamp(_zoom + (yOffset * _zoomSensitivity), glm::radians(1.0f), glm::quarter_pi<float>());
+        _zoom = glm::clamp(_zoom + (yOffset * _zoomSensitivity), glm::radians(1.0f), glm::quarter_pi<float>());
     }
 };
 
