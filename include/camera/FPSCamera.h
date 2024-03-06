@@ -107,7 +107,7 @@ public:
 
     void ProcessMouseScroll(float yOffset)
     {
-        _zoom = glm::clamp(_zoom + (yOffset * _zoomSensitivity), glm::radians(1.0f), glm::quarter_pi<float>());
+        _zoom = std::clamp(_zoom + (yOffset * _zoomSensitivity), glm::radians(1.0f), glm::quarter_pi<float>());
     }
 };
 

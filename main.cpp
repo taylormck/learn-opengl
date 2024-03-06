@@ -1,6 +1,6 @@
+#include "glm/fwd.hpp"
 #include <iostream>
 #include <filesystem>
-#include <math.h>
 #include <memory>
 
 #define STB_IMAGE_IMPLEMENTATION
@@ -26,6 +26,7 @@ constexpr unsigned int SCR_HEIGHT = 600;
 float lastX = 400, lastY = 300;
 
 std::unique_ptr<Camera> camera = std::make_unique<FPSCamera>(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+std::unique_ptr<Camera> camera2 = std::make_unique<FlyingCamera>(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
 void processInput(GLFWwindow* window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
@@ -285,5 +286,6 @@ int main() {
     glDeleteBuffers(1, &VBO);
 
     glfwTerminate();
+
     return 0;
 }

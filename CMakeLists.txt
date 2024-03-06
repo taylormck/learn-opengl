@@ -1,7 +1,21 @@
 cmake_minimum_required(VERSION 3.22.1)
-project(learn-opengl)
+
+project(
+    learn-opengl
+    LANGUAGES CXX
+)
+
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE INTERNAL "")
+
+set(CMAKE_CXX_STANDARD 17)
+
+set(APP_NAME app)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -pedantic")
+
+if (MINGW)
+    set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --target=x86_64-w64-windows-gnu -stdlib=libstdc++")
+endif()
 
 include_directories("include")
 
@@ -21,7 +35,6 @@ include_directories("glfw/deps")
 set(GLAD_GL "glfw/deps/glad/gl.h")
 
 # Set up application
-# set(MAIN_SRC main.cpp)
 add_executable(app main.cpp ${GLAD_GL})
 
 target_link_libraries(app ${OPENGL_LIBRARIES} glfw)
