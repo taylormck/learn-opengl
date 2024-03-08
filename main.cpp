@@ -100,7 +100,7 @@ int main() {
 
     Shader myShader(
         shaderFolder + "vertex/modelViewProjection.vert",
-        shaderFolder + "fragment/doubleTexture.frag"
+        shaderFolder + "fragment/blue.frag"
     );
 
     // Cube vertices, with texture
@@ -171,72 +171,13 @@ int main() {
     glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
 
     // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (void*)0);
     glEnableVertexAttribArray(0);
-
-    // texture coordinate attribute
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
-
     // Load the textures
-    std::string textureFolder = root.string() + "/../textures/";
-    int width, height, nrChannels;
-    stbi_set_flip_vertically_on_load(true);
-
-    unsigned int textures[2];
-    glGenTextures(2, textures);
-
-    glBindTexture(GL_TEXTURE_2D, textures[0]);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    unsigned char* textureData = stbi_load(
-        (textureFolder + "container.jpeg").c_str(),
-        &width,
-        &height,
-        &nrChannels,
-        0
-    );
-
-    if (textureData) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGB, GL_UNSIGNED_BYTE, textureData);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else {
-        std::cout << "Failed to load texture data: " << "container.jpeg" << std::endl;
-    }
-
-    stbi_image_free(textureData);
-
-    glBindTexture(GL_TEXTURE_2D, textures[1]);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    textureData = stbi_load((textureFolder + "awesomeface.png").c_str(), &width, &height, &nrChannels, 0);
-    if (textureData) {
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, textureData);
-        glGenerateMipmap(GL_TEXTURE_2D);
-    }
-    else {
-        std::cout << "Failed to load texture data: " << "awesomeface.pgn" << std::endl;
-    }
-
-    stbi_image_free(textureData);
-
     myShader.use();
-    myShader.setInt("texture1", 0);
-    myShader.setInt("texture2", 1);
-
-    myShader.setFloat("visibility", 0.2);
 
     while (!glfwWindowShouldClose(window)) {
         const float currentTime = glfwGetTime();
@@ -248,11 +189,6 @@ int main() {
         // Render
         glClearColor(0.4f, 0.3f, 0.4f, 0.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, textures[0]);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, textures[1]);
 
         myShader.use();
 
