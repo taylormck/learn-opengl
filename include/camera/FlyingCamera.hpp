@@ -1,7 +1,6 @@
 #ifndef FLYING_CAMERA_H
 #define FLYING_CAMERA_H
 
-#include <iostream>
 #include <algorithm>
 
 #include <glm/glm.hpp>
@@ -9,7 +8,7 @@
 
 #include "openGLCommon.h"
 
-#include "camera/Camera.h"
+#include "camera/Camera.hpp"
 
 class FlyingCamera: public Camera {
 private:
