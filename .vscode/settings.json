@@ -82,5 +82,8 @@
         "functional": "cpp",
         "iterator": "cpp",
         "utility": "cpp"
-    }
+    },
+    "clangd.arguments": [
+        "-xc++"
+    ]
 }

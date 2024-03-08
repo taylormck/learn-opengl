@@ -11,7 +11,9 @@ set(CMAKE_CXX_STANDARD 17)
 
 set(APP_NAME app)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -pedantic")
+set(ENTRY_POINT main.cpp)
+
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -xc++ -std=c++17 -Wall -Wextra -pedantic")
 
 if (MINGW)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --target=x86_64-w64-windows-gnu -stdlib=libstdc++")
@@ -35,6 +37,6 @@ include_directories("glfw/deps")
 set(GLAD_GL "glfw/deps/glad/gl.h")
 
 # Set up application
-add_executable(app main.cpp ${GLAD_GL})
+add_executable(${APP_NAME} ${ENTRY_POINT} ${GLAD_GL})
 
-target_link_libraries(app ${OPENGL_LIBRARIES} glfw)
+target_link_libraries(${APP_NAME} ${OPENGL_LIBRARIES} glfw)

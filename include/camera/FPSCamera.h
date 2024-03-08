@@ -19,8 +19,8 @@ private:
     static constexpr float DEFAULT_MOUSE_SENSITIVITY = 0.01f;
     static constexpr float DEFAULT_ZOOM = glm::quarter_pi<float>();
     static constexpr float DEFAULT_ZOOM_SENSITIVITY = 0.01f;
-    static constexpr float CAMERA_PITCH_LOWER_BOUNDARY = 1.0f - glm::half_pi<float>();
-    static constexpr float CAMERA_PITCH_UPPER_BOUNDARY = glm::half_pi<float>() - 1.0f;
+    static constexpr float CAMERA_PITCH_LOWER_BOUNDARY = 0.1f - glm::half_pi<float>();
+    static constexpr float CAMERA_PITCH_UPPER_BOUNDARY = glm::half_pi<float>() - 0.1f;
 
     glm::vec3 _position;
     glm::vec3 _front;
