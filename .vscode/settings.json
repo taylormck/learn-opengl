@@ -83,7 +83,6 @@
         "iterator": "cpp",
         "utility": "cpp"
     },
-    "clangd.arguments": [
-        "-xc++"
-    ]
+    "clangd.onConfigChanged": "restart",
+    "clangd.checkUpdates": true
 }
