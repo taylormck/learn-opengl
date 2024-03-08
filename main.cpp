@@ -88,6 +88,7 @@ int main() {
 
     if (!gladLoadGL(glfwGetProcAddress)) {
         std::cout << "Failed to load GLAD" << std::endl;
+        glfwTerminate();
         return -1;
     }
 
@@ -176,7 +177,7 @@ int main() {
     glEnableVertexAttribArray(0);
 
     // texture coordinate attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 5 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
     glEnableVertexAttribArray(1);
 
     glBindBuffer(GL_ARRAY_BUFFER, 0);
