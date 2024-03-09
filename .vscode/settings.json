@@ -3,6 +3,7 @@
     "cmake.configureOnOpen": true,
     "cSpell.words": [
         "awesomeface",
+        "endregion",
         "framebuffer",
         "glfw",
         "mipmap",
