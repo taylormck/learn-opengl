@@ -7,16 +7,15 @@ uniform mat4 view;
 uniform mat4 projection;
 uniform mat4 rotation;
 
-out vec3 FragPosition;
-out vec3 Normal;
+out vec3 fragPosition;
+out vec3 normal;
 
 void main()
 {
-    FragPosition = vec3(model * vec4(aPos, 1.0));
+    fragPosition = vec3(model * vec4(aPos, 1.0));
 
-    // TODO finish sorting this out
     mat3 rotation = transpose(inverse(mat3(model)));
-    Normal = rotation * aNormal;
+    normal = rotation * aNormal;
 
-    gl_Position = projection * view * vec4(FragPosition, 1.0f);
+    gl_Position = projection * view * vec4(fragPosition, 1.0f);
 }

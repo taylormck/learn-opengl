@@ -259,6 +259,8 @@ int main() {
             glm::mat3 rotation = glm::transpose(glm::inverse(glm::mat3(model)));
             boxShader.setMat3("rotation", rotation);
 
+            boxShader.setVec3("viewPosition", camera->Position());
+
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
 

@@ -4,21 +4,33 @@ out vec4 FragColor;
 uniform vec3 objectColor;
 uniform vec3 lightColor;
 uniform vec3 lightPosition;
+uniform vec3 viewPosition;
 
-in vec3 FragPosition;
-in vec3 Normal;
+in vec3 fragPosition;
+in vec3 normal;
+
+float ambientStrength = 0.1f;
+float specularStrength = 0.5f;
 
 void main()
 {
-    float ambientStrength = 0.1f;
+    vec3 unitNormal = normalize(normal);
+
+    // Ambient lighting
     vec3 ambient = ambientStrength * lightColor;
 
-    vec3 normal = normalize(Normal);
-    vec3 lightDirection = normalize(lightPosition - FragPosition);
-    float diff = max(dot(normal, lightDirection), 0.0f);
+    // Diffuse lighting
+    vec3 lightDirection = normalize(lightPosition - fragPosition);
+    float diff = max(dot(unitNormal, lightDirection), 0.0f);
     vec3 diffuse = diff * lightColor;
 
-    vec3 result = (ambient + diffuse) * objectColor;
+    // Specular lighting
+    vec3 viewDirection = normalize(viewPosition - fragPosition);
+    vec3 reflectDirection = reflect(-lightDirection, unitNormal);
+    float shine = pow(max(dot(viewDirection, reflectDirection), 0.0f), 32);
+    vec3 specular = specularStrength * shine * lightColor;
+
+    vec3 result = (ambient + diffuse + specular) * objectColor;
 
     FragColor = vec4(result, 1.0);
 }

@@ -1,14 +1,12 @@
 #ifndef FPS_CAMERA_H
 #define FPS_CAMERA_H
 
-#include <iostream>
+#include <algorithm>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
-#include "openGLCommon.h"
-
-#include "camera/Camera.h"
+#include "camera/Camera.hpp"
 
 class FPSCamera : public Camera
 {
@@ -69,18 +67,19 @@ public:
 
     ~FPSCamera() {}
 
-    glm::mat4 GetViewMatrix() const
-    {
+    glm::mat4 GetViewMatrix() const override{
         return glm::lookAt<float>(_position, _position + _front, _up);
     }
 
-    float Zoom() const
-    {
+    float Zoom() const override {
         return _zoom;
     }
 
-    void ProcessKeyboard(glm::vec3 direction, float deltaTime)
-    {
+    glm::vec3 Position() const override {
+        return _position;
+    }
+
+    void ProcessKeyboard(glm::vec3 direction, float deltaTime) override {
         if (glm::dot(direction, direction))
         {
             float velocity = _movementSpeed * deltaTime;
@@ -89,8 +88,7 @@ public:
         }
     }
 
-    void ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch = true)
-    {
+    void ProcessMouseMovement(float xOffset, float yOffset, bool constrainPitch = true) override {
         xOffset *= _mouseSensitivity;
         yOffset *= _mouseSensitivity;
 
@@ -105,8 +103,7 @@ public:
         UpdateCameraVectors();
     }
 
-    void ProcessMouseScroll(float yOffset)
-    {
+    void ProcessMouseScroll(float yOffset) override {
         _zoom = std::clamp(_zoom + (yOffset * _zoomSensitivity), glm::radians(1.0f), glm::quarter_pi<float>());
     }
 };
