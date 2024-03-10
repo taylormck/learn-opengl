@@ -1,7 +1,9 @@
 #include "glm/fwd.hpp"
+#include "materials/Material.hpp"
 #include <iostream>
 #include <filesystem>
 #include <memory>
+#include <vector>
 
 #define STB_IMAGE_IMPLEMENTATION
 #include "stb_image.h"
@@ -13,6 +15,15 @@
 #include "shader.hpp"
 #include "camera/Camera.hpp"
 #include "camera/FlyingCamera.hpp"
+
+#include "materials/Emerald.hpp"
+#include "materials/Jade.hpp"
+#include "materials/Obsidian.hpp"
+#include "materials/Pearl.hpp"
+#include "materials/Ruby.hpp"
+
+#include "lights/Light.hpp"
+#include "lights/WhiteLight.hpp"
 
 #include "openGLCommon.h"
 
@@ -95,28 +106,26 @@ int main() {
     glfwSetCursorPosCallback(window, mouseCallback);
     glfwSetScrollCallback(window, scrollCallback);
 
-    glm::vec3 lightColor = glm::vec3(1.0f, 1.0f, 1.0f);
-    glm::vec3 objectColor = glm::vec3(1.0f, 0.5f, 0.31f);
-
     std::filesystem::path root = std::filesystem::current_path();
     std::string shaderFolder = root.string() + "/../shaders/";
 
     Shader boxShader(
         shaderFolder + "vertex/modelViewProjectionWithNormal.vert",
-        shaderFolder + "fragment/litOrange.frag"
+        shaderFolder + "fragment/litMaterial.frag"
     );
-
-    boxShader.use();
-    boxShader.setVec3("lightColor", lightColor);
-    boxShader.setVec3("objectColor", objectColor);
 
     Shader lightShader(
         shaderFolder + "vertex/modelViewProjection.vert",
         shaderFolder + "fragment/light.frag"
     );
 
-    lightShader.use();
-    lightShader.setVec3("lightColor", lightColor);
+    std::vector<Material::Material> materials = {
+        Material::Emerald,
+        Material::Jade,
+        Material::Obsidian,
+        Material::Pearl,
+        Material::Ruby
+    };
 
     // Cube vertices, with texture
     GLfloat vertices[] = {
@@ -163,7 +172,7 @@ int main() {
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
     };
 
-    glm::vec3 cubePositions[] = {
+    std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f, 0.0f, 0.0f),
         glm::vec3(2.0f, 5.0f, -15.0f),
         glm::vec3(-1.5f, -2.2f, -2.5f),
@@ -226,17 +235,30 @@ int main() {
         glm::mat4 view = camera->GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
 
-        lightShader.use();
-
         model = glm::mat4(1.0f);
         model = glm::rotate(model, currentTime, glm::vec3(0.0f, 1.0f, 0.0f));
         model = glm::translate(model, startingLightPosition);
         model = glm::scale(model, glm::vec3(0.2f));
+
+        glm::vec3 lightPosition = glm::vec3(model[3]);
+
+        Light::Light light = Light::WhiteLight(lightPosition);
+
+        light.sourceColor = glm::vec3(
+            sin(currentTime * 2.0f),
+            sin(currentTime * 0.7f),
+            sin(currentTime * 1.3f)
+        );
+
+        light.ambient *= light.sourceColor;
+        light.diffuse *= light.sourceColor;
+        light.specular *= light.sourceColor;
+
+        lightShader.use();
         lightShader.setMat4("model", model);
         lightShader.setMat4("view", view);
         lightShader.setMat4("projection", projection);
-
-        glm::vec3 lightPosition = glm::vec3(model[3]);
+        lightShader.setVec3("lightColor", light.sourceColor);
 
         glBindVertexArray(lightVAO);
         glDrawArrays(GL_TRIANGLES, 0, 36);
@@ -244,11 +266,11 @@ int main() {
         boxShader.use();
         boxShader.setMat4("view", view);
         boxShader.setMat4("projection", projection);
-        boxShader.setVec3("lightPosition", lightPosition);
+        boxShader.setLight(light);
 
         glBindVertexArray(boxCoordinatesVAO);
 
-        for (unsigned int i = 0; i < 10; i++) {
+        for (unsigned int i = 0; i < cubePositions.size(); i++) {
             float angle = 20.0f * i;
 
             model = glm::mat4(1.0f);
@@ -260,6 +282,8 @@ int main() {
             boxShader.setMat3("rotation", rotation);
 
             boxShader.setVec3("viewPosition", camera->Position());
+
+            boxShader.setMaterial(materials[i % materials.size()]);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }

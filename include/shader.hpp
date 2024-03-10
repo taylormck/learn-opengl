@@ -10,6 +10,10 @@
 #include <glm/gtc/type_ptr.hpp>
 
 #include "glm/fwd.hpp"
+
+#include "materials/Material.hpp"
+#include "lights/Light.hpp"
+
 #include "openGLCommon.h"
 
 class Shader {
@@ -33,7 +37,7 @@ private:
         }
         catch (const std::ifstream::failure& e) {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
-            std::cout << "code: " << e.code() << "\nwhat: " << e.what() << std::endl;
+            std::cout << "path: " << path << "\ncode: " << e.code() << "\nwhat: " << e.what() << std::endl;
         }
 
         return shaderCode;
@@ -90,6 +94,20 @@ public:
 
     void use() {
         glUseProgram(id);
+    }
+
+    void setMaterial(const Material::Material& material) const {
+        setVec3("material.ambient", material.ambient);
+        setVec3("material.diffuse", material.diffuse);
+        setVec3("material.specular", material.specular);
+        setFloat("material.shininess", material.shininess);
+    }
+
+    void setLight(const Light::Light& light) const {
+        setVec3("light.position", light.position);
+        setVec3("light.ambient", light.ambient);
+        setVec3("light.diffuse", light.diffuse);
+        setVec3("light.specular", light.specular);
     }
 
     void setBool(const std::string& name, bool value) const {
