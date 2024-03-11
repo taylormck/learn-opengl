@@ -155,6 +155,7 @@ int main() {
 
     GLuint diffuseMap = loadTexture((textureFolder + "container2.png").c_str());
     GLuint specularMap = loadTexture((textureFolder + "container2_specular.png").c_str());
+    GLuint emissionMap = loadTexture((textureFolder + "matrix.jpg").c_str());
 
     Shader boxShader(
         shaderFolder + "vertex/modelViewProjectionWithNormalAndTex.vert",
@@ -164,6 +165,7 @@ int main() {
     boxShader.use();
     boxShader.setInt("material.diffuse", 0);
     boxShader.setInt("material.specular", 1);
+    boxShader.setInt("material.emission", 2);
 
     Shader lightShader(
         shaderFolder + "vertex/modelViewProjection.vert",
@@ -220,6 +222,7 @@ int main() {
         boxShader.setMat4("projection", projection);
         boxShader.setLight(light);
         boxShader.setFloat("material.shininess", 64.0f);
+        boxShader.setFloat("material.glow", sin(currentTime) / 2.0f + 0.5f);
 
         model = glm::mat4(1.0f);
         model = glm::translate(model, cubePositions[0]);
@@ -229,6 +232,9 @@ int main() {
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularMap);
+
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, emissionMap);
 
         boxShader.setVec3("viewPosition", camera->Position());
 
