@@ -1,5 +1,3 @@
-#include "glm/fwd.hpp"
-#include "materials/Material.hpp"
 #include <iostream>
 #include <filesystem>
 #include <memory>
@@ -16,16 +14,12 @@
 #include "camera/Camera.hpp"
 #include "camera/FlyingCamera.hpp"
 
-#include "materials/Emerald.hpp"
-#include "materials/Jade.hpp"
-#include "materials/Obsidian.hpp"
-#include "materials/Pearl.hpp"
-#include "materials/Ruby.hpp"
-
 #include "lights/Light.hpp"
 #include "lights/WhiteLight.hpp"
 
-#include "openGLCommon.h"
+#include "models/Box.hpp"
+
+#include "openGLCommon.hpp"
 
 float deltaTime = 0.0f;
 float lastFrameTime = 0.0f;
@@ -78,99 +72,103 @@ void framebufferSizeCallback(__attribute__((unused))GLFWwindow* window, int widt
     glViewport(0, 0, width, height);
 }
 
+struct StbiImageDeleter {
+    void operator()(unsigned char* data) {
+        stbi_image_free(data);
+    }
+};
+
+GLuint loadTexture(char const* path) {
+    GLuint textureId;
+    glGenTextures(1, &textureId);
+
+    GLint width, height, nrComponents;
+
+    std::unique_ptr<unsigned char, StbiImageDeleter> data (stbi_load(path, &width, &height, &nrComponents, 0));
+
+    if (!data.get()) {
+        std::cout << "Failed to load texture" << std::endl;
+        return textureId;
+    }
+
+    GLenum format;
+
+    switch(nrComponents) {
+        case 1:
+            format = GL_RED;
+            break;
+        case 3:
+            format = GL_RGB;
+            break;
+        case 4:
+            format = GL_RGBA;
+            break;
+    }
+
+    glBindTexture(GL_TEXTURE_2D, textureId);
+    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data.get());
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    return textureId;
+};
+
+struct GLFWDeleter {
+    void operator()(__attribute__((unused)) GLFWwindow* window) {
+        glfwTerminate();
+    }
+};
+
 int main() {
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Open GL Practice", NULL, NULL);
+    std::unique_ptr<GLFWwindow, GLFWDeleter> window (glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Open GL Practice", NULL, NULL));
 
     if (!window) {
         std::cout << "Failed to create GLFW window" << std::endl;
-        glfwTerminate();
         return -1;
     }
 
-    glfwMakeContextCurrent(window);
-    glfwSetFramebufferSizeCallback(window, framebufferSizeCallback);
+    glfwMakeContextCurrent(window.get());
+    glfwSetFramebufferSizeCallback(window.get(), framebufferSizeCallback);
 
     if (!gladLoadGL(glfwGetProcAddress)) {
         std::cout << "Failed to load GLAD" << std::endl;
-        glfwTerminate();
         return -1;
     }
 
     glEnable(GL_DEPTH_TEST);
-    glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
-    glfwSetCursorPosCallback(window, mouseCallback);
-    glfwSetScrollCallback(window, scrollCallback);
+    glfwSetInputMode(window.get(), GLFW_CURSOR, GLFW_CURSOR_DISABLED);
+    glfwSetCursorPosCallback(window.get(), mouseCallback);
+    glfwSetScrollCallback(window.get(), scrollCallback);
 
     std::filesystem::path root = std::filesystem::current_path();
     std::string shaderFolder = root.string() + "/../shaders/";
+    std::string textureFolder = root.string() + "/../textures/";
+
+    GLuint diffuseMap = loadTexture((textureFolder + "container2.png").c_str());
+    GLuint specularMap = loadTexture((textureFolder + "container2_specular.png").c_str());
 
     Shader boxShader(
-        shaderFolder + "vertex/modelViewProjectionWithNormal.vert",
-        shaderFolder + "fragment/litMaterial.frag"
+        shaderFolder + "vertex/modelViewProjectionWithNormalAndTex.vert",
+        shaderFolder + "fragment/litMaterialTextureMap.frag"
     );
+
+    boxShader.use();
+    boxShader.setInt("material.diffuse", 0);
+    boxShader.setInt("material.specular", 1);
 
     Shader lightShader(
         shaderFolder + "vertex/modelViewProjection.vert",
         shaderFolder + "fragment/light.frag"
     );
-
-    std::vector<Material::Material> materials = {
-        Material::Emerald,
-        Material::Jade,
-        Material::Obsidian,
-        Material::Pearl,
-        Material::Ruby
-    };
-
-    // Cube vertices, with texture
-    GLfloat vertices[] = {
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,
-        0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-        0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-        0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-        -0.5f,  0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-        -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f, 
-
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f,  0.0f, 1.0f,
-
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f, -1.0f,  0.0f,  0.0f,
-
-        0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-        0.5f,  0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-        0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-        0.5f, -0.5f, -0.5f,  1.0f,  0.0f,  0.0f,
-        0.5f, -0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-        0.5f,  0.5f,  0.5f,  1.0f,  0.0f,  0.0f,
-
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-        0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f,  0.5f,  0.0f, -1.0f,  0.0f,
-        -0.5f, -0.5f, -0.5f,  0.0f, -1.0f,  0.0f,
-
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-        0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,
-        0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f,  0.5f,  0.0f,  1.0f,  0.0f,
-        -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f
-    };
 
     std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -187,45 +185,14 @@ int main() {
 
     glm::vec3 startingLightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
 
-    unsigned int boxCoordinatesVBO, boxCoordinatesVAO, lightVAO;
-    glGenVertexArrays(1, &boxCoordinatesVAO);
-    glGenVertexArrays(1, &lightVAO);
-    glGenBuffers(1, &boxCoordinatesVBO);
+    Box::Init();
 
-    glBindBuffer(GL_ARRAY_BUFFER, boxCoordinatesVBO);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    #pragma region Set up Boxes VAO
-
-    glBindVertexArray(boxCoordinatesVAO);
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    // normal attribute
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)(3 * sizeof(GLfloat)));
-    glEnableVertexAttribArray(1);
-
-    #pragma endregion
-
-    #pragma region
-
-    glBindVertexArray(lightVAO);
-    // position attribute
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 6 * sizeof(GLfloat), (void*)0);
-    glEnableVertexAttribArray(0);
-
-    #pragma endregion
-
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-    glBindVertexArray(0);
-
-    while (!glfwWindowShouldClose(window)) {
+    while (!glfwWindowShouldClose(window.get())) {
         const float currentTime = glfwGetTime();
         deltaTime = currentTime - lastFrameTime;
         lastFrameTime = currentTime;
 
-        processInput(window);
+        processInput(window.get());
 
         // Render
         glClearColor(0.1f, 0.1f, 0.1f, 0.0f);
@@ -244,61 +211,37 @@ int main() {
 
         Light::Light light = Light::WhiteLight(lightPosition);
 
-        light.sourceColor = glm::vec3(
-            sin(currentTime * 2.0f),
-            sin(currentTime * 0.7f),
-            sin(currentTime * 1.3f)
-        );
-
-        light.ambient *= light.sourceColor;
-        light.diffuse *= light.sourceColor;
-        light.specular *= light.sourceColor;
-
         lightShader.use();
-        lightShader.setMat4("model", model);
-        lightShader.setMat4("view", view);
-        lightShader.setMat4("projection", projection);
         lightShader.setVec3("lightColor", light.sourceColor);
-
-        glBindVertexArray(lightVAO);
-        glDrawArrays(GL_TRIANGLES, 0, 36);
+        Box::Draw(lightShader, model, view, projection);
 
         boxShader.use();
         boxShader.setMat4("view", view);
         boxShader.setMat4("projection", projection);
         boxShader.setLight(light);
+        boxShader.setFloat("material.shininess", 64.0f);
 
-        glBindVertexArray(boxCoordinatesVAO);
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, cubePositions[0]);
 
-        for (unsigned int i = 0; i < cubePositions.size(); i++) {
-            float angle = 20.0f * i;
+        glActiveTexture(GL_TEXTURE0);
+        glBindTexture(GL_TEXTURE_2D, diffuseMap);
 
-            model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePositions[i]);
-            model = glm::rotate(model, currentTime + angle, glm::normalize(glm::vec3(1.0f, 1.0f, 1.0f)));
-            boxShader.setMat4("model", model);
+        glActiveTexture(GL_TEXTURE1);
+        glBindTexture(GL_TEXTURE_2D, specularMap);
 
-            glm::mat3 rotation = glm::transpose(glm::inverse(glm::mat3(model)));
-            boxShader.setMat3("rotation", rotation);
+        boxShader.setVec3("viewPosition", camera->Position());
 
-            boxShader.setVec3("viewPosition", camera->Position());
-
-            boxShader.setMaterial(materials[i % materials.size()]);
-
-            glDrawArrays(GL_TRIANGLES, 0, 36);
-        }
+        Box::Draw(boxShader, model, view, projection);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
 
-        glfwSwapBuffers(window);
+        glfwSwapBuffers(window.get());
         glfwPollEvents();
     }
 
-    glDeleteVertexArrays(1, &boxCoordinatesVAO);
-    glDeleteBuffers(1, &boxCoordinatesVBO);
-
-    glfwTerminate();
+    Box::Deinit();
 
     return 0;
 }

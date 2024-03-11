@@ -11,10 +11,9 @@
 
 #include "glm/fwd.hpp"
 
-#include "materials/Material.hpp"
 #include "lights/Light.hpp"
 
-#include "openGLCommon.h"
+#include "openGLCommon.hpp"
 
 class Shader {
 private:
@@ -94,13 +93,6 @@ public:
 
     void use() {
         glUseProgram(id);
-    }
-
-    void setMaterial(const Material::Material& material) const {
-        setVec3("material.ambient", material.ambient);
-        setVec3("material.diffuse", material.diffuse);
-        setVec3("material.specular", material.specular);
-        setFloat("material.shininess", material.shininess);
     }
 
     void setLight(const Light::Light& light) const {
