@@ -1,5 +1,5 @@
-#include <iostream>
 #include <filesystem>
+#include <iostream>
 #include <memory>
 #include <vector>
 
@@ -10,9 +10,11 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include "shader.hpp"
+#include <boost/format.hpp>
+
 #include "camera/Camera.hpp"
 #include "camera/FlyingCamera.hpp"
+#include "shader.hpp"
 
 #include "lights/Light.hpp"
 #include "lights/WhiteLight.hpp"
@@ -29,9 +31,10 @@ constexpr unsigned int SCR_HEIGHT = 600;
 
 float lastX = 400, lastY = 300;
 
-std::unique_ptr<Camera> camera = std::make_unique<FlyingCamera>(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
+std::unique_ptr<Camera> camera =
+    std::make_unique<FlyingCamera>(glm::vec3(0.0f, 0.0f, 10.0f), glm::vec3(0.0f, 1.0f, 0.0f));
 
-void processInput(GLFWwindow* window) {
+void processInput(GLFWwindow *window) {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
 
@@ -53,7 +56,7 @@ void processInput(GLFWwindow* window) {
     camera->ProcessKeyboard(movementInput, deltaTime);
 }
 
-void mouseCallback([[maybe_unused]]GLFWwindow* window, double xPosition, double yPosition) {
+void mouseCallback([[maybe_unused]] GLFWwindow *window, double xPosition, double yPosition) {
     float xOffset = (xPosition - lastX);
     float yOffset = (yPosition - lastY);
     lastX = xPosition;
@@ -62,29 +65,28 @@ void mouseCallback([[maybe_unused]]GLFWwindow* window, double xPosition, double 
     camera->ProcessMouseMovement(xOffset, yOffset);
 }
 
-void scrollCallback([[maybe_unused]]GLFWwindow* window, [[maybe_unused]]double xOffset, double yOffset) {
+void scrollCallback([[maybe_unused]] GLFWwindow *window, [[maybe_unused]] double xOffset, double yOffset) {
     camera->ProcessMouseScroll(yOffset);
 }
 
-void framebufferSizeCallback(__attribute__((unused))GLFWwindow* window, int width, int height) {
-    // make sure the viewport matches the new window dimensions; note that width and 
-    // height will be significantly larger than specified on retina displays.
+void framebufferSizeCallback(__attribute__((unused)) GLFWwindow *window, int width, int height) {
+    // make sure the viewport matches the new window dimensions; note that width
+    // and height will be significantly larger than specified on retina
+    // displays.
     glViewport(0, 0, width, height);
 }
 
 struct StbiImageDeleter {
-    void operator()(unsigned char* data) {
-        stbi_image_free(data);
-    }
+    void operator()(unsigned char *data) { stbi_image_free(data); }
 };
 
-GLuint loadTexture(char const* path) {
+GLuint loadTexture(char const *path) {
     GLuint textureId;
     glGenTextures(1, &textureId);
 
     GLint width, height, nrComponents;
 
-    std::unique_ptr<unsigned char, StbiImageDeleter> data (stbi_load(path, &width, &height, &nrComponents, 0));
+    std::unique_ptr<unsigned char, StbiImageDeleter> data(stbi_load(path, &width, &height, &nrComponents, 0));
 
     if (!data.get()) {
         std::cout << "Failed to load texture" << std::endl;
@@ -93,16 +95,16 @@ GLuint loadTexture(char const* path) {
 
     GLenum format;
 
-    switch(nrComponents) {
-        case 1:
-            format = GL_RED;
-            break;
-        case 3:
-            format = GL_RGB;
-            break;
-        case 4:
-            format = GL_RGBA;
-            break;
+    switch (nrComponents) {
+    case 1:
+        format = GL_RED;
+        break;
+    case 3:
+        format = GL_RGB;
+        break;
+    case 4:
+        format = GL_RGBA;
+        break;
     }
 
     glBindTexture(GL_TEXTURE_2D, textureId);
@@ -118,9 +120,7 @@ GLuint loadTexture(char const* path) {
 };
 
 struct GLFWDeleter {
-    void operator()(__attribute__((unused)) GLFWwindow* window) {
-        glfwTerminate();
-    }
+    void operator()(__attribute__((unused)) GLFWwindow *window) { glfwTerminate(); }
 };
 
 int main() {
@@ -129,7 +129,9 @@ int main() {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    std::unique_ptr<GLFWwindow, GLFWDeleter> window (glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Open GL Practice", NULL, NULL));
+    std::unique_ptr<GLFWwindow, GLFWDeleter> window(
+        glfwCreateWindow(SCR_WIDTH, SCR_HEIGHT, "Open GL Practice", NULL, NULL)
+    );
 
     if (!window) {
         std::cout << "Failed to create GLFW window" << std::endl;
@@ -155,7 +157,6 @@ int main() {
 
     GLuint diffuseMap = loadTexture((textureFolder + "container2.png").c_str());
     GLuint specularMap = loadTexture((textureFolder + "container2_specular.png").c_str());
-    GLuint emissionMap = loadTexture((textureFolder + "matrix.jpg").c_str());
 
     Shader boxShader(
         shaderFolder + "vertex/modelViewProjectionWithNormalAndTex.vert",
@@ -167,10 +168,7 @@ int main() {
     boxShader.setInt("material.specular", 1);
     boxShader.setInt("material.emission", 2);
 
-    Shader lightShader(
-        shaderFolder + "vertex/modelViewProjection.vert",
-        shaderFolder + "fragment/light.frag"
-    );
+    Shader lightShader(shaderFolder + "vertex/modelViewProjection.vert", shaderFolder + "fragment/light.frag");
 
     std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -232,9 +230,6 @@ int main() {
 
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, specularMap);
-
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, emissionMap);
 
         boxShader.setVec3("viewPosition", camera->Position());
 
