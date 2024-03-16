@@ -10,8 +10,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
-#include <boost/format.hpp>
-
 #include "camera/Camera.hpp"
 #include "camera/FlyingCamera.hpp"
 #include "shader.hpp"
