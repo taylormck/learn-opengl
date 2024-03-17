@@ -155,7 +155,12 @@ int main() {
 
     GLuint diffuseMap = loadTexture((textureFolder + "container2.png").c_str());
     GLuint specularMap = loadTexture((textureFolder + "container2_specular.png").c_str());
-    Light::DirectionalLight light = Light::DirectionalLight(Color::White, glm::vec3(-0.2f, -1.0f, -0.3f));
+
+    Light::DirectionalLight directionalLight = Light::DirectionalLight(Color::White, glm::vec3(-0.2f, -1.0f, -0.3f));
+
+    glm::vec3 startingLightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
+
+    Light::PointLight pointLight = Light::PointLight(Color::Red, Light::BasicAttenuation, startingLightPosition);
 
     Shader boxShader(
         shaderFolder + "vertex/modelViewProjectionWithNormalAndTex.vert",
@@ -165,10 +170,9 @@ int main() {
     boxShader.use();
     boxShader.setInt("material.diffuse", 0);
     boxShader.setInt("material.specular", 1);
-    boxShader.setDirectionalLight(light);
+    boxShader.setDirectionalLight(directionalLight);
 
-    // Shader lightShader(shaderFolder + "vertex/modelViewProjection.vert", shaderFolder + "fragment/light.frag");
-    // glm::vec3 startingLightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
+    Shader lightShader(shaderFolder + "vertex/modelViewProjection.vert", shaderFolder + "fragment/light.frag");
 
     std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -198,28 +202,26 @@ int main() {
 
         glm::mat4 projection = glm::perspective(camera->Zoom(), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera->GetViewMatrix();
-        glm::mat4 model = glm::mat4(1.0f);
 
-        // model = glm::mat4(1.0f);
+        glm::mat4 pointLightModel = glm::mat4(1.0f);
         // model = glm::rotate(model, currentTime, glm::vec3(0.0f, 1.0f, 0.0f));
-        // model = glm::translate(model, startingLightPosition);
-        // model = glm::scale(model, glm::vec3(0.2f));
+        pointLightModel = glm::translate(pointLightModel, startingLightPosition);
+        pointLightModel = glm::scale(pointLightModel, glm::vec3(0.2f));
 
         // glm::vec3 lightPosition = glm::vec3(model[3]);
 
         // Light::Light light = Light::WhiteLight(lightPosition);
 
-        // lightShader.use();
-        // lightShader.setVec3("lightColor", light.specular);
-        // Box::Draw(lightShader, model, view, projection);
+        lightShader.use();
+        lightShader.setVec3("lightColor", pointLight.color.specular);
+        Box::Draw(lightShader, pointLightModel, view, projection);
 
         boxShader.use();
         boxShader.setMat4("view", view);
         boxShader.setMat4("projection", projection);
         boxShader.setFloat("material.shininess", 64.0f);
         boxShader.setFloat("material.glow", sin(currentTime) / 2.0f + 0.5f);
-
-        // model = glm::mat4(1.0f);
+        boxShader.setPointLight(pointLight);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
@@ -233,7 +235,7 @@ int main() {
             glm::vec3 cubePosition = cubePositions[i];
             GLfloat angle = 20.0f * i;
 
-            glm::mat4 boxModel = glm::translate(model, cubePosition);
+            glm::mat4 boxModel = glm::translate(glm::mat4(1.0f), cubePosition);
             boxModel = glm::rotate(boxModel, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
             Box::Draw(boxShader, boxModel, view, projection);

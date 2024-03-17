@@ -12,6 +12,7 @@
 #include "glm/fwd.hpp"
 
 #include "lights/DirectionalLight.hpp"
+#include "lights/PointLight.hpp"
 
 #include "openGLCommon.hpp"
 
@@ -93,10 +94,20 @@ public:
     void use() { glUseProgram(id); }
 
     void setDirectionalLight(const Light::DirectionalLight &light) const {
-        setVec3("light.ambient", light.color.ambient);
-        setVec3("light.diffuse", light.color.diffuse);
-        setVec3("light.specular", light.color.specular);
-        setVec3("light.direction", light.direction);
+        setVec3("directionalLight.color.ambient", light.color.ambient);
+        setVec3("directionalLight.color.diffuse", light.color.diffuse);
+        setVec3("directionalLight.color.specular", light.color.specular);
+        setVec3("directionalLight.direction", light.direction);
+    }
+
+    void setPointLight(const Light::PointLight &light) const {
+        setVec3("pointLight.position", light.position);
+        setVec3("pointLight.color.ambient", light.color.ambient);
+        setVec3("pointLight.color.diffuse", light.color.diffuse);
+        setVec3("pointLight.color.specular", light.color.specular);
+        setFloat("pointLight.attenuation.constant", light.attenuation.constant);
+        setFloat("pointLight.attenuation.linear", light.attenuation.linear);
+        setFloat("pointLight.attenuation.quadratic", light.attenuation.quadratic);
     }
 
     void setBool(const std::string &name, bool value) const {
