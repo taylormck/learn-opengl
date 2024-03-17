@@ -229,8 +229,13 @@ int main() {
 
         boxShader.setVec3("viewPosition", camera->Position());
 
-        for (const auto &cubePosition : cubePositions) {
+        for (size_t i = 0; i < cubePositions.size(); ++i) {
+            glm::vec3 cubePosition = cubePositions[i];
+            GLfloat angle = 20.0f * i;
+
             glm::mat4 boxModel = glm::translate(model, cubePosition);
+            boxModel = glm::rotate(boxModel, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+
             Box::Draw(boxShader, boxModel, view, projection);
         }
 
