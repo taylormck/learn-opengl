@@ -15,7 +15,10 @@
 #include "shader.hpp"
 
 #include "colors/Color.hpp"
+#include "lights/Attenuation.hpp"
 #include "lights/DirectionalLight.hpp"
+#include "lights/PointLight.hpp"
+#include "lights/SpotLight.hpp"
 
 #include "models/Box.hpp"
 
@@ -156,11 +159,19 @@ int main() {
     GLuint diffuseMap = loadTexture((textureFolder + "container2.png").c_str());
     GLuint specularMap = loadTexture((textureFolder + "container2_specular.png").c_str());
 
-    Light::DirectionalLight directionalLight = Light::DirectionalLight(Color::White, glm::vec3(-0.2f, -1.0f, -0.3f));
-
     glm::vec3 startingLightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
 
+    Light::DirectionalLight directionalLight = Light::DirectionalLight(Color::Cyan, glm::vec3(-0.2f, -1.0f, -0.3f));
     Light::PointLight pointLight = Light::PointLight(Color::Red, Light::BasicAttenuation, startingLightPosition);
+
+    Light::SpotLight spotLight = Light::SpotLight(
+        Color::White,
+        Light::BasicAttenuation,
+        camera->Position(),
+        camera->Front(),
+        glm::cos(glm::radians(12.5f)),
+        glm::cos(glm::radians(17.5f))
+    );
 
     Shader boxShader(
         shaderFolder + "vertex/modelViewProjectionWithNormalAndTex.vert",
@@ -204,17 +215,15 @@ int main() {
         glm::mat4 view = camera->GetViewMatrix();
 
         glm::mat4 pointLightModel = glm::mat4(1.0f);
-        // model = glm::rotate(model, currentTime, glm::vec3(0.0f, 1.0f, 0.0f));
         pointLightModel = glm::translate(pointLightModel, startingLightPosition);
         pointLightModel = glm::scale(pointLightModel, glm::vec3(0.2f));
-
-        // glm::vec3 lightPosition = glm::vec3(model[3]);
-
-        // Light::Light light = Light::WhiteLight(lightPosition);
 
         lightShader.use();
         lightShader.setVec3("lightColor", pointLight.color.specular);
         Box::Draw(lightShader, pointLightModel, view, projection);
+
+        spotLight.position = camera->Position();
+        spotLight.direction = camera->Front();
 
         boxShader.use();
         boxShader.setMat4("view", view);
@@ -222,6 +231,7 @@ int main() {
         boxShader.setFloat("material.shininess", 64.0f);
         boxShader.setFloat("material.glow", sin(currentTime) / 2.0f + 0.5f);
         boxShader.setPointLight(pointLight);
+        boxShader.setSpotLight(spotLight);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);

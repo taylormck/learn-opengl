@@ -13,6 +13,7 @@
 
 #include "lights/DirectionalLight.hpp"
 #include "lights/PointLight.hpp"
+#include "lights/SpotLight.hpp"
 
 #include "openGLCommon.hpp"
 
@@ -108,6 +109,19 @@ public:
         setFloat("pointLight.attenuation.constant", light.attenuation.constant);
         setFloat("pointLight.attenuation.linear", light.attenuation.linear);
         setFloat("pointLight.attenuation.quadratic", light.attenuation.quadratic);
+    }
+
+    void setSpotLight(const Light::SpotLight &light) const {
+        setVec3("spotLight.position", light.position);
+        setVec3("spotLight.direction", light.direction);
+        setFloat("spotLight.innerRadius", light.innerRadius);
+        setFloat("spotLight.outerRadius", light.outerRadius);
+        setVec3("spotLight.color.ambient", light.color.ambient);
+        setVec3("spotLight.color.diffuse", light.color.diffuse);
+        setVec3("spotLight.color.specular", light.color.specular);
+        setFloat("spotLight.attenuation.constant", light.attenuation.constant);
+        setFloat("spotLight.attenuation.linear", light.attenuation.linear);
+        setFloat("spotLight.attenuation.quadratic", light.attenuation.quadratic);
     }
 
     void setBool(const std::string &name, bool value) const {

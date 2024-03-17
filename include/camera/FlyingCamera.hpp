@@ -8,7 +8,7 @@
 
 #include "camera/Camera.hpp"
 
-class FlyingCamera: public Camera {
+class FlyingCamera : public Camera {
 private:
     static constexpr float DEFAULT_YAW = -glm::half_pi<float>();
     static constexpr float DEFAULT_PITCH = 0.0f;
@@ -35,15 +35,11 @@ private:
     float _zoomSensitivity;
 
     void UpdateCameraVectors() {
-        glm::vec3 front = glm::vec3(
-            cos(_yaw) * cos(_pitch),
-            sin(_pitch),
-            sin(_yaw) * cos(_pitch)
-        );
+        glm::vec3 front = glm::vec3(cos(_yaw) * cos(_pitch), sin(_pitch), sin(_yaw) * cos(_pitch));
 
         _front = glm::normalize(front);
         _right = glm::normalize(glm::cross(_front, _worldUp));
-        _up    = glm::normalize(glm::cross(_right, _front));
+        _up = glm::normalize(glm::cross(_right, _front));
     }
 
 public:
@@ -52,8 +48,10 @@ public:
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
         float yaw = DEFAULT_YAW,
         float pitch = DEFAULT_PITCH
-    ): _front(glm::vec3(0.0f, 0.0f, -1.0f)), _movementSpeed(DEFAULT_SPEED),
-    _mouseSensitivity(DEFAULT_MOUSE_SENSITIVITY), _zoom(DEFAULT_ZOOM), _zoomSensitivity(DEFAULT_ZOOM_SENSITIVITY) {
+    )
+        : _front(glm::vec3(0.0f, 0.0f, -1.0f)), _movementSpeed(DEFAULT_SPEED),
+          _mouseSensitivity(DEFAULT_MOUSE_SENSITIVITY), _zoom(DEFAULT_ZOOM),
+          _zoomSensitivity(DEFAULT_ZOOM_SENSITIVITY) {
         _position = position;
         _worldUp = glm::normalize(up);
         _yaw = yaw;
@@ -63,17 +61,13 @@ public:
 
     ~FlyingCamera() {}
 
-    glm::mat4 GetViewMatrix() const override {
-        return glm::lookAt<float>(_position, _position + _front, _up);
-    }
+    glm::mat4 GetViewMatrix() const override { return glm::lookAt<float>(_position, _position + _front, _up); }
 
-    float Zoom() const override {
-        return _zoom;
-    }
+    float Zoom() const override { return _zoom; }
 
-    glm::vec3 Position() const override {
-        return _position;
-    }
+    glm::vec3 Position() const override { return _position; }
+
+    glm::vec3 Front() const override { return _front; }
 
     void ProcessKeyboard(glm::vec3 direction, float deltaTime) override {
         if (glm::dot(direction, direction)) {

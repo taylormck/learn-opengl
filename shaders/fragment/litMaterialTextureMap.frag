@@ -29,11 +29,21 @@ struct PointLight {
     vec3 position;
 };
 
+struct SpotLight {
+    Color color;
+    Attenuation attenuation;
+    vec3 position;
+    vec3 direction;
+    float innerRadius;
+    float outerRadius;
+};
+
 out vec4 FragColor;
 
 uniform Material material;
 uniform DirectionalLight directionalLight;
 uniform PointLight pointLight;
+uniform SpotLight spotLight;
 uniform vec3 viewPosition;
 
 in vec3 FragPosition;
@@ -75,7 +85,6 @@ vec3 getDirectionalLight(DirectionalLight light) {
 
 vec3 getPointLight(PointLight light) {
     vec3 lightToPosition = light.position - FragPosition;
-
     vec3 rawLightValue = getLight(light.color, normalize(lightToPosition));
 
     float distance = length(lightToPosition);
@@ -89,6 +98,25 @@ vec3 getPointLight(PointLight light) {
     return rawLightValue * attenuation;
 }
 
+vec3 getSpotLight(SpotLight light) {
+    vec3 lightToPosition = light.position - FragPosition;
+    vec3 direction = normalize(lightToPosition);
+
+    float theta = dot(direction, normalize(-light.direction));
+    float epsilon = light.innerRadius - light.outerRadius;
+    float intensity = clamp((theta - light.outerRadius) / epsilon, 0.0, 1.0);
+
+    float distance = length(lightToPosition);
+
+    float attenuation = 1.0 / (
+        light.attenuation.constant +
+        light.attenuation.linear * distance +
+        light.attenuation.quadratic * distance * distance
+    );
+
+    return getLight(light.color, direction) * intensity * attenuation;
+}
+
 void main()
 {
     unitNormal = normalize(Normal);
@@ -97,8 +125,9 @@ void main()
 
     vec3 directionalLightResult = getDirectionalLight(directionalLight);
     vec3 pointLightResult = getPointLight(pointLight);
+    vec3 spotLightResult = getSpotLight(spotLight);
 
-    vec3 result = directionalLightResult + pointLightResult;
+    vec3 result = directionalLightResult + pointLightResult + spotLightResult;
 
     FragColor = vec4(result, 1.0);
 }
