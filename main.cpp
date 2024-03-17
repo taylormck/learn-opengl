@@ -159,10 +159,7 @@ int main() {
     GLuint diffuseMap = loadTexture((textureFolder + "container2.png").c_str());
     GLuint specularMap = loadTexture((textureFolder + "container2_specular.png").c_str());
 
-    glm::vec3 startingLightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
-
-    Light::DirectionalLight directionalLight = Light::DirectionalLight(Color::Cyan, glm::vec3(-0.2f, -1.0f, -0.3f));
-    Light::PointLight pointLight = Light::PointLight(Color::Red, Light::BasicAttenuation, startingLightPosition);
+    Light::DirectionalLight directionalLight = Light::DirectionalLight(Color::Red, glm::vec3(-0.2f, -1.0f, -0.3f));
 
     Light::SpotLight spotLight = Light::SpotLight(
         Color::White,
@@ -173,6 +170,20 @@ int main() {
         glm::cos(glm::radians(17.5f))
     );
 
+    std::vector<std::pair<glm::vec3, Color::Color>> pointLightDefinitions = {
+        std::pair<glm::vec3, Color::Color>(glm::vec3(0.7f, 0.2f, 2.0f), Color::Cyan),
+        std::pair<glm::vec3, Color::Color>(glm::vec3(2.3f, -3.3f, -4.0f), Color::Blue),
+        std::pair<glm::vec3, Color::Color>(glm::vec3(-4.0f, 2.0f, -12.0f), Color::Purple),
+        std::pair<glm::vec3, Color::Color>(glm::vec3(0.0f, 0.0f, -3.0f), Color::Green)
+    };
+
+    std::vector<Light::PointLight> pointLights;
+    pointLights.reserve(pointLightDefinitions.size());
+
+    for (const std::pair<glm::vec3, Color::Color> &def : pointLightDefinitions) {
+        pointLights.push_back(Light::PointLight(def.second, Light::BasicAttenuation, def.first));
+    }
+
     Shader boxShader(
         shaderFolder + "vertex/modelViewProjectionWithNormalAndTex.vert",
         shaderFolder + "fragment/litMaterialTextureMap.frag"
@@ -182,6 +193,7 @@ int main() {
     boxShader.setInt("material.diffuse", 0);
     boxShader.setInt("material.specular", 1);
     boxShader.setDirectionalLight(directionalLight);
+    boxShader.setInt("numPointLights", pointLights.size());
 
     Shader lightShader(shaderFolder + "vertex/modelViewProjection.vert", shaderFolder + "fragment/light.frag");
 
@@ -214,13 +226,17 @@ int main() {
         glm::mat4 projection = glm::perspective(camera->Zoom(), (float)SCR_WIDTH / (float)SCR_HEIGHT, 0.1f, 100.0f);
         glm::mat4 view = camera->GetViewMatrix();
 
-        glm::mat4 pointLightModel = glm::mat4(1.0f);
-        pointLightModel = glm::translate(pointLightModel, startingLightPosition);
-        pointLightModel = glm::scale(pointLightModel, glm::vec3(0.2f));
-
         lightShader.use();
-        lightShader.setVec3("lightColor", pointLight.color.specular);
-        Box::Draw(lightShader, pointLightModel, view, projection);
+
+        for (const auto &light : pointLights) {
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, light.position);
+            model = glm::scale(model, glm::vec3(0.2f));
+
+            lightShader.setVec3("lightColor", light.color.specular);
+
+            Box::Draw(lightShader, model, view, projection);
+        }
 
         spotLight.position = camera->Position();
         spotLight.direction = camera->Front();
@@ -230,8 +246,11 @@ int main() {
         boxShader.setMat4("projection", projection);
         boxShader.setFloat("material.shininess", 64.0f);
         boxShader.setFloat("material.glow", sin(currentTime) / 2.0f + 0.5f);
-        boxShader.setPointLight(pointLight);
         boxShader.setSpotLight(spotLight);
+
+        for (size_t i = 0; i < pointLights.size(); ++i) {
+            boxShader.setPointLight(pointLights[i], i);
+        }
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
@@ -245,10 +264,11 @@ int main() {
             glm::vec3 cubePosition = cubePositions[i];
             GLfloat angle = 20.0f * i;
 
-            glm::mat4 boxModel = glm::translate(glm::mat4(1.0f), cubePosition);
-            boxModel = glm::rotate(boxModel, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
+            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::translate(model, cubePosition);
+            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
 
-            Box::Draw(boxShader, boxModel, view, projection);
+            Box::Draw(boxShader, model, view, projection);
         }
 
         glBindVertexArray(0);

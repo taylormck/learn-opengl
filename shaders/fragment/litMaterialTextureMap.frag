@@ -38,11 +38,14 @@ struct SpotLight {
     float outerRadius;
 };
 
+#define MAX_NUM_POINT_LIGHTS 4
+
 out vec4 FragColor;
 
 uniform Material material;
 uniform DirectionalLight directionalLight;
-uniform PointLight pointLight;
+uniform PointLight pointLights[MAX_NUM_POINT_LIGHTS];
+uniform int numPointLights;
 uniform SpotLight spotLight;
 uniform vec3 viewPosition;
 
@@ -123,11 +126,14 @@ void main()
     sampledDiffuse = texture(material.diffuse, TexCoords).rgb;
     sampledSpecular = texture(material.specular, TexCoords).rgb;
 
-    vec3 directionalLightResult = getDirectionalLight(directionalLight);
-    vec3 pointLightResult = getPointLight(pointLight);
-    vec3 spotLightResult = getSpotLight(spotLight);
+    vec3 result = vec3(0.0);
 
-    vec3 result = directionalLightResult + pointLightResult + spotLightResult;
+    result += getDirectionalLight(directionalLight);
+    result += getSpotLight(spotLight);
+
+    for (int i = 0; i < numPointLights; ++i) {
+        result += getPointLight(pointLights[i]);
+    }
 
     FragColor = vec4(result, 1.0);
 }

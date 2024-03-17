@@ -101,14 +101,15 @@ public:
         setVec3("directionalLight.direction", light.direction);
     }
 
-    void setPointLight(const Light::PointLight &light) const {
-        setVec3("pointLight.position", light.position);
-        setVec3("pointLight.color.ambient", light.color.ambient);
-        setVec3("pointLight.color.diffuse", light.color.diffuse);
-        setVec3("pointLight.color.specular", light.color.specular);
-        setFloat("pointLight.attenuation.constant", light.attenuation.constant);
-        setFloat("pointLight.attenuation.linear", light.attenuation.linear);
-        setFloat("pointLight.attenuation.quadratic", light.attenuation.quadratic);
+    void setPointLight(const Light::PointLight &light, GLint index) const {
+        std::string name = "pointLights[" + std::to_string(index) + "].";
+        setVec3(name + "position", light.position);
+        setVec3(name + "color.ambient", light.color.ambient);
+        setVec3(name + "color.diffuse", light.color.diffuse);
+        setVec3(name + "color.specular", light.color.specular);
+        setFloat(name + "attenuation.constant", light.attenuation.constant);
+        setFloat(name + "attenuation.linear", light.attenuation.linear);
+        setFloat(name + "attenuation.quadratic", light.attenuation.quadratic);
     }
 
     void setSpotLight(const Light::SpotLight &light) const {
