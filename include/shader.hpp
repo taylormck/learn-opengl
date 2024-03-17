@@ -1,17 +1,17 @@
 #ifndef SHADER_H
 #define SHADER_H
 
-#include <string>
 #include <fstream>
-#include <sstream>
 #include <iostream>
+#include <sstream>
+#include <string>
 
 #include <glm/glm.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "glm/fwd.hpp"
 
-#include "lights/Light.hpp"
+#include "lights/DirectionalLight.hpp"
 
 #include "openGLCommon.hpp"
 
@@ -33,8 +33,7 @@ private:
             shaderCode = shaderStream.str();
 
             shaderFile.close();
-        }
-        catch (const std::ifstream::failure& e) {
+        } catch (const std::ifstream::failure &e) {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ" << std::endl;
             std::cout << "path: " << path << "\ncode: " << e.code() << "\nwhat: " << e.what() << std::endl;
         }
@@ -42,7 +41,7 @@ private:
         return shaderCode;
     }
 
-    void compileShader(unsigned int shader, const char* shaderCode) {
+    void compileShader(unsigned int shader, const char *shaderCode) {
         int success;
         char infoLog[infoLogSize];
 
@@ -91,38 +90,36 @@ public:
         glDeleteShader(fragment);
     }
 
-    void use() {
-        glUseProgram(id);
+    void use() { glUseProgram(id); }
+
+    void setDirectionalLight(const Light::DirectionalLight &light) const {
+        setVec3("light.ambient", light.color.ambient);
+        setVec3("light.diffuse", light.color.diffuse);
+        setVec3("light.specular", light.color.specular);
+        setVec3("light.direction", light.direction);
     }
 
-    void setLight(const Light::Light& light) const {
-        setVec3("light.position", light.position);
-        setVec3("light.ambient", light.ambient);
-        setVec3("light.diffuse", light.diffuse);
-        setVec3("light.specular", light.specular);
-    }
-
-    void setBool(const std::string& name, bool value) const {
+    void setBool(const std::string &name, bool value) const {
         glUniform1i(glGetUniformLocation(id, name.c_str()), (int)value);
     }
 
-    void setInt(const std::string& name, int value) const {
+    void setInt(const std::string &name, int value) const {
         glUniform1i(glGetUniformLocation(id, name.c_str()), value);
     }
 
-    void setFloat(const std::string& name, float value) const {
+    void setFloat(const std::string &name, float value) const {
         glUniform1f(glGetUniformLocation(id, name.c_str()), value);
     }
 
-    void setMat3(const std::string& name, glm::mat3 value) const {
+    void setMat3(const std::string &name, glm::mat3 value) const {
         glUniformMatrix3fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
     }
 
-    void setMat4(const std::string& name, glm::mat4 value) const {
+    void setMat4(const std::string &name, glm::mat4 value) const {
         glUniformMatrix4fv(glGetUniformLocation(id, name.c_str()), 1, GL_FALSE, glm::value_ptr(value));
     }
 
-    void setVec3(const std::string& name, glm::vec3 value) const {
+    void setVec3(const std::string &name, glm::vec3 value) const {
         glUniform3fv(glGetUniformLocation(id, name.c_str()), 1, glm::value_ptr(value));
     }
 };

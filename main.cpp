@@ -14,8 +14,8 @@
 #include "camera/FlyingCamera.hpp"
 #include "shader.hpp"
 
-#include "lights/Light.hpp"
-#include "lights/WhiteLight.hpp"
+#include "colors/Color.hpp"
+#include "lights/DirectionalLight.hpp"
 
 #include "models/Box.hpp"
 
@@ -155,6 +155,7 @@ int main() {
 
     GLuint diffuseMap = loadTexture((textureFolder + "container2.png").c_str());
     GLuint specularMap = loadTexture((textureFolder + "container2_specular.png").c_str());
+    Light::DirectionalLight light = Light::DirectionalLight(Color::White, glm::vec3(-0.2f, -1.0f, -0.3f));
 
     Shader boxShader(
         shaderFolder + "vertex/modelViewProjectionWithNormalAndTex.vert",
@@ -164,9 +165,10 @@ int main() {
     boxShader.use();
     boxShader.setInt("material.diffuse", 0);
     boxShader.setInt("material.specular", 1);
-    boxShader.setInt("material.emission", 2);
+    boxShader.setDirectionalLight(light);
 
-    Shader lightShader(shaderFolder + "vertex/modelViewProjection.vert", shaderFolder + "fragment/light.frag");
+    // Shader lightShader(shaderFolder + "vertex/modelViewProjection.vert", shaderFolder + "fragment/light.frag");
+    // glm::vec3 startingLightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
 
     std::vector<glm::vec3> cubePositions = {
         glm::vec3(0.0f, 0.0f, 0.0f),
@@ -180,8 +182,6 @@ int main() {
         glm::vec3(1.5f, 0.2f, -1.5f),
         glm::vec3(-1.3f, 1.0f, -1.5f)
     };
-
-    glm::vec3 startingLightPosition = glm::vec3(1.2f, 1.0f, 2.0f);
 
     Box::Init();
 
@@ -200,28 +200,26 @@ int main() {
         glm::mat4 view = camera->GetViewMatrix();
         glm::mat4 model = glm::mat4(1.0f);
 
-        model = glm::mat4(1.0f);
-        model = glm::rotate(model, currentTime, glm::vec3(0.0f, 1.0f, 0.0f));
-        model = glm::translate(model, startingLightPosition);
-        model = glm::scale(model, glm::vec3(0.2f));
+        // model = glm::mat4(1.0f);
+        // model = glm::rotate(model, currentTime, glm::vec3(0.0f, 1.0f, 0.0f));
+        // model = glm::translate(model, startingLightPosition);
+        // model = glm::scale(model, glm::vec3(0.2f));
 
-        glm::vec3 lightPosition = glm::vec3(model[3]);
+        // glm::vec3 lightPosition = glm::vec3(model[3]);
 
-        Light::Light light = Light::WhiteLight(lightPosition);
+        // Light::Light light = Light::WhiteLight(lightPosition);
 
-        lightShader.use();
-        lightShader.setVec3("lightColor", light.sourceColor);
-        Box::Draw(lightShader, model, view, projection);
+        // lightShader.use();
+        // lightShader.setVec3("lightColor", light.specular);
+        // Box::Draw(lightShader, model, view, projection);
 
         boxShader.use();
         boxShader.setMat4("view", view);
         boxShader.setMat4("projection", projection);
-        boxShader.setLight(light);
         boxShader.setFloat("material.shininess", 64.0f);
         boxShader.setFloat("material.glow", sin(currentTime) / 2.0f + 0.5f);
 
-        model = glm::mat4(1.0f);
-        model = glm::translate(model, cubePositions[0]);
+        // model = glm::mat4(1.0f);
 
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, diffuseMap);
@@ -231,7 +229,10 @@ int main() {
 
         boxShader.setVec3("viewPosition", camera->Position());
 
-        Box::Draw(boxShader, model, view, projection);
+        for (const auto &cubePosition : cubePositions) {
+            glm::mat4 boxModel = glm::translate(model, cubePosition);
+            Box::Draw(boxShader, boxModel, view, projection);
+        }
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
