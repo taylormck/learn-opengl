@@ -40,52 +40,65 @@ in vec3 FragPosition;
 in vec3 Normal;
 in vec2 TexCoords;
 
-void main()
-{
-    vec3 unitNormal = normalize(Normal);
-    vec3 sampledDiffuse = texture(material.diffuse, TexCoords).rgb;
-    vec3 sampledSpecular = texture(material.specular, TexCoords).rgb;
+vec3 unitNormal;
+vec3 sampledDiffuse;
+vec3 sampledSpecular;
+
+vec3 getLight(
+    Color color,
+    vec3 direction
+) {
 
     // Ambient lighting
-    vec3 directionalAmbient = directionalLight.color.ambient * sampledDiffuse;
+    vec3 ambient = color.ambient * sampledDiffuse;
 
     // Diffuse lighting
-    vec3 lightDirection = normalize(-directionalLight.direction);
-    float diff = max(dot(unitNormal, lightDirection), 0.0f);
-    vec3 directionalDiffuse = directionalLight.color.diffuse * diff * sampledDiffuse;
+    vec3 unitDirection = normalize(direction);
+    float diff = max(dot(unitNormal, unitDirection), 0.0f);
+    vec3 diffuse = color.diffuse * diff * sampledDiffuse;
 
     // Specular lighting
     vec3 viewDirection = normalize(viewPosition - FragPosition);
-    vec3 reflectDirection = reflect(-lightDirection, unitNormal);
+    vec3 reflectDirection = reflect(-unitDirection, unitNormal);
     float shine = pow(max(dot(viewDirection, reflectDirection), 0.0f), material.shininess);
-    vec3 directionalSpecular = directionalLight.color.specular * shine * sampledSpecular;
+    vec3 specular = color.specular * shine * sampledSpecular;
 
-    vec3 directionalResult = directionalAmbient + directionalDiffuse + directionalSpecular;
+    return ambient + diffuse + specular;
+}
 
+vec3 getDirectionalLight(DirectionalLight light) {
+    return getLight(
+        light.color,
+        -light.direction
+    );
+}
 
-    // Ambient lighting
-    vec3 pointAmbient = pointLight.color.ambient * sampledDiffuse;
+vec3 getPointLight(PointLight light) {
+    vec3 lightToPosition = light.position - FragPosition;
 
-    // Diffuse lighting
-    lightDirection = normalize(pointLight.position - FragPosition);
-    diff = max(dot(unitNormal, lightDirection), 0.0f);
-    vec3 pointDiffuse = directionalLight.color.diffuse * diff * sampledDiffuse;
+    vec3 rawLightValue = getLight(light.color, normalize(lightToPosition));
 
-    viewDirection = normalize(viewPosition - FragPosition);
-    reflectDirection = reflect(-lightDirection, unitNormal);
-    shine = pow(max(dot(viewDirection, reflectDirection), 0.0f), material.shininess);
-    vec3 pointSpecular = directionalLight.color.specular * shine * sampledSpecular;
+    float distance = length(lightToPosition);
 
-    float distance = length(pointLight.position - FragPosition);
     float attenuation = 1.0 / (
-        pointLight.attenuation.constant +
-        pointLight.attenuation.linear * distance +
-        pointLight.attenuation.quadratic * distance * distance
+        light.attenuation.constant +
+        light.attenuation.linear * distance +
+        light.attenuation.quadratic * distance * distance
     );
 
-    vec3 pointResult = (pointAmbient + pointDiffuse + pointSpecular) * attenuation;
+    return rawLightValue * attenuation;
+}
 
-    vec3 result = directionalResult + pointResult;
+void main()
+{
+    unitNormal = normalize(Normal);
+    sampledDiffuse = texture(material.diffuse, TexCoords).rgb;
+    sampledSpecular = texture(material.specular, TexCoords).rgb;
+
+    vec3 directionalLightResult = getDirectionalLight(directionalLight);
+    vec3 pointLightResult = getPointLight(pointLight);
+
+    vec3 result = directionalLightResult + pointLightResult;
 
     FragColor = vec4(result, 1.0);
 }
