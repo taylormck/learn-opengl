@@ -30,6 +30,7 @@ set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 set(GLFW_INSTALL OFF CACHE BOOL "GLFW lib only")
+include_directories("glfw/include")
 add_subdirectory(glfw)
 
 # Set up GLAD
@@ -39,7 +40,7 @@ set(GLAD_GL "glfw/deps/glad/gl.h")
 
 # Set up assimp
 include_directories(assimp/include)
-set(BUILD_SHARED_LIBS OFF)
+set(BUILD_SHARED_LIBS ON)
 set(ASSIMP_INSTALL OFF)
 set(ASSIMP_BUILD_SAMPLES OFF)
 set(ASSIMP_BUILD_TESTS OFF)
