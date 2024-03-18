@@ -13,9 +13,10 @@ set(APP_NAME app)
 
 set(ENTRY_POINT main.cpp)
 
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -pedantic")
+# set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17 -Wall -Wextra -pedantic")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++17")
 
-if (MINGW)
+if(MINGW)
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} --target=x86_64-w64-windows-gnu -stdlib=libstdc++")
 endif()
 
@@ -36,7 +37,16 @@ option(GLFW-CMAKE-STARTER-USE-GLFW-GLAD "Use GLAD from GLFW" ON)
 include_directories("glfw/deps")
 set(GLAD_GL "glfw/deps/glad/gl.h")
 
+# Set up assimp
+include_directories(assimp/include)
+set(BUILD_SHARED_LIBS OFF)
+set(ASSIMP_INSTALL OFF)
+set(ASSIMP_BUILD_SAMPLES OFF)
+set(ASSIMP_BUILD_TESTS OFF)
+set(ASSIMP_BUILD_ASSIMP_TOOLS OFF)
+add_subdirectory(assimp)
+
 # Set up application
 add_executable(${APP_NAME} ${ENTRY_POINT} ${GLAD_GL})
 
-target_link_libraries(${APP_NAME} ${OPENGL_LIBRARIES} glfw)
+target_link_libraries(${APP_NAME} ${OPENGL_LIBRARIES} glfw assimp)
