@@ -6,7 +6,6 @@
 #include "colors/Color.hpp"
 #include "lights/Attenuation.hpp"
 
-
 namespace Light {
 
 struct PointLight {
@@ -14,8 +13,8 @@ struct PointLight {
     Attenuation attenuation;
     glm::vec3 position;
 
-    PointLight(const Color::Color &_color, const Attenuation &_attenuation, const glm::vec3 &_position)
-        : color(_color), attenuation(_attenuation), position(_position) {}
+    PointLight(const Color::Color &_color, const Attenuation &_attenuation, const glm::vec3 &_position) :
+        color(_color), attenuation(_attenuation), position(_position) {}
 };
 } // namespace Light
 

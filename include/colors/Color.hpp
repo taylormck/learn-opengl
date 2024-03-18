@@ -9,8 +9,8 @@ struct Color {
     glm::vec3 diffuse;
     glm::vec3 specular;
 
-    Color(glm::vec3 _ambient, glm::vec3 _diffuse, glm::vec3 _specular)
-        : ambient(_ambient), diffuse(_diffuse), specular(_specular) {}
+    Color(glm::vec3 _ambient, glm::vec3 _diffuse, glm::vec3 _specular) :
+        ambient(_ambient), diffuse(_diffuse), specular(_specular) {}
 };
 
 const Color Black(glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f), glm::vec3(0.0f, 0.0f, 0.0f));

@@ -22,9 +22,13 @@ struct SpotLight {
         const glm::vec3 &_direction,
         const float _innerRadius,
         const float _outerRadius
-    )
-        : color(_color), attenuation(_attenuation), position(_position), direction(_direction),
-          innerRadius(_innerRadius), outerRadius(_outerRadius) {}
+    ) :
+        color(_color),
+        attenuation(_attenuation),
+        position(_position),
+        direction(_direction),
+        innerRadius(_innerRadius),
+        outerRadius(_outerRadius) {}
 };
 } // namespace Light
 

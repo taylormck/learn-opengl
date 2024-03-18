@@ -12,4 +12,6 @@ AllowShortCaseLabelsOnASingleLine: false
 AllowShortIfStatementsOnASingleLine: false
 BinPackArguments: false
 BinPackParameters: false
+BreakConstructorInitializers: AfterColon
 ColumnLimit: 120
+PackConstructorInitializers: NextLine

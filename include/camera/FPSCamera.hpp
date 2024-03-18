@@ -50,10 +50,12 @@ public:
         glm::vec3 up = glm::vec3(0.0f, 1.0f, 0.0f),
         float yaw = DEFAULT_YAW,
         float pitch = DEFAULT_PITCH
-    )
-        : _front(glm::vec3(0.0f, 0.0f, -1.0f)), _movementSpeed(DEFAULT_SPEED),
-          _mouseSensitivity(DEFAULT_MOUSE_SENSITIVITY), _zoom(DEFAULT_ZOOM),
-          _zoomSensitivity(DEFAULT_ZOOM_SENSITIVITY) {
+    ) :
+        _front(glm::vec3(0.0f, 0.0f, -1.0f)),
+        _movementSpeed(DEFAULT_SPEED),
+        _mouseSensitivity(DEFAULT_MOUSE_SENSITIVITY),
+        _zoom(DEFAULT_ZOOM),
+        _zoomSensitivity(DEFAULT_ZOOM_SENSITIVITY) {
         _position = position;
         _worldUp = glm::normalize(up);
         _yaw = yaw;
