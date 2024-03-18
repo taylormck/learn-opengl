@@ -57,10 +57,7 @@ vec3 unitNormal;
 vec3 sampledDiffuse;
 vec3 sampledSpecular;
 
-vec3 getLight(
-    Color color,
-    vec3 direction
-) {
+vec3 getLight(Color color, vec3 direction) {
 
     // Ambient lighting
     vec3 ambient = color.ambient * sampledDiffuse;
@@ -79,12 +76,15 @@ vec3 getLight(
     return ambient + diffuse + specular;
 }
 
-vec3 getDirectionalLight(DirectionalLight light) {
-    return getLight(
-        light.color,
-        -light.direction
-    );
+float getAttenuation(Attenuation attenuation, float distance) {
+    float denominator = attenuation.constant;
+    denominator += attenuation.linear * distance;
+    denominator += attenuation.linear * distance * distance;
+
+    return 1.0 / denominator;
 }
+
+vec3 getDirectionalLight(DirectionalLight light) { return getLight(light.color, -light.direction); }
 
 vec3 getPointLight(PointLight light) {
     vec3 lightToPosition = light.position - FragPosition;
@@ -92,11 +92,7 @@ vec3 getPointLight(PointLight light) {
 
     float distance = length(lightToPosition);
 
-    float attenuation = 1.0 / (
-        light.attenuation.constant +
-        light.attenuation.linear * distance +
-        light.attenuation.quadratic * distance * distance
-    );
+    float attenuation = getAttenuation(light.attenuation, distance);
 
     return rawLightValue * attenuation;
 }
@@ -111,17 +107,12 @@ vec3 getSpotLight(SpotLight light) {
 
     float distance = length(lightToPosition);
 
-    float attenuation = 1.0 / (
-        light.attenuation.constant +
-        light.attenuation.linear * distance +
-        light.attenuation.quadratic * distance * distance
-    );
+    float attenuation = getAttenuation(light.attenuation, distance);
 
     return getLight(light.color, direction) * intensity * attenuation;
 }
 
-void main()
-{
+void main() {
     unitNormal = normalize(Normal);
     sampledDiffuse = texture(material.diffuse, TexCoords).rgb;
     sampledSpecular = texture(material.specular, TexCoords).rgb;
