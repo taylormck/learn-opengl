@@ -7,7 +7,6 @@
 #include "texture.hpp"
 #include "vertex.hpp"
 
-
 #include "openGLCommon.hpp"
 
 class Mesh {
@@ -62,7 +61,7 @@ public:
         unsigned int diffuseNr = 0;
         unsigned int specularNr = 0;
 
-        for (unsigned int i = 0; i < Textures.size(); i++) {
+        for (unsigned int i = 0; i < Textures.size(); ++i) {
             glActiveTexture(GL_TEXTURE0 + i);
 
             std::string number;

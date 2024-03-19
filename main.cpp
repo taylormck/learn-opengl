@@ -80,7 +80,6 @@ struct GLFWDeleter {
 };
 
 int main() {
-    std::cout << "hi there" << std::endl;
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -150,7 +149,8 @@ int main() {
 
     Shader lightShader(shaderFolder + "vertex/modelViewProjection.vert", shaderFolder + "fragment/light.frag");
 
-    Model backpack((modelFolder + "backpack/backpack.obj").c_str());
+    Model::Model backpack((modelFolder + "backpack/backpack.obj").c_str());
+    Box::Init();
 
     while (!glfwWindowShouldClose(window.get())) {
         const float currentTime = glfwGetTime();
@@ -181,7 +181,12 @@ int main() {
         spotLight.position = camera->Position();
         spotLight.direction = camera->Front();
 
+        glm::mat4 backpackModel = glm::mat4(1.0f);
+        backpackModel = glm::translate(backpackModel, glm::vec3(0.0f, 0.0f, 0.0f));
+        backpackModel = glm::scale(backpackModel, glm::vec3(1.0f, 1.0f, 1.0f));
+
         basicObjectShader.use();
+        basicObjectShader.setMat4("model", backpackModel);
         basicObjectShader.setMat4("view", view);
         basicObjectShader.setMat4("projection", projection);
         basicObjectShader.setFloat("material.shininess", 64.0f);

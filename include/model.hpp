@@ -20,6 +20,7 @@
 
 #include "openGLCommon.hpp"
 
+namespace Model {
 struct StbiImageDeleter {
     void operator()(unsigned char *data) { stbi_image_free(data); }
 };
@@ -70,7 +71,6 @@ private:
     std::string directory;
 
     void loadModel(std::string path) {
-        std::cout << "loadModel" << std::endl;
         Assimp::Importer import;
 
         const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
@@ -86,10 +86,9 @@ private:
     }
 
     void processNode(aiNode *node, const aiScene *scene) {
-        std::cout << "processNode" << std::endl;
         for (unsigned int i = 0; i < node->mNumMeshes; ++i) {
             aiMesh *mesh = scene->mMeshes[node->mMeshes[i]];
-            meshes.push_back(processMesh(mesh, scene));
+            processMesh(mesh, scene);
         }
 
         for (unsigned int i = 0; i < node->mNumChildren; ++i) {
@@ -97,8 +96,7 @@ private:
         }
     }
 
-    Mesh processMesh(aiMesh *mesh, const aiScene *scene) {
-        std::cout << "processMesh" << std::endl;
+    void processMesh(aiMesh *mesh, const aiScene *scene) {
         std::vector<Vertex> vertices;
         std::vector<GLuint> indices;
         std::vector<Texture> textures;
@@ -138,17 +136,16 @@ private:
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
         }
 
-        return Mesh(vertices, indices, textures);
+        meshes.emplace_back(vertices, indices, textures);
     }
 
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName) {
-        std::cout << "loadMaterialTextures" << std::endl;
         std::vector<Texture> textures;
 
         for (unsigned int i = 0; i < mat->GetTextureCount(type); ++i) {
             aiString str;
             mat->GetTexture(type, i, &str);
-            std::string path = directory + str.C_Str();
+            std::string path = directory + "/" + str.C_Str();
 
             auto matchingTexture =
                 std::find_if(loadedTextures.begin(), loadedTextures.end(), [path](const Texture &loadedTexture) {
@@ -175,5 +172,6 @@ public:
         }
     }
 };
+} // namespace Model
 
 #endif
