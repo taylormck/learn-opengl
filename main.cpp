@@ -3,15 +3,13 @@
 #include <memory>
 #include <vector>
 
-#define STB_IMAGE_IMPLEMENTATION
-#include "stb_image.h"
-
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
 #include "camera/Camera.hpp"
 #include "camera/FlyingCamera.hpp"
+#include "model.hpp"
 #include "shader.hpp"
 
 #include "colors/Color.hpp"
@@ -77,54 +75,12 @@ void framebufferSizeCallback(__attribute__((unused)) GLFWwindow *window, int wid
     glViewport(0, 0, width, height);
 }
 
-struct StbiImageDeleter {
-    void operator()(unsigned char *data) { stbi_image_free(data); }
-};
-
-GLuint loadTexture(char const *path) {
-    GLuint textureId;
-    glGenTextures(1, &textureId);
-
-    GLint width, height, nrComponents;
-
-    std::unique_ptr<unsigned char, StbiImageDeleter> data(stbi_load(path, &width, &height, &nrComponents, 0));
-
-    if (!data.get()) {
-        std::cout << "Failed to load texture" << std::endl;
-        return textureId;
-    }
-
-    GLenum format;
-
-    switch (nrComponents) {
-    case 1:
-        format = GL_RED;
-        break;
-    case 3:
-        format = GL_RGB;
-        break;
-    case 4:
-        format = GL_RGBA;
-        break;
-    }
-
-    glBindTexture(GL_TEXTURE_2D, textureId);
-    glTexImage2D(GL_TEXTURE_2D, 0, format, width, height, 0, format, GL_UNSIGNED_BYTE, data.get());
-    glGenerateMipmap(GL_TEXTURE_2D);
-
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_REPEAT);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-
-    return textureId;
-};
-
 struct GLFWDeleter {
     void operator()(__attribute__((unused)) GLFWwindow *window) { glfwTerminate(); }
 };
 
 int main() {
+    std::cout << "hi there" << std::endl;
     glfwInit();
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 3);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
@@ -154,10 +110,7 @@ int main() {
 
     std::filesystem::path root = std::filesystem::current_path();
     std::string shaderFolder = root.string() + "/../shaders/";
-    std::string textureFolder = root.string() + "/../textures/";
-
-    GLuint diffuseMap = loadTexture((textureFolder + "container2.png").c_str());
-    GLuint specularMap = loadTexture((textureFolder + "container2_specular.png").c_str());
+    std::string modelFolder = root.string() + "/../models/";
 
     Light::DirectionalLight directionalLight = Light::DirectionalLight(Color::Red, glm::vec3(-0.2f, -1.0f, -0.3f));
 
@@ -184,33 +137,20 @@ int main() {
         pointLights.push_back(Light::PointLight(def.second, Light::BasicAttenuation, def.first));
     }
 
-    Shader boxShader(
+    Shader basicObjectShader(
         shaderFolder + "vertex/modelViewProjectionWithNormalAndTex.vert",
         shaderFolder + "fragment/litMaterialTextureMap.frag"
     );
 
-    boxShader.use();
-    boxShader.setInt("material.diffuse", 0);
-    boxShader.setInt("material.specular", 1);
-    boxShader.setDirectionalLight(directionalLight);
-    boxShader.setInt("numPointLights", pointLights.size());
+    basicObjectShader.use();
+    basicObjectShader.setInt("material.diffuse", 0);
+    basicObjectShader.setInt("material.specular", 1);
+    basicObjectShader.setDirectionalLight(directionalLight);
+    basicObjectShader.setInt("numPointLights", pointLights.size());
 
     Shader lightShader(shaderFolder + "vertex/modelViewProjection.vert", shaderFolder + "fragment/light.frag");
 
-    std::vector<glm::vec3> cubePositions = {
-        glm::vec3(0.0f, 0.0f, 0.0f),
-        glm::vec3(2.0f, 5.0f, -15.0f),
-        glm::vec3(-1.5f, -2.2f, -2.5f),
-        glm::vec3(-3.8f, -2.0f, -12.3f),
-        glm::vec3(2.4f, -0.4f, -3.5f),
-        glm::vec3(-1.7f, 3.0f, -7.5f),
-        glm::vec3(1.3f, -2.0f, -2.5f),
-        glm::vec3(1.5f, 2.0f, -2.5f),
-        glm::vec3(1.5f, 0.2f, -1.5f),
-        glm::vec3(-1.3f, 1.0f, -1.5f)
-    };
-
-    Box::Init();
+    Model backpack((modelFolder + "backpack/backpack.obj").c_str());
 
     while (!glfwWindowShouldClose(window.get())) {
         const float currentTime = glfwGetTime();
@@ -241,35 +181,20 @@ int main() {
         spotLight.position = camera->Position();
         spotLight.direction = camera->Front();
 
-        boxShader.use();
-        boxShader.setMat4("view", view);
-        boxShader.setMat4("projection", projection);
-        boxShader.setFloat("material.shininess", 64.0f);
-        boxShader.setFloat("material.glow", sin(currentTime) / 2.0f + 0.5f);
-        boxShader.setSpotLight(spotLight);
+        basicObjectShader.use();
+        basicObjectShader.setMat4("view", view);
+        basicObjectShader.setMat4("projection", projection);
+        basicObjectShader.setFloat("material.shininess", 64.0f);
+        basicObjectShader.setFloat("material.glow", sin(currentTime) / 2.0f + 0.5f);
+        basicObjectShader.setSpotLight(spotLight);
 
         for (size_t i = 0; i < pointLights.size(); ++i) {
-            boxShader.setPointLight(pointLights[i], i);
+            basicObjectShader.setPointLight(pointLights[i], i);
         }
 
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, diffuseMap);
+        basicObjectShader.setVec3("viewPosition", camera->Position());
 
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, specularMap);
-
-        boxShader.setVec3("viewPosition", camera->Position());
-
-        for (size_t i = 0; i < cubePositions.size(); ++i) {
-            glm::vec3 cubePosition = cubePositions[i];
-            GLfloat angle = 20.0f * i;
-
-            glm::mat4 model = glm::mat4(1.0f);
-            model = glm::translate(model, cubePosition);
-            model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-
-            Box::Draw(boxShader, model, view, projection);
-        }
+        backpack.Draw(basicObjectShader);
 
         glBindVertexArray(0);
         glBindBuffer(GL_ARRAY_BUFFER, 0);
@@ -277,8 +202,6 @@ int main() {
         glfwSwapBuffers(window.get());
         glfwPollEvents();
     }
-
-    Box::Deinit();
 
     return 0;
 }

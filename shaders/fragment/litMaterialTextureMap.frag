@@ -1,8 +1,11 @@
 #version 330 core
 
 struct Material {
-    sampler2D diffuse;
-    sampler2D specular;
+    sampler2D texture_diffuse0;
+    sampler2D texture_diffuse1;
+    sampler2D texture_diffuse2;
+    sampler2D texture_specular0;
+    sampler2D texture_specular1;
     float shininess;
 };
 
@@ -114,8 +117,8 @@ vec3 getSpotLight(SpotLight light) {
 
 void main() {
     unitNormal = normalize(Normal);
-    sampledDiffuse = texture(material.diffuse, TexCoords).rgb;
-    sampledSpecular = texture(material.specular, TexCoords).rgb;
+    sampledDiffuse = texture(material.texture_diffuse0, TexCoords).rgb;
+    sampledSpecular = texture(material.texture_specular0, TexCoords).rgb;
 
     vec3 result = vec3(0.0);
 
