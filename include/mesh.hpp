@@ -51,11 +51,11 @@ public:
         setupMesh();
     }
 
-    ~Mesh() {
-        glDeleteVertexArrays(1, &VAO);
-        glDeleteBuffers(1, &VBO);
-        glDeleteBuffers(1, &EBO);
-    }
+    /* ~Mesh() { */
+    /*     glDeleteVertexArrays(1, &VAO); */
+    /*     glDeleteBuffers(1, &VBO); */
+    /*     glDeleteBuffers(1, &EBO); */
+    /* } */
 
     void Draw(Shader &shader) const {
         unsigned int diffuseNr = 0;

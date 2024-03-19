@@ -190,7 +190,6 @@ int main() {
         basicObjectShader.setMat4("view", view);
         basicObjectShader.setMat4("projection", projection);
         basicObjectShader.setFloat("material.shininess", 64.0f);
-        basicObjectShader.setFloat("material.glow", sin(currentTime) / 2.0f + 0.5f);
         basicObjectShader.setSpotLight(spotLight);
 
         for (size_t i = 0; i < pointLights.size(); ++i) {

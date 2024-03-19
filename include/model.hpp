@@ -31,6 +31,7 @@ GLuint loadTexture(char const *path) {
 
     GLint width, height, nrComponents;
 
+    stbi_set_flip_vertically_on_load(true);
     std::unique_ptr<unsigned char, StbiImageDeleter> data(stbi_load(path, &width, &height, &nrComponents, 0));
 
     if (!data.get()) {
