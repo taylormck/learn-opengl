@@ -101,15 +101,18 @@ private:
         std::vector<Vertex> vertices;
         std::vector<GLuint> indices;
         std::vector<Texture> textures;
+        GLfloat shininess = 0.0f;
 
         for (unsigned int i = 0; i < mesh->mNumVertices; ++i) {
             aiVector3D aiVertex = mesh->mVertices[i];
             glm::vec3 position = glm::vec3(aiVertex.x, aiVertex.y, aiVertex.z);
-
-            aiVector3D aiNormal = mesh->mNormals[i];
-            glm::vec3 normal = glm::vec3(aiNormal.x, aiNormal.y, aiNormal.z);
-
+            glm::vec3 normal = glm::vec3(0.0f, 0.0f, 0.0f);
             glm::vec2 textureCoordinates(0.0f, 0.0f);
+
+            if (mesh->HasNormals()) {
+                aiVector3D aiNormal = mesh->mNormals[i];
+                normal = glm::vec3(aiNormal.x, aiNormal.y, aiNormal.z);
+            }
 
             if (mesh->mTextureCoords[0]) {
                 aiVector3D aiTextureCoordinates = mesh->mTextureCoords[0][i];
@@ -129,15 +132,20 @@ private:
 
         if (mesh->mMaterialIndex >= 0) {
             aiMaterial *material = scene->mMaterials[mesh->mMaterialIndex];
+
             std::vector<Texture> diffuseMaps = loadMaterialTextures(material, aiTextureType_DIFFUSE, "texture_diffuse");
             std::vector<Texture> specularMaps =
                 loadMaterialTextures(material, aiTextureType_SPECULAR, "texture_specular");
+            std::vector<Texture> normalMaps = loadMaterialTextures(material, aiTextureType_NORMALS, "texture_normal");
 
             textures.insert(textures.end(), diffuseMaps.begin(), diffuseMaps.end());
             textures.insert(textures.end(), specularMaps.begin(), specularMaps.end());
+            textures.insert(textures.end(), normalMaps.begin(), normalMaps.end());
+
+            material->Get(AI_MATKEY_SHININESS, shininess);
         }
 
-        meshes.emplace_back(vertices, indices, textures);
+        meshes.emplace_back(vertices, indices, textures, shininess);
     }
 
     std::vector<Texture> loadMaterialTextures(aiMaterial *mat, aiTextureType type, std::string typeName) {

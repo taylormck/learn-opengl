@@ -45,21 +45,17 @@ public:
     std::vector<Vertex> Vertices;
     std::vector<GLuint> Indices;
     std::vector<Texture> Textures;
+    GLfloat Shininess;
 
-    Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures) :
-        Vertices(vertices), Indices(indices), Textures(textures) {
+    Mesh(std::vector<Vertex> vertices, std::vector<GLuint> indices, std::vector<Texture> textures, float shininess) :
+        Vertices(vertices), Indices(indices), Textures(textures), Shininess(shininess) {
         setupMesh();
     }
-
-    /* ~Mesh() { */
-    /*     glDeleteVertexArrays(1, &VAO); */
-    /*     glDeleteBuffers(1, &VBO); */
-    /*     glDeleteBuffers(1, &EBO); */
-    /* } */
 
     void Draw(Shader &shader) const {
         unsigned int diffuseNr = 0;
         unsigned int specularNr = 0;
+        unsigned int normalNr = 0;
 
         for (unsigned int i = 0; i < Textures.size(); ++i) {
             glActiveTexture(GL_TEXTURE0 + i);
@@ -73,19 +69,24 @@ public:
             } else if (name == "texture_specular") {
                 name += std::to_string(specularNr);
                 ++specularNr;
+            } else if (name == "texture_normal") {
+                name += std::to_string(normalNr);
+                ++normalNr;
             }
 
             shader.setInt("material." + name, i);
 
             glBindTexture(GL_TEXTURE_2D, Textures[i].ID);
         }
-        glActiveTexture(GL_TEXTURE0);
+
+        shader.setFloat("material.shininess", Shininess);
 
         // draw mesh
         glBindVertexArray(VAO);
         glDrawElements(GL_TRIANGLES, Indices.size(), GL_UNSIGNED_INT, 0);
 
         glBindVertexArray(0);
+        glActiveTexture(GL_TEXTURE0);
     }
 };
 

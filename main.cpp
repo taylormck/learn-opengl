@@ -111,7 +111,7 @@ int main() {
     std::string shaderFolder = root.string() + "/../shaders/";
     std::string modelFolder = root.string() + "/../models/";
 
-    Light::DirectionalLight directionalLight = Light::DirectionalLight(Color::Red, glm::vec3(-0.2f, -1.0f, -0.3f));
+    Light::DirectionalLight directionalLight = Light::DirectionalLight(Color::White, glm::vec3(-0.2f, -1.0f, -0.3f));
 
     Light::SpotLight spotLight = Light::SpotLight(
         Color::White,
@@ -124,9 +124,9 @@ int main() {
 
     std::vector<std::pair<glm::vec3, Color::Color>> pointLightDefinitions = {
         std::pair<glm::vec3, Color::Color>(glm::vec3(0.7f, 0.2f, 2.0f), Color::Cyan),
-        std::pair<glm::vec3, Color::Color>(glm::vec3(2.3f, -3.3f, -4.0f), Color::Blue),
-        std::pair<glm::vec3, Color::Color>(glm::vec3(-4.0f, 2.0f, -12.0f), Color::Yellow),
-        std::pair<glm::vec3, Color::Color>(glm::vec3(0.0f, 0.0f, -3.0f), Color::Green)
+        std::pair<glm::vec3, Color::Color>(glm::vec3(1.3f, -1.3f, -1.0f), Color::Red),
+        std::pair<glm::vec3, Color::Color>(glm::vec3(-2.0f, 2.0f, -1.5f), Color::Yellow),
+        std::pair<glm::vec3, Color::Color>(glm::vec3(0.0f, 0.0f, -2.0f), Color::Orange)
     };
 
     std::vector<Light::PointLight> pointLights;
@@ -142,8 +142,6 @@ int main() {
     );
 
     basicObjectShader.use();
-    basicObjectShader.setInt("material.diffuse", 0);
-    basicObjectShader.setInt("material.specular", 1);
     basicObjectShader.setDirectionalLight(directionalLight);
     basicObjectShader.setInt("numPointLights", pointLights.size());
 
@@ -185,11 +183,13 @@ int main() {
         backpackModel = glm::translate(backpackModel, glm::vec3(0.0f, 0.0f, 0.0f));
         backpackModel = glm::scale(backpackModel, glm::vec3(1.0f, 1.0f, 1.0f));
 
+        glm::mat3 rotation = glm::transpose(glm::inverse(glm::mat3(backpackModel)));
+
         basicObjectShader.use();
         basicObjectShader.setMat4("model", backpackModel);
         basicObjectShader.setMat4("view", view);
         basicObjectShader.setMat4("projection", projection);
-        basicObjectShader.setFloat("material.shininess", 64.0f);
+        basicObjectShader.setMat3("rotation", rotation);
         basicObjectShader.setSpotLight(spotLight);
 
         for (size_t i = 0; i < pointLights.size(); ++i) {

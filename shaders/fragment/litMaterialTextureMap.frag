@@ -6,6 +6,8 @@ struct Material {
     sampler2D texture_diffuse2;
     sampler2D texture_specular0;
     sampler2D texture_specular1;
+    sampler2D texture_normal0;
+    sampler2D texture_normal1;
     float shininess;
 };
 
@@ -52,6 +54,8 @@ uniform int numPointLights;
 uniform SpotLight spotLight;
 uniform vec3 viewPosition;
 
+uniform mat3 rotation;
+
 in vec3 FragPosition;
 in vec3 Normal;
 in vec2 TexCoords;
@@ -59,6 +63,7 @@ in vec2 TexCoords;
 vec3 unitNormal;
 vec3 sampledDiffuse;
 vec3 sampledSpecular;
+vec3 sampledNormal;
 
 vec3 getLight(Color color, vec3 direction) {
 
@@ -93,10 +98,10 @@ vec3 getDirectionalLight(DirectionalLight light) {
 
 vec3 getPointLight(PointLight light) {
     vec3 lightToPosition = light.position - FragPosition;
-    vec3 rawLightValue = getLight(light.color, normalize(lightToPosition));
-
+    vec3 direction = normalize(lightToPosition);
     float distance = length(lightToPosition);
 
+    vec3 rawLightValue = getLight(light.color, direction);
     float attenuation = getAttenuation(light.attenuation, distance);
 
     return rawLightValue * attenuation;
@@ -105,22 +110,23 @@ vec3 getPointLight(PointLight light) {
 vec3 getSpotLight(SpotLight light) {
     vec3 lightToPosition = light.position - FragPosition;
     vec3 direction = normalize(lightToPosition);
+    float distance = length(lightToPosition);
 
     float theta = dot(direction, normalize(-light.direction));
     float epsilon = light.innerRadius - light.outerRadius;
     float intensity = clamp((theta - light.outerRadius) / epsilon, 0.0, 1.0);
 
-    float distance = length(lightToPosition);
-
+    vec3 rawLightValue = getLight(light.color, direction);
     float attenuation = getAttenuation(light.attenuation, distance);
 
-    return getLight(light.color, direction) * intensity * attenuation;
+    return rawLightValue * intensity * attenuation;
 }
 
 void main() {
-    unitNormal = normalize(Normal);
     sampledDiffuse = texture(material.texture_diffuse0, TexCoords).rgb;
     sampledSpecular = texture(material.texture_specular0, TexCoords).rgb;
+    sampledNormal = texture(material.texture_normal0, TexCoords).rgb;
+    unitNormal = normalize(sampledNormal);
 
     vec3 result = vec3(0.0);
 
