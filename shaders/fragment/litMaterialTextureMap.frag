@@ -87,7 +87,9 @@ float getAttenuation(Attenuation attenuation, float distance) {
     return 1.0 / denominator;
 }
 
-vec3 getDirectionalLight(DirectionalLight light) { return getLight(light.color, -light.direction); }
+vec3 getDirectionalLight(DirectionalLight light) {
+    return getLight(light.color, -light.direction);
+}
 
 vec3 getPointLight(PointLight light) {
     vec3 lightToPosition = light.position - FragPosition;
