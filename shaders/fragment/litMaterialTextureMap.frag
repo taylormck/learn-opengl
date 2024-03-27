@@ -66,7 +66,6 @@ vec3 sampledSpecular;
 vec3 sampledNormal;
 
 vec3 getLight(Color color, vec3 direction) {
-
     // Ambient lighting
     vec3 ambient = color.ambient * sampledDiffuse;
 
@@ -92,9 +91,7 @@ float getAttenuation(Attenuation attenuation, float distance) {
     return 1.0 / denominator;
 }
 
-vec3 getDirectionalLight(DirectionalLight light) {
-    return getLight(light.color, -light.direction);
-}
+vec3 getDirectionalLight(DirectionalLight light) { return getLight(light.color, -light.direction); }
 
 vec3 getPointLight(PointLight light) {
     vec3 lightToPosition = light.position - FragPosition;
