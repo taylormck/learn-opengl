@@ -76,8 +76,8 @@ vec3 getLight(Color color, vec3 direction) {
 
     // Specular lighting
     vec3 viewDirection = normalize(viewPosition - FragPosition);
-    vec3 halfway = normalize(direction + viewDirection);
-    float shine = pow(max(dot(unitNormal, halfway), 0.0f), material.shininess);
+    vec3 halfwayDirection = normalize(direction + viewDirection);
+    float shine = pow(max(dot(unitNormal, halfwayDirection), 0.0f), material.shininess);
     vec3 specular = color.specular * shine * sampledSpecular;
 
     return ambient + diffuse + specular;
