@@ -76,8 +76,8 @@ vec3 getLight(Color color, vec3 direction) {
 
     // Specular lighting
     vec3 viewDirection = normalize(viewPosition - FragPosition);
-    vec3 reflectDirection = reflect(-unitDirection, unitNormal);
-    float shine = pow(max(dot(viewDirection, reflectDirection), 0.0f), material.shininess);
+    vec3 halfway = normalize(direction + viewDirection);
+    float shine = pow(max(dot(unitNormal, halfway), 0.0f), material.shininess);
     vec3 specular = color.specular * shine * sampledSpecular;
 
     return ambient + diffuse + specular;
@@ -122,7 +122,7 @@ vec3 getSpotLight(SpotLight light) {
 void main() {
     sampledDiffuse = texture(material.texture_diffuse0, TexCoords).rgb;
     sampledSpecular = texture(material.texture_specular0, TexCoords).rgb;
-    sampledNormal = texture(material.texture_normal0, TexCoords).rgb;
+    sampledNormal = rotation * texture(material.texture_normal0, TexCoords).rgb;
     unitNormal = normalize(sampledNormal);
 
     vec3 result = vec3(0.0);
