@@ -1,6 +1,7 @@
 #ifndef MODEL_H
 #define MODEL_H
 
+#include "assimp/vector3.h"
 #include <memory>
 #include <string>
 #include <vector>
@@ -74,7 +75,10 @@ private:
     void loadModel(std::string path) {
         Assimp::Importer import;
 
-        const aiScene *scene = import.ReadFile(path, aiProcess_Triangulate | aiProcess_FlipUVs);
+        const aiScene *scene = import.ReadFile(
+            path,
+            aiProcess_Triangulate | aiProcess_FlipUVs | aiProcess_CalcTangentSpace | aiProcess_GenSmoothNormals
+        );
 
         if (!scene || scene->mFlags & AI_SCENE_FLAGS_INCOMPLETE || !scene->mRootNode) {
             std::cout << "ERROR::ASSIMP::" << import.GetErrorString() << "\n";
@@ -108,10 +112,17 @@ private:
             glm::vec3 position = glm::vec3(aiVertex.x, aiVertex.y, aiVertex.z);
             glm::vec3 normal = glm::vec3(0.0f, 0.0f, 0.0f);
             glm::vec2 textureCoordinates(0.0f, 0.0f);
+            glm::vec3 tangent(0.0f, 0.0f, 0.0f);
+            glm::vec3 bitTangent(0.0f, 0.0f, 0.0f);
 
             if (mesh->HasNormals()) {
                 aiVector3D aiNormal = mesh->mNormals[i];
+                aiVector3D aiTangent = mesh->mTangents[i];
+                aiVector3D aiBitTangent = mesh->mBitangents[i];
+
                 normal = glm::vec3(aiNormal.x, aiNormal.y, aiNormal.z);
+                tangent = glm::vec3(aiTangent.x, aiTangent.y, aiTangent.z);
+                bitTangent = glm::vec3(aiBitTangent.x, aiBitTangent.y, aiBitTangent.z);
             }
 
             if (mesh->mTextureCoords[0]) {
@@ -119,7 +130,7 @@ private:
                 textureCoordinates = glm::vec2(aiTextureCoordinates.x, aiTextureCoordinates.y);
             }
 
-            vertices.emplace_back(position, normal, textureCoordinates);
+            vertices.emplace_back(position, normal, textureCoordinates, tangent, bitTangent);
         }
 
         for (unsigned int i = 0; i < mesh->mNumFaces; ++i) {

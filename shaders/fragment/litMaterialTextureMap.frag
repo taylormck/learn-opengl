@@ -59,6 +59,7 @@ uniform mat3 rotation;
 in vec3 FragPosition;
 in vec3 Normal;
 in vec2 TexCoords;
+in mat3 TBN;
 
 vec3 unitNormal;
 vec3 sampledDiffuse;
@@ -122,8 +123,10 @@ vec3 getSpotLight(SpotLight light) {
 void main() {
     sampledDiffuse = texture(material.texture_diffuse0, TexCoords).rgb;
     sampledSpecular = texture(material.texture_specular0, TexCoords).rgb;
-    sampledNormal = rotation * texture(material.texture_normal0, TexCoords).rgb;
-    unitNormal = normalize(sampledNormal);
+    vec3 normal = texture(material.texture_normal0, TexCoords).rgb;
+    normal = normal * 2.0 - 1.0;
+    normal = TBN * normal;
+    unitNormal = normalize(normal);
 
     vec3 result = vec3(0.0);
 
