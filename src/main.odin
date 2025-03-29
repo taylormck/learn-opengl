@@ -74,56 +74,10 @@ main :: proc() {
     gl.load_up_to(GL_MAJOR_VERSION, GL_MINOR_VERSION, glfw.gl_set_proc_address)
     gl.Viewport(0, 0, WIDTH, HEIGHT)
 
-    vertex_shader_source := #load("../shaders/vert/basic.vert", cstring)
-    vertex_shader := gl.CreateShader(gl.VERTEX_SHADER)
-    gl.ShaderSource(vertex_shader, 1, &vertex_shader_source, nil)
-    gl.CompileShader(vertex_shader)
-    {
-        success: i32
-        gl.GetShaderiv(vertex_shader, gl.COMPILE_STATUS, &success)
-
-        if success == 0 {
-            info_log: [512]u8
-            gl.GetShaderInfoLog(vertex_shader, 512, nil, raw_data(info_log[:]))
-            log.errorf("ERROR::SHADER::VERTEX::COMPILATION_FAILED:\n{}", string(info_log[:]))
-        }
-    }
-
-
-    frag_shader_source := #load("../shaders/frag/basic.frag", cstring)
-    frag_shader := gl.CreateShader(gl.FRAGMENT_SHADER)
-    gl.ShaderSource(frag_shader, 1, &frag_shader_source, nil)
-    gl.CompileShader(frag_shader)
-    {
-        success: i32
-        gl.GetShaderiv(frag_shader, gl.COMPILE_STATUS, &success)
-
-        if success == 0 {
-            info_log: [512]u8
-            gl.GetShaderInfoLog(frag_shader, 512, nil, raw_data(info_log[:]))
-            log.errorf("ERROR::SHADER::FRAG::COMPILATION_FAILED:\n{}", string(info_log[:]))
-        }
-    }
-
-    shader_program := gl.CreateProgram()
-    gl.UseProgram(shader_program)
-    gl.AttachShader(shader_program, vertex_shader)
-    gl.AttachShader(shader_program, frag_shader)
-    gl.LinkProgram(shader_program)
-
-    {
-        success: i32
-        gl.GetProgramiv(shader_program, gl.LINK_STATUS, &success)
-
-        if success == 0 {
-            info_log: [512]u8
-            gl.GetProgramInfoLog(shader_program, 512, nil, raw_data(info_log[:]))
-            log.errorf("ERROR::SHADER::PROGRAM::LINKING_FAILED:\n{}", string(info_log[:]))
-        }
-    }
-
-    gl.DeleteShader(vertex_shader)
-    gl.DeleteShader(frag_shader)
+    basic_shader_program :=
+        gl.load_shaders_source(#load("../shaders/vert/basic.vert"), #load("../shaders/frag/basic.frag")) or_else panic(
+            "Failed to load the shader.",
+        )
 
     vertices := RECTANGLE_VERTICES
     indicies := RECTANGLE_INDICES
@@ -154,7 +108,7 @@ main :: proc() {
         gl.ClearColor(0.1, 0.2, 0.3, 1)
         gl.Clear(gl.COLOR_BUFFER_BIT)
 
-        gl.UseProgram(shader_program)
+        gl.UseProgram(basic_shader_program)
         gl.BindVertexArray(vao)
         gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 
@@ -168,4 +122,66 @@ process_input :: proc(window: glfw.WindowHandle) {
     if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
         glfw.SetWindowShouldClose(window, true)
     }
+}
+
+/**
+ * This function is the naive implementation of the code necessary to load the basic shader.
+ * We can largely replace it with Odin's vendor:gl library helpers, but it's here for old time's sake.
+ */
+load_basic_shader :: proc() -> (program_id: u32, ok: bool) {
+    vertex_shader_source := #load("../shaders/vert/basic.vert", cstring)
+    vertex_shader := gl.CreateShader(gl.VERTEX_SHADER)
+    gl.ShaderSource(vertex_shader, 1, &vertex_shader_source, nil)
+    gl.CompileShader(vertex_shader)
+    {
+        success: i32
+        gl.GetShaderiv(vertex_shader, gl.COMPILE_STATUS, &success)
+
+        if success == 0 {
+            info_log: [512]u8
+            gl.GetShaderInfoLog(vertex_shader, 512, nil, raw_data(info_log[:]))
+            log.errorf("ERROR::SHADER::VERTEX::COMPILATION_FAILED:\n{}", string(info_log[:]))
+            return 0, false
+        }
+    }
+
+
+    frag_shader_source := #load("../shaders/frag/basic.frag", cstring)
+    frag_shader := gl.CreateShader(gl.FRAGMENT_SHADER)
+    gl.ShaderSource(frag_shader, 1, &frag_shader_source, nil)
+    gl.CompileShader(frag_shader)
+    {
+        success: i32
+        gl.GetShaderiv(frag_shader, gl.COMPILE_STATUS, &success)
+
+        if success == 0 {
+            info_log: [512]u8
+            gl.GetShaderInfoLog(frag_shader, 512, nil, raw_data(info_log[:]))
+            log.errorf("ERROR::SHADER::FRAG::COMPILATION_FAILED:\n{}", string(info_log[:]))
+            return 0, false
+        }
+    }
+
+    program_id = gl.CreateProgram()
+    gl.UseProgram(program_id)
+    gl.AttachShader(program_id, vertex_shader)
+    gl.AttachShader(program_id, frag_shader)
+    gl.LinkProgram(program_id)
+
+    {
+        success: i32
+        gl.GetProgramiv(program_id, gl.LINK_STATUS, &success)
+
+        if success == 0 {
+            info_log: [512]u8
+            gl.GetProgramInfoLog(program_id, 512, nil, raw_data(info_log[:]))
+            log.errorf("ERROR::SHADER::PROGRAM::LINKING_FAILED:\n{}", string(info_log[:]))
+            return 0, false
+        }
+    }
+
+    gl.DeleteShader(vertex_shader)
+    gl.DeleteShader(frag_shader)
+
+    return program_id, true
 }
