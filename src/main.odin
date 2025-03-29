@@ -11,6 +11,44 @@ HEIGHT :: 600
 GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
 
+TRIANGLE_VERTICES :: [?]f32{-0.5, -0.5, 0, 0.5, -0.5, 0, 0, 0.5, 0}
+
+RECTANGLE_VERTICES :: [?]f32 {
+    // top right
+    0.5,
+    0.5,
+    0.0,
+    // ====
+    // bottom right
+    0.5,
+    -0.5,
+    0.0,
+    // ====
+    // bottom left
+    -0.5,
+    -0.5,
+    0.0,
+    // ====
+    // top left
+    -0.5,
+    0.5,
+    0.0,
+    // ====
+}
+
+RECTANGLE_INDICES :: [?]i32 {
+    // first trinagle
+    0,
+    1,
+    3,
+    // ====
+    // second triangle
+    1,
+    2,
+    3,
+    // ====
+}
+
 main :: proc() {
     context.logger = log.create_console_logger()
     defer log.destroy_console_logger(context.logger)
@@ -87,19 +125,25 @@ main :: proc() {
     gl.DeleteShader(vertex_shader)
     gl.DeleteShader(frag_shader)
 
-    // Define the triangle
-    vertices := [?]f32{-0.5, -0.5, 0, 0.5, -0.5, 0, 0, 0.5, 0}
+    vertices := RECTANGLE_VERTICES
+    indicies := RECTANGLE_INDICES
 
-    vbo, vao: u32
+    vao, vbo, ebo: u32
     gl.GenVertexArrays(1, &vao)
     gl.GenBuffers(1, &vbo)
+    gl.GenBuffers(1, &ebo)
 
     // Make sure to bind the VAO first
     gl.BindVertexArray(vao)
 
+    // Then pass data to the GPU, since that takes time
     gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
     gl.BufferData(gl.ARRAY_BUFFER, size_of(vertices), &vertices, gl.STATIC_DRAW)
 
+    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(indicies), &indicies, gl.STATIC_DRAW)
+
+    // Finally, set the vertex attributes
     gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(f32) * 3, 0)
     gl.EnableVertexAttribArray(0)
 
@@ -112,7 +156,9 @@ main :: proc() {
 
         gl.UseProgram(shader_program)
         gl.BindVertexArray(vao)
-        gl.DrawArrays(gl.TRIANGLES, 0, 3)
+        gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+
+        gl.BindVertexArray(0)
 
         glfw.SwapBuffers(window)
     }
