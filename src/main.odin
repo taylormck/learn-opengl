@@ -163,10 +163,10 @@ main :: proc() {
 
             for i in 0 ..< 3 {
                 vertices[i].color = get_my_palette(times[i])
-
-                gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-                gl.BufferData(gl.ARRAY_BUFFER, size_of(vertices), &vertices, gl.STATIC_DRAW)
             }
+
+            gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+            gl.BufferData(gl.ARRAY_BUFFER, size_of(vertices), &vertices, gl.STATIC_DRAW)
         }
 
         gl.DrawArrays(gl.TRIANGLES, 0, 3)
