@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:log"
+import "core:math"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 
@@ -154,6 +155,20 @@ main :: proc() {
 
         gl.UseProgram(vertex_color_shader_program)
         gl.BindVertexArray(vao)
+
+        {
+            // Update colors
+            time := f32(glfw.GetTime())
+            times := [?]f32{time, time + math.PI / 2, time + math.PI}
+
+            for i in 0 ..< 3 {
+                vertices[i].color = get_my_palette(times[i])
+
+                gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+                gl.BufferData(gl.ARRAY_BUFFER, size_of(vertices), &vertices, gl.STATIC_DRAW)
+            }
+        }
+
         gl.DrawArrays(gl.TRIANGLES, 0, 3)
         // gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 
@@ -229,4 +244,20 @@ load_basic_shader :: proc() -> (program_id: u32, ok: bool) {
     gl.DeleteShader(frag_shader)
 
     return program_id, true
+}
+
+get_palette :: proc(t: f32, a, b, c, d: Vec3) -> Vec3 {
+    partial_color := math.TAU * (c * t + d)
+    partial_color = {math.cos(partial_color.x), math.cos(partial_color.y), math.cos(partial_color.z)}
+
+    return a + b * partial_color
+}
+
+get_my_palette :: proc(t: f32) -> Vec3 {
+    a := Vec3{0.5, 0.5, 0.5}
+    b := Vec3{0.5, 0.5, 0.5}
+    c := Vec3{1.0, 1.0, 1.0}
+    d := Vec3{0.0, 0.10, 0.20}
+
+    return get_palette(t, a, b, c, d)
 }
