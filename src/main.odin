@@ -4,6 +4,7 @@ import "core:fmt"
 import "core:image"
 import "core:log"
 import "core:math"
+import "core:time"
 import "render"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
@@ -13,6 +14,9 @@ HEIGHT :: 600
 
 GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
+
+TARGET_FRAMERATE :: 60
+TARGET_FRAME_SECONDS :: 1.0 / TARGET_FRAMERATE
 
 Vec2 :: [2]f32
 Vec3 :: [3]f32
@@ -121,11 +125,14 @@ main :: proc() {
     // gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
     // gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(indicies), &indicies, gl.STATIC_DRAW)
 
+    prev_time := glfw.GetTime()
+
     for !glfw.WindowShouldClose(window) {
         glfw.PollEvents()
         process_input(window)
 
-        time := f32(glfw.GetTime())
+        new_time := glfw.GetTime()
+        delta := new_time - prev_time
 
         gl.ClearColor(0.1, 0.2, 0.3, 1)
         gl.Clear(gl.COLOR_BUFFER_BIT)
@@ -133,12 +140,13 @@ main :: proc() {
         gl.UseProgram(shader_program)
         gl.BindVertexArray(vao)
 
-        gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), time)
+        gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
 
         gl.DrawArrays(gl.TRIANGLES, 0, 3)
 
         glfw.SwapBuffers(window)
         gl.BindVertexArray(0)
+        prev_time = new_time
     }
 }
 
