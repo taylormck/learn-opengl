@@ -1,8 +1,10 @@
 package main
 
 import "core:fmt"
+import "core:image"
 import "core:log"
 import "core:math"
+import "render"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 
@@ -12,64 +14,30 @@ HEIGHT :: 600
 GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
 
+Vec2 :: [2]f32
 Vec3 :: [3]f32
+Vec3u :: [3]u32
 
-TriangleVertex :: struct {
-    posotion: Vec3,
-}
-
-TriangleVertexColor :: struct {
-    position: Vec3,
-    color:    Vec3,
-}
-
-TRIANGLE_VERTICES :: [?]Vec3 {
+TRIANGLE_VERTEX_POSITIONS := [?]Vec3 {
     {-0.5, -0.5, 0}, // bottom left
     {0.5, -0.5, 0}, // bottom right
     {0, 0.5, 0}, // top
 }
 
-TRIANGLE_VERTICES_COLOR :: [?]TriangleVertexColor {
-    TriangleVertexColor{position = {-0.5, -0.5, 0}, color = {1, 0, 0}},
-    TriangleVertexColor{position = {0.5, -0.5, 0}, color = {0, 1, 0}},
-    TriangleVertexColor{position = {0, 0.5, 0}, color = {0, 0, 1}},
+TRIANGLE_VERTEX_COLORS := [?]Vec3 {
+    {1, 0, 0}, // bottom left
+    {0, 1, 0}, // bottom right
+    {0, 0, 1}, // top
 }
 
-RECTANGLE_VERTICES :: [?]f32 {
-    // top right
-    0.5,
-    0.5,
-    0.0,
-    // ====
-    // bottom right
-    0.5,
-    -0.5,
-    0.0,
-    // ====
-    // bottom left
-    -0.5,
-    -0.5,
-    0.0,
-    // ====
-    // top left
-    -0.5,
-    0.5,
-    0.0,
-    // ====
+RECTANGLE_VERTICES := [?]Vec3 {
+    {0.5, 0.5, 0.0}, // top right
+    {0.5, -0.5, 0.0}, // bottom right
+    {-0.5, -0.5, 0.0}, // bottom left
+    {-0.5, 0.5, 0.0}, // top left
 }
 
-RECTANGLE_INDICES :: [?]i32 {
-    // first trinagle
-    0,
-    1,
-    3,
-    // ====
-    // second triangle
-    1,
-    2,
-    3,
-    // ====
-}
+RECTANGLE_INDICES := [?]Vec3u{{0, 1, 3}, {1, 2, 3}}
 
 main :: proc() {
     context.logger = log.create_console_logger()
@@ -98,11 +66,15 @@ main :: proc() {
 
     shader_program :=
         gl.load_shaders_source(
-            #load("../shaders/vert/basic_palette.vert"),
+            #load("../shaders/vert/pos_and_color.vert"),
             #load("../shaders/frag/vert_color.frag"),
         ) or_else panic("Failed to load the shader")
 
-    vertices := TRIANGLE_VERTICES
+    vertex_data: render.VertexData
+    append(&vertex_data.positions, ..TRIANGLE_VERTEX_POSITIONS[:])
+    append(&vertex_data.colors, ..TRIANGLE_VERTEX_COLORS[:])
+
+    assert(len(vertex_data.positions) == len(vertex_data.colors))
 
     vao, vbo, ebo: u32
     gl.GenVertexArrays(1, &vao)
@@ -117,19 +89,37 @@ main :: proc() {
     // Make sure to bind the VAO first
     gl.BindVertexArray(vao)
 
-    // Then pass data to the GPU, since that takes time
+    positions_offset := 0
+    positions_size := size_of(Vec3) * len(vertex_data.positions)
+    colors_offset := positions_size
+    colors_size := size_of(Vec3) * len(vertex_data.colors)
+    uvs_offset := colors_offset + colors_size
+    uvs_size := size_of(Vec2) + len(vertex_data.uvs)
+    normals_offset := uvs_offset + uvs_size
+    normals_size := size_of(Vec3) + normals_offset
+    total_size := positions_size + colors_size + uvs_size + normals_size
+
     gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-    gl.BufferData(gl.ARRAY_BUFFER, size_of(vertices), &vertices, gl.STATIC_DRAW)
+    gl.BufferData(gl.ARRAY_BUFFER, total_size, nil, gl.STATIC_DRAW)
+
+    gl.BufferSubData(gl.ARRAY_BUFFER, 0, positions_size, raw_data(vertex_data.positions))
+    gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(Vec3), 0)
+    gl.EnableVertexAttribArray(0)
+
+    gl.BufferSubData(gl.ARRAY_BUFFER, colors_offset, colors_size, raw_data(vertex_data.colors))
+    gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, size_of(Vec3), uintptr(colors_offset))
+    gl.EnableVertexAttribArray(1)
+
+    gl.BufferSubData(gl.ARRAY_BUFFER, uvs_offset, uvs_size, raw_data(vertex_data.uvs))
+    gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, size_of(Vec3), uintptr(uvs_offset))
+    gl.EnableVertexAttribArray(2)
+
+    gl.BufferSubData(gl.ARRAY_BUFFER, normals_offset, normals_size, raw_data(vertex_data.normals))
+    gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(Vec3), uintptr(normals_offset))
+    gl.EnableVertexAttribArray(3)
 
     // gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
     // gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(indicies), &indicies, gl.STATIC_DRAW)
-
-    // Finally, set the vertex attributes
-    gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(TriangleVertex), 0)
-    gl.EnableVertexAttribArray(0)
-
-    // gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, size_of(f32) * 6, size_of(Vec3))
-    // gl.EnableVertexAttribArray(1)
 
     for !glfw.WindowShouldClose(window) {
         glfw.PollEvents()

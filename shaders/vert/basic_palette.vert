@@ -4,7 +4,6 @@ layout(location = 0) in vec3 vert_position;
 out vec3 vert_color;
 
 uniform float time;
-uniform vec2 resolution;
 
 vec3 palette(float t, vec3 a, vec3 b, vec3 c, vec3 d) { return a + b * cos(6.28318 * (c * t + d)); }
 
