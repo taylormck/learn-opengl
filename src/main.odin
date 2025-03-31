@@ -143,9 +143,7 @@ main :: proc() {
         gl.UseProgram(shader_program)
         gl.BindVertexArray(vao)
 
-
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), time)
-        gl.Uniform2f(gl.GetUniformLocation(shader_program, "resolution"), WIDTH, HEIGHT)
 
         gl.DrawArrays(gl.TRIANGLES, 0, 3)
 
