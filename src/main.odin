@@ -156,9 +156,6 @@ main :: proc() {
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
     gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(indices), &indices, gl.STATIC_DRAW)
 
-
-    gl.UseProgram(shader_program)
-
     gl.GenTextures(1, &wall_texture)
     defer gl.DeleteTextures(1, &wall_texture)
 
@@ -192,7 +189,6 @@ main :: proc() {
         wall_texture_img.buffer,
     )
     gl.GenerateMipmap(gl.TEXTURE_2D)
-    gl.Uniform1ui(gl.GetUniformLocation(shader_program, "texture_0"), wall_texture)
 
     gl.GenTextures(1, &face_texture)
     defer gl.DeleteTextures(1, &face_texture)
@@ -223,6 +219,9 @@ main :: proc() {
         face_texture_img.buffer,
     )
     gl.GenerateMipmap(gl.TEXTURE_2D)
+
+    gl.UseProgram(shader_program)
+    gl.Uniform1i(gl.GetUniformLocation(shader_program, "texture_0"), 0)
     gl.Uniform1i(gl.GetUniformLocation(shader_program, "texture_1"), 1)
 
     prev_time := glfw.GetTime()
@@ -248,7 +247,6 @@ main :: proc() {
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
 
         gl.BindVertexArray(vao)
-        // gl.DrawArrays(gl.TRIANGLES, 0, 3)
         gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 
         glfw.SwapBuffers(window)
