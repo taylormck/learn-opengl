@@ -1,14 +1,13 @@
 package main
 
 import "core:fmt"
-import "core:image"
-import "core:image/png"
 import "core:log"
 import "core:math"
 import "core:time"
 import "render"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
+import "vendor:stb/image"
 
 WIDTH :: 800
 HEIGHT :: 600
@@ -96,7 +95,7 @@ main :: proc() {
     shader_program :=
         gl.load_shaders_source(
             #load("../shaders/vert/pos_color_tex.vert"),
-            #load("../shaders/frag/tex.frag"),
+            #load("../shaders/frag/double_tex.frag"),
         ) or_else panic("Failed to load the shader")
 
     vertex_data: render.VertexData
@@ -112,7 +111,7 @@ main :: proc() {
     assert(len(vertex_data.positions) == len(vertex_data.colors))
     assert(len(vertex_data.positions) == len(vertex_data.uvs))
 
-    vao, vbo, ebo, wall_texture: u32
+    vao, vbo, ebo, wall_texture, face_texture: u32
     gl.GenVertexArrays(1, &vao)
     defer gl.DeleteVertexArrays(1, &vao)
 
@@ -157,6 +156,9 @@ main :: proc() {
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
     gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(indices), &indices, gl.STATIC_DRAW)
 
+
+    gl.UseProgram(shader_program)
+
     gl.GenTextures(1, &wall_texture)
     defer gl.DeleteTextures(1, &wall_texture)
 
@@ -168,8 +170,13 @@ main :: proc() {
     gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
     gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
-    wall_texture_img := image.load_from_file("textures/wall.png") or_else panic("Failed to load the wall texture.")
-    defer image.destroy(wall_texture_img)
+    wall_texture_img: Texture
+    if !load_texture_2d(
+        "textures/container.png",
+        &wall_texture_img,
+        3,
+    ) {panic("Failed to load the container texture.")}
+    defer image.image_free(wall_texture_img.buffer)
 
     assert(wall_texture_img.channels == 3)
 
@@ -177,14 +184,46 @@ main :: proc() {
         gl.TEXTURE_2D,
         0,
         gl.RGB,
-        i32(wall_texture_img.width),
-        i32(wall_texture_img.height),
+        wall_texture_img.width,
+        wall_texture_img.height,
         0,
         gl.RGB,
         gl.UNSIGNED_BYTE,
-        raw_data(wall_texture_img.pixels.buf),
+        wall_texture_img.buffer,
     )
     gl.GenerateMipmap(gl.TEXTURE_2D)
+    gl.Uniform1ui(gl.GetUniformLocation(shader_program, "texture_0"), wall_texture)
+
+    gl.GenTextures(1, &face_texture)
+    defer gl.DeleteTextures(1, &face_texture)
+
+    gl.ActiveTexture(gl.TEXTURE1)
+    gl.BindTexture(gl.TEXTURE_2D, face_texture)
+
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+    face_texture_img: Texture
+    if !load_texture_2d("textures/awesomeface.png", &face_texture_img, 4) {panic("Failed to load the face texture.")}
+    defer image.image_free(face_texture_img.buffer)
+
+    assert(face_texture_img.channels == 4)
+
+    gl.TexImage2D(
+        gl.TEXTURE_2D,
+        0,
+        gl.RGBA,
+        face_texture_img.width,
+        face_texture_img.height,
+        0,
+        gl.RGBA,
+        gl.UNSIGNED_BYTE,
+        face_texture_img.buffer,
+    )
+    gl.GenerateMipmap(gl.TEXTURE_2D)
+    gl.Uniform1i(gl.GetUniformLocation(shader_program, "texture_1"), 1)
 
     prev_time := glfw.GetTime()
 
@@ -199,11 +238,16 @@ main :: proc() {
         gl.Clear(gl.COLOR_BUFFER_BIT)
 
         gl.UseProgram(shader_program)
+
+        gl.ActiveTexture(gl.TEXTURE0)
         gl.BindTexture(gl.TEXTURE_2D, wall_texture)
-        gl.BindVertexArray(vao)
+
+        gl.ActiveTexture(gl.TEXTURE1)
+        gl.BindTexture(gl.TEXTURE_2D, face_texture)
 
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
 
+        gl.BindVertexArray(vao)
         // gl.DrawArrays(gl.TRIANGLES, 0, 3)
         gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 
@@ -217,4 +261,18 @@ process_input :: proc(window: glfw.WindowHandle) {
     if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
         glfw.SetWindowShouldClose(window, true)
     }
+}
+
+Texture :: struct {
+    width:    i32,
+    height:   i32,
+    channels: i32,
+    buffer:   [^]u8,
+}
+
+load_texture_2d :: proc(path: cstring, t: ^Texture, channels: i32, flip_vertically: bool = true) -> (ok: bool) {
+    image.set_flip_vertically_on_load(1 if flip_vertically else 0)
+    t.buffer = image.load(path, &t.width, &t.height, &t.channels, channels)
+
+    return t.buffer != nil && t.channels == channels
 }
