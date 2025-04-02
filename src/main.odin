@@ -3,6 +3,7 @@ package main
 import "core:fmt"
 import "core:log"
 import "core:math"
+import "core:math/linalg"
 import "core:time"
 import "render"
 import gl "vendor:OpenGL"
@@ -94,7 +95,7 @@ main :: proc() {
 
     shader_program :=
         gl.load_shaders_source(
-            #load("../shaders/vert/pos_color_tex.vert"),
+            #load("../shaders/vert/pos_color_tex_tranform.vert"),
             #load("../shaders/frag/double_tex.frag"),
         ) or_else panic("Failed to load the shader")
 
@@ -200,6 +201,11 @@ main :: proc() {
         gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
 
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
+
+        translation := linalg.matrix4_translate(Vec3{0.8 * f32(math.sin(new_time)), 0, 0})
+        rotation := linalg.matrix4_rotate(f32(new_time * 0.5), Vec3{0, 0, 1})
+        transform := translation * rotation
+        gl.UniformMatrix4fv(gl.GetUniformLocation(shader_program, "transform"), 1, false, raw_data(&transform))
 
         gl.BindVertexArray(vao)
         gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
