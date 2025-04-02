@@ -99,9 +99,6 @@ main :: proc() {
         ) or_else panic("Failed to load the shader")
 
     vertex_data: render.VertexData
-    // append(&vertex_data.positions, ..TRIANGLE_VERTEX_POSITIONS[:])
-    // append(&vertex_data.colors, ..TRIANGLE_VERTEX_COLORS[:])
-    // append(&vertex_data.uvs, ..TRIANGLE_TEXTURE_COORDS[:])
 
     append(&vertex_data.positions, ..RECTANGLE_VERTEX_POSITIONS[:])
     append(&vertex_data.colors, ..RECTANGLE_VERTEX_COLORS[:])
@@ -111,7 +108,7 @@ main :: proc() {
     assert(len(vertex_data.positions) == len(vertex_data.colors))
     assert(len(vertex_data.positions) == len(vertex_data.uvs))
 
-    vao, vbo, ebo, wall_texture, face_texture: u32
+    vao, vbo, ebo: u32
     gl.GenVertexArrays(1, &vao)
     defer gl.DeleteVertexArrays(1, &vao)
 
@@ -156,73 +153,31 @@ main :: proc() {
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
     gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(indices), &indices, gl.STATIC_DRAW)
 
-    gl.GenTextures(1, &wall_texture)
-    defer gl.DeleteTextures(1, &wall_texture)
+    gl.UseProgram(shader_program)
 
-    gl.ActiveTexture(gl.TEXTURE0)
-    gl.BindTexture(gl.TEXTURE_2D, wall_texture)
+    box_texture_ids: [2]u32
+    gl.GenTextures(2, raw_data(box_texture_ids[:]))
+    defer gl.DeleteTextures(2, raw_data(box_texture_ids[:]))
 
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-
-    wall_texture_img: Texture
-    if !load_texture_2d(
-        "textures/container.png",
-        &wall_texture_img,
-        3,
-    ) {panic("Failed to load the container texture.")}
+    wall_texture_img := prepare_texture(
+        path = "textures/container.png",
+        channels = 3,
+        texture_number = 0,
+        shader_program = shader_program,
+        texture_id = box_texture_ids[0],
+        gl_texture = gl.TEXTURE0,
+    )
     defer image.image_free(wall_texture_img.buffer)
 
-    assert(wall_texture_img.channels == 3)
-
-    gl.TexImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGB,
-        wall_texture_img.width,
-        wall_texture_img.height,
-        0,
-        gl.RGB,
-        gl.UNSIGNED_BYTE,
-        wall_texture_img.buffer,
+    face_texture_img := prepare_texture(
+        path = "textures/awesomeface.png",
+        channels = 4,
+        texture_number = 1,
+        shader_program = shader_program,
+        texture_id = box_texture_ids[1],
+        gl_texture = gl.TEXTURE1,
     )
-    gl.GenerateMipmap(gl.TEXTURE_2D)
-
-    gl.GenTextures(1, &face_texture)
-    defer gl.DeleteTextures(1, &face_texture)
-
-    gl.ActiveTexture(gl.TEXTURE1)
-    gl.BindTexture(gl.TEXTURE_2D, face_texture)
-
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-
-    face_texture_img: Texture
-    if !load_texture_2d("textures/awesomeface.png", &face_texture_img, 4) {panic("Failed to load the face texture.")}
     defer image.image_free(face_texture_img.buffer)
-
-    assert(face_texture_img.channels == 4)
-
-    gl.TexImage2D(
-        gl.TEXTURE_2D,
-        0,
-        gl.RGBA,
-        face_texture_img.width,
-        face_texture_img.height,
-        0,
-        gl.RGBA,
-        gl.UNSIGNED_BYTE,
-        face_texture_img.buffer,
-    )
-    gl.GenerateMipmap(gl.TEXTURE_2D)
-
-    gl.UseProgram(shader_program)
-    gl.Uniform1i(gl.GetUniformLocation(shader_program, "texture_0"), 0)
-    gl.Uniform1i(gl.GetUniformLocation(shader_program, "texture_1"), 1)
 
     prev_time := glfw.GetTime()
 
@@ -239,10 +194,10 @@ main :: proc() {
         gl.UseProgram(shader_program)
 
         gl.ActiveTexture(gl.TEXTURE0)
-        gl.BindTexture(gl.TEXTURE_2D, wall_texture)
+        gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[0])
 
         gl.ActiveTexture(gl.TEXTURE1)
-        gl.BindTexture(gl.TEXTURE_2D, face_texture)
+        gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
 
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
 
@@ -268,8 +223,54 @@ Texture :: struct {
     buffer:   [^]u8,
 }
 
+prepare_texture :: proc(
+    path: cstring,
+    channels, texture_number: i32,
+    shader_program, texture_id, gl_texture: u32,
+) -> (
+    img: Texture,
+) {
+    gl.ActiveTexture(gl_texture)
+    gl.BindTexture(gl.TEXTURE_2D, texture_id)
+
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+    if !load_texture_2d(path, &img, channels) {panic(fmt.aprintf("Failed to load texture: {}", path))}
+
+    assert(img.channels == channels)
+
+    format: i32
+    switch channels {
+    case 3:
+        format = gl.RGB
+    case 4:
+        format = gl.RGBA
+    case:
+        panic(fmt.aprintf("Unsupported number of channels: {}", channels))
+    }
+
+    gl.TexImage2D(
+        gl.TEXTURE_2D,
+        0,
+        format,
+        img.width,
+        img.height,
+        0,
+        transmute(u32)format,
+        gl.UNSIGNED_BYTE,
+        img.buffer,
+    )
+    gl.GenerateMipmap(gl.TEXTURE_2D)
+    gl.Uniform1i(gl.GetUniformLocation(shader_program, fmt.caprintf("texture_{}", texture_number)), texture_number)
+
+    return img
+}
+
 load_texture_2d :: proc(path: cstring, t: ^Texture, channels: i32, flip_vertically: bool = true) -> (ok: bool) {
-    image.set_flip_vertically_on_load(1 if flip_vertically else 0)
+    if flip_vertically do image.set_flip_vertically_on_load(1)
     t.buffer = image.load(path, &t.width, &t.height, &t.channels, channels)
 
     return t.buffer != nil && t.channels == channels
