@@ -204,7 +204,20 @@ main :: proc() {
 
         translation := linalg.matrix4_translate(Vec3{0.8 * f32(math.sin(new_time)), 0, 0})
         rotation := linalg.matrix4_rotate(f32(new_time * 0.5), Vec3{0, 0, 1})
-        transform := translation * rotation
+        perspective_rotation := linalg.matrix4_rotate(-math.PI / 4, Vec3{1, 0, 0})
+
+        view := linalg.matrix4_translate(Vec3{0, 0, -3})
+
+        projection := linalg.matrix4_perspective_f32(
+            fovy = math.PI / 4,
+            aspect = WIDTH / HEIGHT,
+            near = 0.1,
+            far = 100,
+        )
+
+        model := translation * perspective_rotation * rotation
+        transform := projection * view * model
+
         gl.UniformMatrix4fv(gl.GetUniformLocation(shader_program, "transform"), 1, false, raw_data(&transform))
 
         gl.BindVertexArray(vao)
@@ -221,6 +234,8 @@ process_input :: proc(window: glfw.WindowHandle) {
         glfw.SetWindowShouldClose(window, true)
     }
 }
+
+TransformMatrix :: matrix[4, 4]f32
 
 Texture :: struct {
     width:    i32,
