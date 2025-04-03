@@ -34,6 +34,12 @@ CUBE_POSITIONS :: [?]types.Vec3 {
     {-1.3, 1, -1.5},
 }
 
+Camera :: struct {
+    position, target, up: types.Vec3,
+}
+
+CAMERA_RADIUS :: 10
+
 main :: proc() {
     context.logger = log.create_console_logger()
     defer log.destroy_console_logger(context.logger)
@@ -109,14 +115,19 @@ main :: proc() {
 
     prev_time := glfw.GetTime()
 
-    view := linalg.matrix4_translate(types.Vec3{0, 0, -3})
     projection := linalg.matrix4_perspective_f32(
         fovy = linalg.to_radians(f32(45)),
         aspect = f32(WIDTH) / HEIGHT,
         near = 0.1,
         far = 100,
     )
-    pv := projection * view
+
+    camera := Camera {
+        position = {0, 0, 3},
+        target   = {0, 0, 0},
+        up       = {0, 1, 0},
+    }
+
 
     for !glfw.WindowShouldClose(window) {
         glfw.PollEvents()
@@ -137,6 +148,11 @@ main :: proc() {
         gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
 
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
+
+        camera.position = {math.sin(f32(new_time)) * CAMERA_RADIUS, 0, math.cos(f32(new_time)) * CAMERA_RADIUS}
+
+        view := linalg.matrix4_look_at_f32(camera.position, camera.target, camera.up)
+        pv := projection * view
 
         gl.BindVertexArray(vao)
 
