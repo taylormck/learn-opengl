@@ -52,60 +52,23 @@ main :: proc() {
             #load("../shaders/frag/double_tex.frag"),
         ) or_else panic("Failed to load the shader")
 
-    vertex_data: render.VertexData
-
-    append(&vertex_data.positions, ..mesh.RECTANGLE_VERTEX_POSITIONS[:])
-    append(&vertex_data.colors, ..mesh.RECTANGLE_VERTEX_COLORS[:])
-    append(&vertex_data.uvs, ..mesh.RECTANGLE_TEXTURE_COORDS[:])
-    indices := mesh.RECTANGLE_INDICES
-
-    assert(len(vertex_data.positions) == len(vertex_data.colors))
-    assert(len(vertex_data.positions) == len(vertex_data.uvs))
-
-    vao, vbo, ebo: u32
+    vao: u32
+    buffers: [2]u32
     gl.GenVertexArrays(1, &vao)
     defer gl.DeleteVertexArrays(1, &vao)
 
     // Make sure to bind the VAO first
     gl.BindVertexArray(vao)
 
-    gl.GenBuffers(1, &vbo)
-    defer gl.DeleteBuffers(1, &vbo)
+    gl.GenBuffers(2, raw_data(buffers[:]))
+    defer gl.DeleteBuffers(2, raw_data(buffers[:]))
 
-    gl.GenBuffers(1, &ebo)
-    defer gl.DeleteBuffers(1, &ebo)
+    // vertex_data := mesh.rectangle_vertex_data_alloc()
+    vertex_data := mesh.triangle_vertex_data_alloc()
+    defer render.vertex_data_free(&vertex_data)
 
-    positions_offset := 0
-    positions_size := size_of(types.Vec3) * len(vertex_data.positions)
-    colors_offset := positions_size
-    colors_size := size_of(types.Vec3) * len(vertex_data.colors)
-    uvs_offset := colors_offset + colors_size
-    uvs_size := size_of(types.Vec2) * len(vertex_data.uvs)
-    normals_offset := uvs_offset + uvs_size
-    normals_size := size_of(types.Vec3) + normals_offset
-    total_size := positions_size + colors_size + uvs_size + normals_size
-
-    gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-    gl.BufferData(gl.ARRAY_BUFFER, total_size, nil, gl.STATIC_DRAW)
-
-    gl.BufferSubData(gl.ARRAY_BUFFER, 0, positions_size, raw_data(vertex_data.positions))
-    gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), 0)
-    gl.EnableVertexAttribArray(0)
-
-    gl.BufferSubData(gl.ARRAY_BUFFER, colors_offset, colors_size, raw_data(vertex_data.colors))
-    gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), uintptr(colors_offset))
-    gl.EnableVertexAttribArray(1)
-
-    gl.BufferSubData(gl.ARRAY_BUFFER, uvs_offset, uvs_size, raw_data(vertex_data.uvs))
-    gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, size_of(types.Vec2), uintptr(uvs_offset))
-    gl.EnableVertexAttribArray(2)
-
-    gl.BufferSubData(gl.ARRAY_BUFFER, normals_offset, normals_size, raw_data(vertex_data.normals))
-    gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), uintptr(normals_offset))
-    gl.EnableVertexAttribArray(3)
-
-    gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
-    gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(indices), &indices, gl.STATIC_DRAW)
+    // mesh.rectangle_send_to_gpu(vertex_data, vao, buffers[0], buffers[1])
+    mesh.triangle_send_to_gpu(vertex_data, vao, buffers[0])
 
     gl.UseProgram(shader_program)
 
@@ -173,8 +136,8 @@ main :: proc() {
 
         gl.UniformMatrix4fv(gl.GetUniformLocation(shader_program, "transform"), 1, false, raw_data(&transform))
 
-        gl.BindVertexArray(vao)
-        gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+        // mesh.rectangle_draw(vao)
+        mesh.triangle_draw(vao)
 
         glfw.SwapBuffers(window)
         gl.BindVertexArray(0)
