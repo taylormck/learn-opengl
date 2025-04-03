@@ -5,7 +5,9 @@ import "core:log"
 import "core:math"
 import "core:math/linalg"
 import "core:time"
+import "mesh"
 import "render"
+import "types"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 import "vendor:stb/image"
@@ -18,55 +20,6 @@ GL_MINOR_VERSION :: 5
 
 TARGET_FRAMERATE :: 60
 TARGET_FRAME_SECONDS :: 1.0 / TARGET_FRAMERATE
-
-Vec2 :: [2]f32
-Vec3 :: [3]f32
-Vec3u :: [3]u32
-
-NUM_TRIANGLE_VERTICES :: 3
-
-TRIANGLE_VERTEX_POSITIONS := [NUM_TRIANGLE_VERTICES]Vec3 {
-    {-0.5, -0.5, 0}, // bottom left
-    {0.5, -0.5, 0}, // bottom right
-    {0, 0.5, 0}, // top
-}
-
-TRIANGLE_VERTEX_COLORS := [NUM_TRIANGLE_VERTICES]Vec3 {
-    {1, 0, 0}, // bottom left
-    {0, 1, 0}, // bottom right
-    {0, 0, 1}, // top
-}
-
-TRIANGLE_TEXTURE_COORDS := [NUM_TRIANGLE_VERTICES]Vec2 {
-    {0, 0}, // bottom left
-    {1, 0}, // bottom right
-    {0.5, 1}, // top
-}
-
-NUM_RECTANGLE_VERTICES :: 4
-
-RECTANGLE_VERTEX_POSITIONS := [NUM_RECTANGLE_VERTICES]Vec3 {
-    {0.5, 0.5, 0.0}, // top right
-    {0.5, -0.5, 0.0}, // bottom right
-    {-0.5, 0.5, 0.0}, // top left
-    {-0.5, -0.5, 0.0}, // bottom left
-}
-
-RECTANGLE_VERTEX_COLORS := [NUM_RECTANGLE_VERTICES]Vec3 {
-    {1, 0, 0}, // top right
-    {0, 1, 0}, // bottom right
-    {1, 1, 0}, // top left
-    {0, 0, 1}, // bottom left
-}
-
-RECTANGLE_TEXTURE_COORDS := [NUM_RECTANGLE_VERTICES]Vec2 {
-    {1, 1}, // top right
-    {1, 0}, // bottom right
-    {0, 1}, // top left
-    {0, 0}, // bottom left
-}
-
-RECTANGLE_INDICES := [2]Vec3u{{0, 1, 2}, {1, 3, 2}}
 
 main :: proc() {
     context.logger = log.create_console_logger()
@@ -101,10 +54,10 @@ main :: proc() {
 
     vertex_data: render.VertexData
 
-    append(&vertex_data.positions, ..RECTANGLE_VERTEX_POSITIONS[:])
-    append(&vertex_data.colors, ..RECTANGLE_VERTEX_COLORS[:])
-    append(&vertex_data.uvs, ..RECTANGLE_TEXTURE_COORDS[:])
-    indices := RECTANGLE_INDICES
+    append(&vertex_data.positions, ..mesh.RECTANGLE_VERTEX_POSITIONS[:])
+    append(&vertex_data.colors, ..mesh.RECTANGLE_VERTEX_COLORS[:])
+    append(&vertex_data.uvs, ..mesh.RECTANGLE_TEXTURE_COORDS[:])
+    indices := mesh.RECTANGLE_INDICES
 
     assert(len(vertex_data.positions) == len(vertex_data.colors))
     assert(len(vertex_data.positions) == len(vertex_data.uvs))
@@ -123,32 +76,32 @@ main :: proc() {
     defer gl.DeleteBuffers(1, &ebo)
 
     positions_offset := 0
-    positions_size := size_of(Vec3) * len(vertex_data.positions)
+    positions_size := size_of(types.Vec3) * len(vertex_data.positions)
     colors_offset := positions_size
-    colors_size := size_of(Vec3) * len(vertex_data.colors)
+    colors_size := size_of(types.Vec3) * len(vertex_data.colors)
     uvs_offset := colors_offset + colors_size
-    uvs_size := size_of(Vec2) * len(vertex_data.uvs)
+    uvs_size := size_of(types.Vec2) * len(vertex_data.uvs)
     normals_offset := uvs_offset + uvs_size
-    normals_size := size_of(Vec3) + normals_offset
+    normals_size := size_of(types.Vec3) + normals_offset
     total_size := positions_size + colors_size + uvs_size + normals_size
 
     gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
     gl.BufferData(gl.ARRAY_BUFFER, total_size, nil, gl.STATIC_DRAW)
 
     gl.BufferSubData(gl.ARRAY_BUFFER, 0, positions_size, raw_data(vertex_data.positions))
-    gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(Vec3), 0)
+    gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), 0)
     gl.EnableVertexAttribArray(0)
 
     gl.BufferSubData(gl.ARRAY_BUFFER, colors_offset, colors_size, raw_data(vertex_data.colors))
-    gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, size_of(Vec3), uintptr(colors_offset))
+    gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), uintptr(colors_offset))
     gl.EnableVertexAttribArray(1)
 
     gl.BufferSubData(gl.ARRAY_BUFFER, uvs_offset, uvs_size, raw_data(vertex_data.uvs))
-    gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, size_of(Vec2), uintptr(uvs_offset))
+    gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, size_of(types.Vec2), uintptr(uvs_offset))
     gl.EnableVertexAttribArray(2)
 
     gl.BufferSubData(gl.ARRAY_BUFFER, normals_offset, normals_size, raw_data(vertex_data.normals))
-    gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(Vec3), uintptr(normals_offset))
+    gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), uintptr(normals_offset))
     gl.EnableVertexAttribArray(3)
 
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
@@ -202,11 +155,11 @@ main :: proc() {
 
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
 
-        translation := linalg.matrix4_translate(Vec3{0.8 * f32(math.sin(new_time)), 0, 0})
-        rotation := linalg.matrix4_rotate(f32(new_time * 0.5), Vec3{0, 0, 1})
-        perspective_rotation := linalg.matrix4_rotate(-math.PI / 4, Vec3{1, 0, 0})
+        translation := linalg.matrix4_translate(types.Vec3{0.8 * f32(math.sin(new_time)), 0, 0})
+        rotation := linalg.matrix4_rotate(f32(new_time * 0.5), types.Vec3{0, 0, 1})
+        perspective_rotation := linalg.matrix4_rotate(-math.PI / 4, types.Vec3{1, 0, 0})
 
-        view := linalg.matrix4_translate(Vec3{0, 0, -3})
+        view := linalg.matrix4_translate(types.Vec3{0, 0, -3})
 
         projection := linalg.matrix4_perspective_f32(
             fovy = math.PI / 4,
