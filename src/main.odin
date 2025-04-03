@@ -143,7 +143,8 @@ main :: proc() {
         for position, i in CUBE_POSITIONS {
             model := linalg.matrix4_translate(position)
 
-            angle: f32 = f32(new_time) if i % 3 == 0 else linalg.to_radians(20 * f32(i))
+            angle: f32 = linalg.to_radians(20 * f32(i))
+            if i % 3 == 0 do angle += f32(new_time)
 
             model *= linalg.matrix4_rotate(angle, types.Vec3{1, 0.3, 0.5})
 
