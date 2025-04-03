@@ -48,7 +48,7 @@ main :: proc() {
 
     shader_program :=
         gl.load_shaders_source(
-            #load("../shaders/vert/pos_color_tex_tranform.vert"),
+            #load("../shaders/vert/pos_tex_transform.vert"),
             #load("../shaders/frag/double_tex.frag"),
         ) or_else panic("Failed to load the shader")
 
@@ -63,12 +63,7 @@ main :: proc() {
     gl.GenBuffers(2, raw_data(buffers[:]))
     defer gl.DeleteBuffers(2, raw_data(buffers[:]))
 
-    // vertex_data := mesh.rectangle_vertex_data_alloc()
-    vertex_data := mesh.triangle_vertex_data_alloc()
-    defer render.vertex_data_free(&vertex_data)
-
-    // mesh.rectangle_send_to_gpu(vertex_data, vao, buffers[0], buffers[1])
-    mesh.triangle_send_to_gpu(vertex_data, vao, buffers[0])
+    mesh.cube_send_to_gpu(vao, buffers[0])
 
     gl.UseProgram(shader_program)
 
@@ -96,6 +91,8 @@ main :: proc() {
     )
     defer image.image_free(face_texture_img.buffer)
 
+    gl.Enable(gl.DEPTH_TEST)
+
     prev_time := glfw.GetTime()
 
     for !glfw.WindowShouldClose(window) {
@@ -106,7 +103,7 @@ main :: proc() {
         delta := new_time - prev_time
 
         gl.ClearColor(0.1, 0.2, 0.3, 1)
-        gl.Clear(gl.COLOR_BUFFER_BIT)
+        gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
         gl.UseProgram(shader_program)
 
@@ -119,8 +116,7 @@ main :: proc() {
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
 
         translation := linalg.matrix4_translate(types.Vec3{0.8 * f32(math.sin(new_time)), 0, 0})
-        rotation := linalg.matrix4_rotate(f32(new_time * 0.5), types.Vec3{0, 0, 1})
-        perspective_rotation := linalg.matrix4_rotate(-math.PI / 4, types.Vec3{1, 0, 0})
+        rotation := linalg.matrix4_rotate(f32(new_time) * math.PI / 4, types.Vec3{0.5, 1, 0})
 
         view := linalg.matrix4_translate(types.Vec3{0, 0, -3})
 
@@ -131,13 +127,12 @@ main :: proc() {
             far = 100,
         )
 
-        model := translation * perspective_rotation * rotation
+        model := translation * rotation
         transform := projection * view * model
 
         gl.UniformMatrix4fv(gl.GetUniformLocation(shader_program, "transform"), 1, false, raw_data(&transform))
 
-        // mesh.rectangle_draw(vao)
-        mesh.triangle_draw(vao)
+        mesh.cube_draw(vao)
 
         glfw.SwapBuffers(window)
         gl.BindVertexArray(0)
