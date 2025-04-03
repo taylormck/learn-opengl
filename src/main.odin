@@ -45,6 +45,7 @@ main :: proc() {
     glfw.MakeContextCurrent(window)
     gl.load_up_to(GL_MAJOR_VERSION, GL_MINOR_VERSION, glfw.gl_set_proc_address)
     gl.Viewport(0, 0, WIDTH, HEIGHT)
+    glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
 
     shader_program :=
         gl.load_shaders_source(
@@ -206,4 +207,8 @@ load_texture_2d :: proc(path: cstring, t: ^Texture, channels: i32, flip_vertical
     t.buffer = image.load(path, &t.width, &t.height, &t.channels, channels)
 
     return t.buffer != nil && t.channels == channels
+}
+
+framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, height: i32) {
+    gl.Viewport(0, 0, width, height)
 }
