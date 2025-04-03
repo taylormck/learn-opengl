@@ -21,6 +21,19 @@ GL_MINOR_VERSION :: 5
 TARGET_FRAMERATE :: 60
 TARGET_FRAME_SECONDS :: 1.0 / TARGET_FRAMERATE
 
+CUBE_POSITIONS :: [?]types.Vec3 {
+    {0, 0, 0},
+    {2, 5, -15},
+    {-1.5, -2.2, -2.5},
+    {-3.8, -2, -12.3},
+    {2.4, -0.4, -3.5},
+    {-1.7, 3, -7.5},
+    {1.3, -2, -2.5},
+    {1.5, 2, -2.5},
+    {1.5, 0.2, -1.5},
+    {-1.3, 1, -1.5},
+}
+
 main :: proc() {
     context.logger = log.create_console_logger()
     defer log.destroy_console_logger(context.logger)
@@ -96,6 +109,15 @@ main :: proc() {
 
     prev_time := glfw.GetTime()
 
+    view := linalg.matrix4_translate(types.Vec3{0, 0, -3})
+    projection := linalg.matrix4_perspective_f32(
+        fovy = linalg.to_radians(f32(45)),
+        aspect = f32(WIDTH) / HEIGHT,
+        near = 0.1,
+        far = 100,
+    )
+    pv := projection * view
+
     for !glfw.WindowShouldClose(window) {
         glfw.PollEvents()
         process_input(window)
@@ -116,24 +138,19 @@ main :: proc() {
 
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
 
-        translation := linalg.matrix4_translate(types.Vec3{0.8 * f32(math.sin(new_time)), 0, 0})
-        rotation := linalg.matrix4_rotate(f32(new_time) * math.PI / 4, types.Vec3{0.5, 1, 0})
+        gl.BindVertexArray(vao)
 
-        view := linalg.matrix4_translate(types.Vec3{0, 0, -3})
+        for position, i in CUBE_POSITIONS {
+            model := linalg.matrix4_translate(position)
 
-        projection := linalg.matrix4_perspective_f32(
-            fovy = math.PI / 4,
-            aspect = WIDTH / HEIGHT,
-            near = 0.1,
-            far = 100,
-        )
+            angle: f32 = f32(new_time) if i % 3 == 0 else linalg.to_radians(20 * f32(i))
 
-        model := translation * rotation
-        transform := projection * view * model
+            model *= linalg.matrix4_rotate(angle, types.Vec3{1, 0.3, 0.5})
 
-        gl.UniformMatrix4fv(gl.GetUniformLocation(shader_program, "transform"), 1, false, raw_data(&transform))
-
-        mesh.cube_draw(vao)
+            transform := pv * model
+            gl.UniformMatrix4fv(gl.GetUniformLocation(shader_program, "transform"), 1, false, raw_data(&transform))
+            mesh.cube_draw(vao)
+        }
 
         glfw.SwapBuffers(window)
         gl.BindVertexArray(0)

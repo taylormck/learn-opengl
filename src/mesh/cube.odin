@@ -72,6 +72,5 @@ cube_send_to_gpu :: proc(vao, vbo: u32) {
 }
 
 cube_draw :: proc(vao: u32) {
-    gl.BindVertexArray(vao)
     gl.DrawArrays(gl.TRIANGLES, 0, 36)
 }
