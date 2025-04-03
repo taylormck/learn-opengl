@@ -21,6 +21,13 @@ GL_MINOR_VERSION :: 5
 TARGET_FRAMERATE :: 60
 TARGET_FRAME_SECONDS :: 1.0 / TARGET_FRAMERATE
 
+UP :: types.Vec3{0, 1, 0}
+DOWN :: types.Vec3{0, -1, 0}
+LEFT :: types.Vec3{-1, 0, 0}
+RIGHT :: types.Vec3{1, 0, 0}
+FORWARD :: types.Vec3{0, 0, -1}
+BACKWARD :: types.Vec3{0, 0, 1}
+
 CUBE_POSITIONS :: [?]types.Vec3 {
     {0, 0, 0},
     {2, 5, -15},
@@ -35,10 +42,19 @@ CUBE_POSITIONS :: [?]types.Vec3 {
 }
 
 Camera :: struct {
-    position, target, up: types.Vec3,
+    position, direction, up: types.Vec3,
+}
+
+CAMERA_SPEED :: 5
+
+camera := Camera {
+    position  = {0, 0, 3},
+    direction = {0, 0, -1},
+    up        = {0, 1, 0},
 }
 
 CAMERA_RADIUS :: 10
+
 
 main :: proc() {
     context.logger = log.create_console_logger()
@@ -113,7 +129,7 @@ main :: proc() {
 
     gl.Enable(gl.DEPTH_TEST)
 
-    prev_time := glfw.GetTime()
+    prev_time := f32(glfw.GetTime())
 
     projection := linalg.matrix4_perspective_f32(
         fovy = linalg.to_radians(f32(45)),
@@ -122,19 +138,12 @@ main :: proc() {
         far = 100,
     )
 
-    camera := Camera {
-        position = {0, 0, 3},
-        target   = {0, 0, 0},
-        up       = {0, 1, 0},
-    }
-
-
     for !glfw.WindowShouldClose(window) {
-        glfw.PollEvents()
-        process_input(window)
-
-        new_time := glfw.GetTime()
+        new_time := f32(glfw.GetTime())
         delta := new_time - prev_time
+
+        glfw.PollEvents()
+        process_input(window, delta)
 
         gl.ClearColor(0.1, 0.2, 0.3, 1)
         gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -147,11 +156,9 @@ main :: proc() {
         gl.ActiveTexture(gl.TEXTURE1)
         gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
 
-        gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), f32(new_time))
+        gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), new_time)
 
-        camera.position = {math.sin(f32(new_time)) * CAMERA_RADIUS, 0, math.cos(f32(new_time)) * CAMERA_RADIUS}
-
-        view := linalg.matrix4_look_at_f32(camera.position, camera.target, camera.up)
+        view := linalg.matrix4_look_at_f32(camera.position, camera.position + camera.direction, camera.up)
         pv := projection * view
 
         gl.BindVertexArray(vao)
@@ -160,7 +167,7 @@ main :: proc() {
             model := linalg.matrix4_translate(position)
 
             angle: f32 = linalg.to_radians(20 * f32(i))
-            if i % 3 == 0 do angle += f32(new_time)
+            if i % 3 == 0 do angle += new_time
 
             model *= linalg.matrix4_rotate(angle, types.Vec3{1, 0.3, 0.5})
 
@@ -175,10 +182,27 @@ main :: proc() {
     }
 }
 
-process_input :: proc(window: glfw.WindowHandle) {
+process_input :: proc(window: glfw.WindowHandle, delta: f32) {
     if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
         glfw.SetWindowShouldClose(window, true)
     }
+
+    camera_movement: types.Vec3
+
+    if (glfw.GetKey(window, glfw.KEY_W) == glfw.PRESS) do camera_movement += camera.direction
+    if (glfw.GetKey(window, glfw.KEY_S) == glfw.PRESS) do camera_movement -= camera.direction
+
+    if (glfw.GetKey(window, glfw.KEY_A) == glfw.PRESS) {
+        right := linalg.normalize(linalg.cross(camera.direction, camera.up))
+        camera_movement -= right
+    }
+
+    if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) {
+        right := linalg.normalize(linalg.cross(camera.direction, camera.up))
+        camera_movement += right
+    }
+
+    camera.position += camera_movement * delta
 }
 
 TransformMatrix :: matrix[4, 4]f32
