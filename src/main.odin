@@ -32,7 +32,7 @@ CUBE_POSITIONS :: [?]types.Vec3 {
 }
 
 camera := render.Camera {
-    type         = .FPS,
+    type         = .Flying,
     position     = {0, 0, 3},
     direction    = {0, 0, -1},
     up           = {0, 1, 0},

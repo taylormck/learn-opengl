@@ -37,6 +37,8 @@ process_input :: proc(window: glfw.WindowHandle, delta: f32) {
     if (glfw.GetKey(window, glfw.KEY_A) == glfw.PRESS) do camera_movement += LEFT
     if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) do camera_movement += RIGHT
 
+    // NOTE: input should probably be stashed in a global somewhere,
+    // then this can run in the update directly.
     render.camera_move(&camera, camera_movement, delta)
 }
 
