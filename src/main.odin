@@ -55,6 +55,16 @@ camera := Camera {
 
 CAMERA_RADIUS :: 10
 
+MOUSE_SENSITIVITY :: 0.01
+
+MouseStatus :: struct {
+    position: types.Vec2,
+}
+
+mouse_info := MouseStatus {
+    position = {WIDTH / 2, HEIGHT / 2},
+}
+
 
 main :: proc() {
     context.logger = log.create_console_logger()
@@ -81,6 +91,9 @@ main :: proc() {
     gl.load_up_to(GL_MAJOR_VERSION, GL_MINOR_VERSION, glfw.gl_set_proc_address)
     gl.Viewport(0, 0, WIDTH, HEIGHT)
     glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
+
+    glfw.SetInputMode(window, glfw.CURSOR, glfw.CURSOR_DISABLED)
+    glfw.SetCursorPosCallback(window, mouse_callback)
 
     shader_program :=
         gl.load_shaders_source(
@@ -269,4 +282,30 @@ load_texture_2d :: proc(path: cstring, t: ^Texture, channels: i32, flip_vertical
 
 framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, height: i32) {
     gl.Viewport(0, 0, width, height)
+}
+
+first_mouse := true
+
+mouse_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
+    x := f32(x)
+    y := f32(y)
+
+    if first_mouse {
+        mouse_info.position = {x, y}
+        first_mouse = false
+    }
+
+    offset := types.Vec2{x - mouse_info.position.x, mouse_info.position.y - y} * MOUSE_SENSITIVITY
+    mouse_info.position = {x, y}
+
+    yaw := linalg.atan2(camera.direction.z, camera.direction.x)
+
+    pitch_adjacent := math.sqrt(camera.direction.x * camera.direction.x + camera.direction.z * camera.direction.z)
+
+    pitch := linalg.atan2(camera.direction.y, pitch_adjacent)
+
+    yaw += offset.x
+    pitch = clamp(pitch + offset.y, linalg.to_radians(f32(-89)), linalg.to_radians(f32(89)))
+
+    camera.direction = types.Vec3{math.cos(yaw) * math.cos(pitch), math.sin(pitch), math.sin(yaw) * math.cos(pitch)}
 }
