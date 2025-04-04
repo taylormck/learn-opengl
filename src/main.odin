@@ -18,16 +18,6 @@ HEIGHT :: 600
 GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
 
-TARGET_FRAMERATE :: 60
-TARGET_FRAME_SECONDS :: 1.0 / TARGET_FRAMERATE
-
-UP :: types.Vec3{0, 1, 0}
-DOWN :: types.Vec3{0, -1, 0}
-LEFT :: types.Vec3{-1, 0, 0}
-RIGHT :: types.Vec3{1, 0, 0}
-FORWARD :: types.Vec3{0, 0, -1}
-BACKWARD :: types.Vec3{0, 0, 1}
-
 CUBE_POSITIONS :: [?]types.Vec3 {
     {0, 0, 0},
     {2, 5, -15},
@@ -41,32 +31,15 @@ CUBE_POSITIONS :: [?]types.Vec3 {
     {-1.3, 1, -1.5},
 }
 
-Camera :: struct {
-    position, direction, up: types.Vec3,
-    fov:                     f32,
+camera := render.Camera {
+    position     = {0, 0, 3},
+    direction    = {0, 0, -1},
+    up           = {0, 1, 0},
+    fov          = linalg.to_radians(f32(45)),
+    aspect_ratio = f32(WIDTH) / HEIGHT,
+    near         = 0.1,
+    far          = 100,
 }
-
-CAMERA_SPEED :: 5
-
-camera := Camera {
-    position  = {0, 0, 3},
-    direction = {0, 0, -1},
-    up        = {0, 1, 0},
-    fov       = linalg.to_radians(f32(45)),
-}
-
-CAMERA_RADIUS :: 10
-
-MOUSE_SENSITIVITY :: 0.01
-
-MouseStatus :: struct {
-    position: types.Vec2,
-}
-
-mouse_info := MouseStatus {
-    position = {WIDTH / 2, HEIGHT / 2},
-}
-
 
 main :: proc() {
     context.logger = log.create_console_logger()
@@ -104,18 +77,17 @@ main :: proc() {
             #load("../shaders/frag/double_tex.frag"),
         ) or_else panic("Failed to load the shader")
 
-    vao: u32
-    buffers: [2]u32
+    vao, vbo: u32
     gl.GenVertexArrays(1, &vao)
     defer gl.DeleteVertexArrays(1, &vao)
 
     // Make sure to bind the VAO first
     gl.BindVertexArray(vao)
 
-    gl.GenBuffers(2, raw_data(buffers[:]))
-    defer gl.DeleteBuffers(2, raw_data(buffers[:]))
+    gl.GenBuffers(1, &vbo)
+    defer gl.DeleteBuffers(1, &vbo)
 
-    mesh.cube_send_to_gpu(vao, buffers[0])
+    mesh.cube_send_to_gpu(vao, vbo)
 
     gl.UseProgram(shader_program)
 
@@ -147,7 +119,6 @@ main :: proc() {
 
     prev_time := f32(glfw.GetTime())
 
-
     for !glfw.WindowShouldClose(window) {
         new_time := f32(glfw.GetTime())
         delta := new_time - prev_time
@@ -168,14 +139,8 @@ main :: proc() {
 
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), new_time)
 
-        projection := linalg.matrix4_perspective_f32(
-            fovy = camera.fov,
-            aspect = f32(WIDTH) / HEIGHT,
-            near = 0.1,
-            far = 100,
-        )
-
-        view := linalg.matrix4_look_at_f32(camera.position, camera.position + camera.direction, camera.up)
+        projection := render.camera_get_projection(&camera)
+        view := render.camera_get_view(&camera)
         pv := projection * view
 
         gl.BindVertexArray(vao)
@@ -199,124 +164,7 @@ main :: proc() {
     }
 }
 
-process_input :: proc(window: glfw.WindowHandle, delta: f32) {
-    if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
-        glfw.SetWindowShouldClose(window, true)
-    }
-
-    camera_movement: types.Vec3
-
-    if (glfw.GetKey(window, glfw.KEY_W) == glfw.PRESS) do camera_movement += camera.direction
-    if (glfw.GetKey(window, glfw.KEY_S) == glfw.PRESS) do camera_movement -= camera.direction
-
-    if (glfw.GetKey(window, glfw.KEY_A) == glfw.PRESS) {
-        right := linalg.normalize(linalg.cross(camera.direction, camera.up))
-        camera_movement -= right
-    }
-
-    if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) {
-        right := linalg.normalize(linalg.cross(camera.direction, camera.up))
-        camera_movement += right
-    }
-
-    camera.position += camera_movement * delta
-}
-
-TransformMatrix :: matrix[4, 4]f32
-
-Texture :: struct {
-    width:    i32,
-    height:   i32,
-    channels: i32,
-    buffer:   [^]u8,
-}
-
-prepare_texture :: proc(
-    path: cstring,
-    channels, texture_number: i32,
-    shader_program, texture_id, gl_texture: u32,
-) -> (
-    img: Texture,
-) {
-    gl.ActiveTexture(gl_texture)
-    gl.BindTexture(gl.TEXTURE_2D, texture_id)
-
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-
-    if !load_texture_2d(path, &img, channels) {panic(fmt.aprintf("Failed to load texture: {}", path))}
-
-    assert(img.channels == channels)
-
-    format: i32
-    switch channels {
-    case 3:
-        format = gl.RGB
-    case 4:
-        format = gl.RGBA
-    case:
-        panic(fmt.aprintf("Unsupported number of channels: {}", channels))
-    }
-
-    gl.TexImage2D(
-        gl.TEXTURE_2D,
-        0,
-        format,
-        img.width,
-        img.height,
-        0,
-        transmute(u32)format,
-        gl.UNSIGNED_BYTE,
-        img.buffer,
-    )
-    gl.GenerateMipmap(gl.TEXTURE_2D)
-    gl.Uniform1i(gl.GetUniformLocation(shader_program, fmt.caprintf("texture_{}", texture_number)), texture_number)
-
-    return img
-}
-
-load_texture_2d :: proc(path: cstring, t: ^Texture, channels: i32, flip_vertically: bool = true) -> (ok: bool) {
-    if flip_vertically do image.set_flip_vertically_on_load(1)
-    t.buffer = image.load(path, &t.width, &t.height, &t.channels, channels)
-
-    return t.buffer != nil && t.channels == channels
-}
-
 framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, height: i32) {
     gl.Viewport(0, 0, width, height)
-}
-
-first_mouse := true
-
-mouse_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
-    x := f32(x)
-    y := f32(y)
-
-    if first_mouse {
-        mouse_info.position = {x, y}
-        first_mouse = false
-    }
-
-    offset := types.Vec2{x - mouse_info.position.x, mouse_info.position.y - y} * MOUSE_SENSITIVITY
-    mouse_info.position = {x, y}
-
-    yaw := linalg.atan2(camera.direction.z, camera.direction.x)
-
-    pitch_adjacent := math.sqrt(camera.direction.x * camera.direction.x + camera.direction.z * camera.direction.z)
-
-    pitch := linalg.atan2(camera.direction.y, pitch_adjacent)
-
-    yaw += offset.x
-    pitch = clamp(pitch + offset.y, linalg.to_radians(f32(-89)), linalg.to_radians(f32(89)))
-
-    camera.direction = types.Vec3{math.cos(yaw) * math.cos(pitch), math.sin(pitch), math.sin(yaw) * math.cos(pitch)}
-}
-
-scroll_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
-    SCROLL_SCALE :: 0.03
-    y := f32(y) * SCROLL_SCALE
-
-    camera.fov = clamp(camera.fov - y, linalg.to_radians(f32(1)), linalg.to_radians(f32(45)))
+    camera.aspect_ratio = f32(width) / f32(height)
 }
