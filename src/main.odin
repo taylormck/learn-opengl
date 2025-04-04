@@ -165,6 +165,7 @@ main :: proc() {
         gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "light_color"), 1, raw_data(&light_color))
         gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "light_position"), 1, raw_data(&light_positions[0]))
         gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "object_color"), 1, raw_data(&cube_color))
+        gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "view_position"), 1, raw_data(&camera.position))
 
         // gl.ActiveTexture(gl.TEXTURE0)
         // gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[0])
