@@ -4,11 +4,15 @@ import "../types"
 import "core:math"
 import "core:math/linalg"
 
-CAMERA_SPEED :: 5
+CameraType :: enum {
+    Flying,
+    FPS,
+}
 
 Camera :: struct {
-    position, direction, up:      types.Vec3,
-    fov, aspect_ratio, near, far: f32,
+    type:                                CameraType,
+    position, direction, up:             types.Vec3,
+    fov, aspect_ratio, near, far, speed: f32,
 }
 
 camera_update_direction :: proc "cdecl" (camera: ^Camera, offset: types.Vec2) {
@@ -37,4 +41,21 @@ camera_get_projection :: proc(camera: ^Camera) -> types.TransformMatrix {
         near = camera.near,
         far = camera.far,
     )
+}
+
+camera_move :: proc(camera: ^Camera, direction: types.Vec3, delta: f32) {
+    movement: types.Vec3
+    right := linalg.normalize(linalg.cross(camera.direction, camera.up))
+
+    switch camera.type {
+    case .Flying:
+        movement += direction.z * camera.direction
+        movement += direction.x * right
+    case .FPS:
+        forward := types.Vec3{camera.direction.x, 0, camera.direction.z}
+        movement += direction.z * forward
+        movement += direction.x * right
+    }
+
+    camera.position += movement * delta
 }

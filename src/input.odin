@@ -6,6 +6,13 @@ import "types"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 
+UP :: types.Vec3{0, 1, 0}
+DOWN :: types.Vec3{0, -1, 0}
+LEFT :: types.Vec3{-1, 0, 0}
+RIGHT :: types.Vec3{1, 0, 0}
+FORWARD :: types.Vec3{0, 0, 1}
+BACKWARD :: types.Vec3{0, 0, -1}
+
 MOUSE_SENSITIVITY :: 0.01
 
 MouseStatus :: struct {
@@ -17,26 +24,20 @@ mouse_info := MouseStatus {
 }
 
 process_input :: proc(window: glfw.WindowHandle, delta: f32) {
+    CAMERA_SPEED :: 5
+
     if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
         glfw.SetWindowShouldClose(window, true)
     }
 
     camera_movement: types.Vec3
 
-    if (glfw.GetKey(window, glfw.KEY_W) == glfw.PRESS) do camera_movement += camera.direction
-    if (glfw.GetKey(window, glfw.KEY_S) == glfw.PRESS) do camera_movement -= camera.direction
+    if (glfw.GetKey(window, glfw.KEY_W) == glfw.PRESS) do camera_movement += FORWARD
+    if (glfw.GetKey(window, glfw.KEY_S) == glfw.PRESS) do camera_movement += BACKWARD
+    if (glfw.GetKey(window, glfw.KEY_A) == glfw.PRESS) do camera_movement += LEFT
+    if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) do camera_movement += RIGHT
 
-    if (glfw.GetKey(window, glfw.KEY_A) == glfw.PRESS) {
-        right := linalg.normalize(linalg.cross(camera.direction, camera.up))
-        camera_movement -= right
-    }
-
-    if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) {
-        right := linalg.normalize(linalg.cross(camera.direction, camera.up))
-        camera_movement += right
-    }
-
-    camera.position += camera_movement * delta
+    render.camera_move(&camera, camera_movement, delta)
 }
 
 @(private = "file")

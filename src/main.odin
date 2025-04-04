@@ -32,6 +32,7 @@ CUBE_POSITIONS :: [?]types.Vec3 {
 }
 
 camera := render.Camera {
+    type         = .FPS,
     position     = {0, 0, 3},
     direction    = {0, 0, -1},
     up           = {0, 1, 0},
@@ -39,6 +40,7 @@ camera := render.Camera {
     aspect_ratio = f32(WIDTH) / HEIGHT,
     near         = 0.1,
     far          = 100,
+    speed        = 5,
 }
 
 main :: proc() {
