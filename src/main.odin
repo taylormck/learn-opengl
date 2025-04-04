@@ -43,6 +43,7 @@ CUBE_POSITIONS :: [?]types.Vec3 {
 
 Camera :: struct {
     position, direction, up: types.Vec3,
+    fov:                     f32,
 }
 
 CAMERA_SPEED :: 5
@@ -51,6 +52,7 @@ camera := Camera {
     position  = {0, 0, 3},
     direction = {0, 0, -1},
     up        = {0, 1, 0},
+    fov       = linalg.to_radians(f32(45)),
 }
 
 CAMERA_RADIUS :: 10
@@ -94,6 +96,7 @@ main :: proc() {
 
     glfw.SetInputMode(window, glfw.CURSOR, glfw.CURSOR_DISABLED)
     glfw.SetCursorPosCallback(window, mouse_callback)
+    glfw.SetScrollCallback(window, scroll_callback)
 
     shader_program :=
         gl.load_shaders_source(
@@ -144,12 +147,6 @@ main :: proc() {
 
     prev_time := f32(glfw.GetTime())
 
-    projection := linalg.matrix4_perspective_f32(
-        fovy = linalg.to_radians(f32(45)),
-        aspect = f32(WIDTH) / HEIGHT,
-        near = 0.1,
-        far = 100,
-    )
 
     for !glfw.WindowShouldClose(window) {
         new_time := f32(glfw.GetTime())
@@ -170,6 +167,13 @@ main :: proc() {
         gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
 
         gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), new_time)
+
+        projection := linalg.matrix4_perspective_f32(
+            fovy = camera.fov,
+            aspect = f32(WIDTH) / HEIGHT,
+            near = 0.1,
+            far = 100,
+        )
 
         view := linalg.matrix4_look_at_f32(camera.position, camera.position + camera.direction, camera.up)
         pv := projection * view
@@ -308,4 +312,11 @@ mouse_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
     pitch = clamp(pitch + offset.y, linalg.to_radians(f32(-89)), linalg.to_radians(f32(89)))
 
     camera.direction = types.Vec3{math.cos(yaw) * math.cos(pitch), math.sin(pitch), math.sin(yaw) * math.cos(pitch)}
+}
+
+scroll_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
+    SCROLL_SCALE :: 0.03
+    y := f32(y) * SCROLL_SCALE
+
+    camera.fov = clamp(camera.fov - y, linalg.to_radians(f32(1)), linalg.to_radians(f32(45)))
 }
