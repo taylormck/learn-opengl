@@ -31,6 +31,8 @@ CUBE_POSITIONS :: [?]types.Vec3 {
     {-1.3, 1, -1.5},
 }
 
+LIGHT_POSITIONS :: [?]types.Vec3{{1.2, 1, 2}}
+
 camera := render.Camera {
     type         = .Flying,
     position     = {0, 0, 3},
@@ -73,49 +75,58 @@ main :: proc() {
     glfw.SetCursorPosCallback(window, mouse_callback)
     glfw.SetScrollCallback(window, scroll_callback)
 
-    shader_program :=
+    cube_shader :=
         gl.load_shaders_source(
-            #load("../shaders/vert/pos_tex_transform.vert"),
-            #load("../shaders/frag/double_tex.frag"),
+            #load("../shaders/vert/pos_transform.vert"),
+            #load("../shaders/frag/light_object_color.frag"),
         ) or_else panic("Failed to load the shader")
 
-    vao, vbo: u32
-    gl.GenVertexArrays(1, &vao)
-    defer gl.DeleteVertexArrays(1, &vao)
+    light_shader :=
+        gl.load_shaders_source(
+            #load("../shaders/vert/pos_transform.vert"),
+            #load("../shaders/frag/light_color.frag"),
+        ) or_else panic("Failed to load the light shader")
+    light_color := WHITE
+    cube_color := CORAL
 
-    // Make sure to bind the VAO first
-    gl.BindVertexArray(vao)
+    light_cube_vao, cube_vao, vbo: u32
+    gl.GenVertexArrays(1, &cube_vao)
+    defer gl.DeleteVertexArrays(1, &cube_vao)
+
+    gl.GenVertexArrays(1, &light_cube_vao)
+    defer gl.DeleteVertexArrays(1, &light_cube_vao)
 
     gl.GenBuffers(1, &vbo)
     defer gl.DeleteBuffers(1, &vbo)
 
-    mesh.cube_send_to_gpu(vao, vbo)
+    mesh.cube_send_to_gpu(cube_vao, vbo)
+    mesh.cube_send_to_gpu(light_cube_vao, vbo)
 
-    gl.UseProgram(shader_program)
-
-    box_texture_ids: [2]u32
-    gl.GenTextures(2, raw_data(box_texture_ids[:]))
-    defer gl.DeleteTextures(2, raw_data(box_texture_ids[:]))
-
-    wall_texture_img := prepare_texture(
-        path = "textures/container.png",
-        channels = 3,
-        texture_number = 0,
-        shader_program = shader_program,
-        texture_id = box_texture_ids[0],
-        gl_texture = gl.TEXTURE0,
-    )
-    defer image.image_free(wall_texture_img.buffer)
-
-    face_texture_img := prepare_texture(
-        path = "textures/awesomeface.png",
-        channels = 4,
-        texture_number = 1,
-        shader_program = shader_program,
-        texture_id = box_texture_ids[1],
-        gl_texture = gl.TEXTURE1,
-    )
-    defer image.image_free(face_texture_img.buffer)
+    // gl.UseProgram(cube_shader)
+    //
+    // box_texture_ids: [2]u32
+    // gl.GenTextures(2, raw_data(box_texture_ids[:]))
+    // defer gl.DeleteTextures(2, raw_data(box_texture_ids[:]))
+    //
+    // wall_texture_img := prepare_texture(
+    //     path = "textures/container.png",
+    //     channels = 3,
+    //     texture_number = 0,
+    //     shader_program = shader_program,
+    //     texture_id = box_texture_ids[0],
+    //     gl_texture = gl.TEXTURE0,
+    // )
+    // defer image.image_free(wall_texture_img.buffer)
+    //
+    // face_texture_img := prepare_texture(
+    //     path = "textures/awesomeface.png",
+    //     channels = 4,
+    //     texture_number = 1,
+    //     shader_program = shader_program,
+    //     texture_id = box_texture_ids[1],
+    //     gl_texture = gl.TEXTURE1,
+    // )
+    // defer image.image_free(face_texture_img.buffer)
 
     gl.Enable(gl.DEPTH_TEST)
 
@@ -131,21 +142,32 @@ main :: proc() {
         gl.ClearColor(0.1, 0.2, 0.3, 1)
         gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-        gl.UseProgram(shader_program)
-
-        gl.ActiveTexture(gl.TEXTURE0)
-        gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[0])
-
-        gl.ActiveTexture(gl.TEXTURE1)
-        gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
-
-        gl.Uniform1f(gl.GetUniformLocation(shader_program, "time"), new_time)
-
         projection := render.camera_get_projection(&camera)
         view := render.camera_get_view(&camera)
         pv := projection * view
 
-        gl.BindVertexArray(vao)
+        gl.BindVertexArray(cube_vao)
+
+        gl.UseProgram(light_shader)
+        gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light_color))
+        for position in LIGHT_POSITIONS {
+            model := linalg.matrix4_translate(position)
+            model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
+            transform := pv * model
+
+            gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+            mesh.cube_draw(light_cube_vao)
+        }
+
+        gl.UseProgram(cube_shader)
+        gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "light_color"), 1, raw_data(&light_color))
+        gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "object_color"), 1, raw_data(&cube_color))
+
+        // gl.ActiveTexture(gl.TEXTURE0)
+        // gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[0])
+        //
+        // gl.ActiveTexture(gl.TEXTURE1)
+        // gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
 
         for position, i in CUBE_POSITIONS {
             model := linalg.matrix4_translate(position)
@@ -156,8 +178,8 @@ main :: proc() {
             model *= linalg.matrix4_rotate(angle, types.Vec3{1, 0.3, 0.5})
 
             transform := pv * model
-            gl.UniformMatrix4fv(gl.GetUniformLocation(shader_program, "transform"), 1, false, raw_data(&transform))
-            mesh.cube_draw(vao)
+            gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "transform"), 1, false, raw_data(&transform))
+            mesh.cube_draw(cube_vao)
         }
 
         glfw.SwapBuffers(window)

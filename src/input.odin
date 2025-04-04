@@ -6,13 +6,6 @@ import "types"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 
-UP :: types.Vec3{0, 1, 0}
-DOWN :: types.Vec3{0, -1, 0}
-LEFT :: types.Vec3{-1, 0, 0}
-RIGHT :: types.Vec3{1, 0, 0}
-FORWARD :: types.Vec3{0, 0, 1}
-BACKWARD :: types.Vec3{0, 0, -1}
-
 MOUSE_SENSITIVITY :: 0.01
 
 MouseStatus :: struct {
