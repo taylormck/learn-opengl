@@ -31,7 +31,13 @@ CUBE_POSITIONS :: [?]types.Vec3 {
     {-1.3, 1, -1.5},
 }
 
-LIGHT_POSITIONS :: [?]types.Vec3{{1.2, 1, 2}}
+light := render.Light {
+    position = {1.2, 1, 2},
+    ambient  = {0.2, 0.2, 0.2},
+    diffuse  = {0.5, 0.5, 0.5},
+    specular = {1, 1, 1},
+}
+
 
 camera := render.Camera {
     type         = .Flying,
@@ -43,6 +49,13 @@ camera := render.Camera {
     near         = 0.1,
     far          = 100,
     speed        = 5,
+}
+
+material := render.Material {
+    ambient   = {1, 0.5, 0.31},
+    diffuse   = {1, 0.5, 0.31},
+    specular  = {0.5, 0.5, 0.5},
+    shininess = 32,
 }
 
 main :: proc() {
@@ -78,7 +91,7 @@ main :: proc() {
     cube_shader :=
         gl.load_shaders_source(
             #load("../shaders/vert/pos_normal_transform.vert"),
-            #load("../shaders/frag/phong.frag"),
+            #load("../shaders/frag/phong_material.frag"),
         ) or_else panic("Failed to load the shader")
 
     light_shader :=
@@ -86,10 +99,6 @@ main :: proc() {
             #load("../shaders/vert/pos_transform.vert"),
             #load("../shaders/frag/light_color.frag"),
         ) or_else panic("Failed to load the light shader")
-
-    light_positions := LIGHT_POSITIONS
-    light_color := WHITE
-    cube_color := CORAL
 
     light_cube_vao, cube_vao, vbo: u32
     gl.GenVertexArrays(1, &cube_vao)
@@ -148,24 +157,26 @@ main :: proc() {
         view := render.camera_get_view(&camera)
         pv := projection * view
 
-        gl.BindVertexArray(cube_vao)
-
+        gl.BindVertexArray(light_cube_vao)
         gl.UseProgram(light_shader)
-        gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light_color))
-        for position in LIGHT_POSITIONS {
-            model := linalg.matrix4_translate(position)
+
+        {
+            light_color := WHITE
+            model := linalg.matrix4_translate(light.position)
             model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
             transform := pv * model
 
             gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+            gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light_color))
             mesh.cube_draw(light_cube_vao)
         }
 
+        gl.BindVertexArray(cube_vao)
+
         gl.UseProgram(cube_shader)
-        gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "light_color"), 1, raw_data(&light_color))
-        gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "light_position"), 1, raw_data(&light_positions[0]))
-        gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "object_color"), 1, raw_data(&cube_color))
         gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "view_position"), 1, raw_data(&camera.position))
+        render.material_set_uniform(&material, cube_shader)
+        render.light_set_uniform(&light, cube_shader)
 
         // gl.ActiveTexture(gl.TEXTURE0)
         // gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[0])
