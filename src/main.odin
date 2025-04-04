@@ -77,8 +77,8 @@ main :: proc() {
 
     cube_shader :=
         gl.load_shaders_source(
-            #load("../shaders/vert/pos_transform.vert"),
-            #load("../shaders/frag/light_object_color.frag"),
+            #load("../shaders/vert/pos_normal_transform.vert"),
+            #load("../shaders/frag/phong.frag"),
         ) or_else panic("Failed to load the shader")
 
     light_shader :=
@@ -86,6 +86,8 @@ main :: proc() {
             #load("../shaders/vert/pos_transform.vert"),
             #load("../shaders/frag/light_color.frag"),
         ) or_else panic("Failed to load the light shader")
+
+    light_positions := LIGHT_POSITIONS
     light_color := WHITE
     cube_color := CORAL
 
@@ -161,6 +163,7 @@ main :: proc() {
 
         gl.UseProgram(cube_shader)
         gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "light_color"), 1, raw_data(&light_color))
+        gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "light_position"), 1, raw_data(&light_positions[0]))
         gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "object_color"), 1, raw_data(&cube_color))
 
         // gl.ActiveTexture(gl.TEXTURE0)
@@ -176,9 +179,12 @@ main :: proc() {
             if i % 3 == 0 do angle += new_time
 
             model *= linalg.matrix4_rotate(angle, types.Vec3{1, 0.3, 0.5})
+            mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
             transform := pv * model
             gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "transform"), 1, false, raw_data(&transform))
+            gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "model"), 1, false, raw_data(&model))
+            gl.UniformMatrix3fv(gl.GetUniformLocation(cube_shader, "mit"), 1, false, raw_data(&mit))
             mesh.cube_draw(cube_vao)
         }
 

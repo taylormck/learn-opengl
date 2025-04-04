@@ -4,3 +4,4 @@ Vec3 :: [3]f32
 Vec3u :: [3]u32
 
 TransformMatrix :: matrix[4, 4]f32
+SubTransformMatrix :: matrix[3, 3]f32
