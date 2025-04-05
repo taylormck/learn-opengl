@@ -31,11 +31,21 @@ CUBE_POSITIONS :: [?]types.Vec3 {
     {-1.3, 1, -1.5},
 }
 
-light := render.Light {
-    position = {1.2, 1, 2},
-    ambient  = {0.2, 0.2, 0.2},
-    diffuse  = {0.5, 0.5, 0.5},
-    specular = {1, 1, 1},
+point_light := render.PointLight {
+    position  = {1.2, 1, 2},
+    ambient   = {0.2, 0.2, 0.2},
+    diffuse   = {0.5, 0.5, 0.5},
+    specular  = {1, 1, 1},
+    constant  = 1,
+    linear    = 0.09,
+    quadratic = 0.032,
+}
+
+directional_light := render.DirectionalLight {
+    direction = {-0.2, -1, 0.3},
+    ambient   = {0.2, 0.2, 0.2},
+    diffuse   = {0.5, 0.5, 0.5},
+    specular  = {1, 1, 1},
 }
 
 
@@ -84,7 +94,7 @@ main :: proc() {
     cube_shader :=
         gl.load_shaders_source(
             #load("../shaders/vert/pos_tex_normal_transform.vert"),
-            #load("../shaders/frag/phong_material_sampled.frag"),
+            #load("../shaders/frag/phong_material_sampled_multilights.frag"),
         ) or_else panic("Failed to load the shader")
 
     light_shader :=
@@ -137,7 +147,8 @@ main :: proc() {
     }
 
     render.material_sampled_set_uniform(&material, cube_shader)
-    render.light_set_uniform(&light, cube_shader)
+    render.point_light_set_uniform(&point_light, cube_shader)
+    render.directional_light_set_uniform(&directional_light, cube_shader)
 
     gl.Enable(gl.DEPTH_TEST)
 
@@ -162,7 +173,7 @@ main :: proc() {
 
         {
             light_color := WHITE
-            model := linalg.matrix4_translate(light.position)
+            model := linalg.matrix4_translate(point_light.position)
             model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
             transform := pv * model
 
