@@ -31,14 +31,43 @@ CUBE_POSITIONS :: [?]types.Vec3 {
     {-1.3, 1, -1.5},
 }
 
-point_light := render.PointLight {
-    position  = {1.2, 1, 2},
-    ambient   = {0.2, 0.2, 0.2},
-    diffuse   = {0.5, 0.5, 0.5},
-    specular  = {1, 1, 1},
-    constant  = 1,
-    linear    = 0.09,
-    quadratic = 0.032,
+point_lights := [?]render.PointLight {
+    {
+        position = {0.4, 0.2, 2},
+        ambient = {0.2, 0.2, 0.2},
+        diffuse = {0.5, 0.5, 0.5},
+        specular = {1, 1, 1},
+        constant = 1,
+        linear = 0.09,
+        quadratic = 0.032,
+    },
+    {
+        position = {2.3, -3.3, -4},
+        ambient = {0.2, 0.2, 0.2},
+        diffuse = {1, 0, 0},
+        specular = {1, 1, 1},
+        constant = 1,
+        linear = 0.09,
+        quadratic = 0.032,
+    },
+    {
+        position = {-4, 2, -12},
+        ambient = {0.2, 0.2, 0.2},
+        diffuse = {0, 1, 0},
+        specular = {1, 1, 1},
+        constant = 1,
+        linear = 0.09,
+        quadratic = 0.032,
+    },
+    {
+        position = {0, 0, -3},
+        ambient = {0.2, 0.2, 0.2},
+        diffuse = {0, 0, 1},
+        specular = {1, 1, 1},
+        constant = 1,
+        linear = 0.09,
+        quadratic = 0.032,
+    },
 }
 
 directional_light := render.DirectionalLight {
@@ -154,8 +183,11 @@ main :: proc() {
     }
 
     render.material_sampled_set_uniform(&material, cube_shader)
-    render.point_light_set_uniform(&point_light, cube_shader)
     render.directional_light_set_uniform(&directional_light, cube_shader)
+
+    for &point_light, i in point_lights {
+        render.point_light_array_set_uniform(&point_light, cube_shader, u32(i))
+    }
 
     gl.Enable(gl.DEPTH_TEST)
 
@@ -178,8 +210,10 @@ main :: proc() {
         gl.BindVertexArray(light_cube_vao)
         gl.UseProgram(light_shader)
 
-        {
-            light_color := WHITE
+        for point_light in point_lights {
+            // NOTE: This is just a quick hack to make the lights look brighter.
+            light_color := point_light.diffuse * 2
+
             model := linalg.matrix4_translate(point_light.position)
             model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
             transform := pv * model

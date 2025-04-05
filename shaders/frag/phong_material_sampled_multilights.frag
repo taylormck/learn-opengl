@@ -42,12 +42,13 @@ out vec4 FragColor;
 uniform vec3 view_position;
 uniform Material material;
 
-uniform PointLight point_light;
+#define NUM_POINT_LIGHTS 4
+uniform PointLight point_lights[NUM_POINT_LIGHTS];
 uniform DirectionalLight directional_light;
 uniform SpotLight spot_light;
 
 vec3 calculate_point_light(PointLight light) {
-    vec3 ambient = point_light.ambient * vec3(texture(material.diffuse, tex_coords));
+    vec3 ambient = light.ambient * vec3(texture(material.diffuse, tex_coords));
 
     vec3 norm = normalize(normal);
     vec3 light_diff = light.position - frag_position;
@@ -109,7 +110,10 @@ vec3 calculate_spot_light(SpotLight light) {
 void main() {
     vec3 result = vec3(0.0);
 
-    result += calculate_point_light(point_light);
+    for (int i = 0; i < NUM_POINT_LIGHTS; i += 1) {
+        result += calculate_point_light(point_lights[i]);
+    }
+
     result += calculate_direcitonal_light(directional_light);
     result += calculate_spot_light(spot_light);
 
