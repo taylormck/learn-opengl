@@ -48,6 +48,13 @@ directional_light := render.DirectionalLight {
     specular  = {1, 1, 1},
 }
 
+spot_light := render.SpotLight {
+    ambient      = {0.2, 0.2, 0.2},
+    diffuse      = {0.5, 0.5, 0.5},
+    specular     = {1, 1, 1},
+    inner_cutoff = math.cos(linalg.to_radians(f32(12.5))),
+    outer_cutoff = math.cos(linalg.to_radians(f32(17.5))),
+}
 
 camera := render.Camera {
     type         = .Flying,
@@ -192,6 +199,10 @@ main :: proc() {
 
         gl.ActiveTexture(gl.TEXTURE1)
         gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
+
+        spot_light.position = camera.position
+        spot_light.direction = camera.direction
+        render.spot_light_set_uniform(&spot_light, cube_shader)
 
         for position, i in CUBE_POSITIONS {
             model := linalg.matrix4_translate(position)

@@ -12,6 +12,11 @@ DirectionalLight :: struct {
     direction, ambient, diffuse, specular: types.Vec3,
 }
 
+SpotLight :: struct {
+    position, direction, ambient, diffuse, specular: types.Vec3,
+    inner_cutoff, outer_cutoff:                      f32,
+}
+
 point_light_set_uniform :: proc(light: ^PointLight, shader_id: u32) {
     gl.Uniform3fv(gl.GetUniformLocation(shader_id, "point_light.position"), 1, raw_data(&light.position))
     gl.Uniform3fv(gl.GetUniformLocation(shader_id, "point_light.ambient"), 1, raw_data(&light.ambient))
@@ -28,4 +33,14 @@ directional_light_set_uniform :: proc(light: ^DirectionalLight, shader_id: u32) 
     gl.Uniform3fv(gl.GetUniformLocation(shader_id, "directional_light.ambient"), 1, raw_data(&light.ambient))
     gl.Uniform3fv(gl.GetUniformLocation(shader_id, "directional_light.diffuse"), 1, raw_data(&light.diffuse))
     gl.Uniform3fv(gl.GetUniformLocation(shader_id, "directional_light.specular"), 1, raw_data(&light.specular))
+}
+
+spot_light_set_uniform :: proc(light: ^SpotLight, shader_id: u32) {
+    gl.Uniform3fv(gl.GetUniformLocation(shader_id, "spot_light.position"), 1, raw_data(&light.position))
+    gl.Uniform3fv(gl.GetUniformLocation(shader_id, "spot_light.direction"), 1, raw_data(&light.direction))
+    gl.Uniform3fv(gl.GetUniformLocation(shader_id, "spot_light.ambient"), 1, raw_data(&light.ambient))
+    gl.Uniform3fv(gl.GetUniformLocation(shader_id, "spot_light.diffuse"), 1, raw_data(&light.diffuse))
+    gl.Uniform3fv(gl.GetUniformLocation(shader_id, "spot_light.specular"), 1, raw_data(&light.specular))
+    gl.Uniform1f(gl.GetUniformLocation(shader_id, "spot_light.inner_cutoff"), light.inner_cutoff)
+    gl.Uniform1f(gl.GetUniformLocation(shader_id, "spot_light.outer_cutoff"), light.outer_cutoff)
 }
