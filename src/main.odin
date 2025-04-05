@@ -51,13 +51,6 @@ camera := render.Camera {
     speed        = 5,
 }
 
-material := render.Material {
-    ambient   = {1, 0.5, 0.31},
-    diffuse   = {1, 0.5, 0.31},
-    specular  = {0.5, 0.5, 0.5},
-    shininess = 32,
-}
-
 main :: proc() {
     context.logger = log.create_console_logger()
     defer log.destroy_console_logger(context.logger)
@@ -90,8 +83,8 @@ main :: proc() {
 
     cube_shader :=
         gl.load_shaders_source(
-            #load("../shaders/vert/pos_normal_transform.vert"),
-            #load("../shaders/frag/phong_material.frag"),
+            #load("../shaders/vert/pos_tex_normal_transform.vert"),
+            #load("../shaders/frag/phong_material_sampled.frag"),
         ) or_else panic("Failed to load the shader")
 
     light_shader :=
@@ -113,31 +106,38 @@ main :: proc() {
     mesh.cube_send_to_gpu(cube_vao, vbo)
     mesh.cube_send_to_gpu(light_cube_vao, vbo)
 
-    // gl.UseProgram(cube_shader)
-    //
-    // box_texture_ids: [2]u32
-    // gl.GenTextures(2, raw_data(box_texture_ids[:]))
-    // defer gl.DeleteTextures(2, raw_data(box_texture_ids[:]))
-    //
-    // wall_texture_img := prepare_texture(
-    //     path = "textures/container.png",
-    //     channels = 3,
-    //     texture_number = 0,
-    //     shader_program = shader_program,
-    //     texture_id = box_texture_ids[0],
-    //     gl_texture = gl.TEXTURE0,
-    // )
-    // defer image.image_free(wall_texture_img.buffer)
-    //
-    // face_texture_img := prepare_texture(
-    //     path = "textures/awesomeface.png",
-    //     channels = 4,
-    //     texture_number = 1,
-    //     shader_program = shader_program,
-    //     texture_id = box_texture_ids[1],
-    //     gl_texture = gl.TEXTURE1,
-    // )
-    // defer image.image_free(face_texture_img.buffer)
+    gl.UseProgram(cube_shader)
+
+    box_texture_ids: [2]u32
+    gl.GenTextures(2, raw_data(box_texture_ids[:]))
+    defer gl.DeleteTextures(2, raw_data(box_texture_ids[:]))
+
+    diffuse_map := prepare_texture(
+        path = "textures/container2.png",
+        channels = 4,
+        shader_program = cube_shader,
+        texture_id = box_texture_ids[0],
+        gl_texture = gl.TEXTURE0,
+    )
+    defer image.image_free(diffuse_map.buffer)
+
+    spec_map := prepare_texture(
+        path = "textures/container2_specular.png",
+        channels = 4,
+        shader_program = cube_shader,
+        texture_id = box_texture_ids[1],
+        gl_texture = gl.TEXTURE1,
+    )
+    defer image.image_free(spec_map.buffer)
+
+    material := render.MaterialSampled {
+        diffuse   = box_texture_ids[0],
+        specular  = box_texture_ids[1],
+        shininess = 64,
+    }
+
+    render.material_sampled_set_uniform(&material, cube_shader)
+    render.light_set_uniform(&light, cube_shader)
 
     gl.Enable(gl.DEPTH_TEST)
 
@@ -175,14 +175,12 @@ main :: proc() {
 
         gl.UseProgram(cube_shader)
         gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "view_position"), 1, raw_data(&camera.position))
-        render.material_set_uniform(&material, cube_shader)
-        render.light_set_uniform(&light, cube_shader)
 
-        // gl.ActiveTexture(gl.TEXTURE0)
-        // gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[0])
-        //
-        // gl.ActiveTexture(gl.TEXTURE1)
-        // gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
+        gl.ActiveTexture(gl.TEXTURE0)
+        gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[0])
+
+        gl.ActiveTexture(gl.TEXTURE1)
+        gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
 
         for position, i in CUBE_POSITIONS {
             model := linalg.matrix4_translate(position)

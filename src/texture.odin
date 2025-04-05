@@ -13,13 +13,7 @@ Texture :: struct {
     buffer:                  [^]u8,
 }
 
-prepare_texture :: proc(
-    path: cstring,
-    channels, texture_number: i32,
-    shader_program, texture_id, gl_texture: u32,
-) -> (
-    img: Texture,
-) {
+prepare_texture :: proc(path: cstring, channels: i32, shader_program, texture_id, gl_texture: u32) -> (img: Texture) {
     gl.ActiveTexture(gl_texture)
     gl.BindTexture(gl.TEXTURE_2D, texture_id)
 
@@ -54,7 +48,6 @@ prepare_texture :: proc(
         img.buffer,
     )
     gl.GenerateMipmap(gl.TEXTURE_2D)
-    gl.Uniform1i(gl.GetUniformLocation(shader_program, fmt.caprintf("texture_{}", texture_number)), texture_number)
 
     return img
 }
