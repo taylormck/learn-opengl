@@ -29,3 +29,18 @@ expect_to_get_material_name_tokens :: proc(t: ^testing.T) {
         testing.expect_value(t, actual, expected_value)
     }
 }
+
+@(test)
+expect_to_get_shininess_tokens :: proc(t: ^testing.T) {
+    input := "Ns 225.00000"
+    expected := [?]MaterialToken{MaterialToken{type = .Shininess}, MaterialToken{type = .Float, value = f32(225)}}
+
+    iter := MaterialParserIter {
+        data = input,
+    }
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
