@@ -18,7 +18,11 @@ expect_to_get_eof_token :: proc(t: ^testing.T) {
 @(test)
 expect_to_get_material_name_tokens :: proc(t: ^testing.T) {
     input := "newmtl Scene_-_Root"
-    expected := [?]MaterialToken{MaterialToken{type = .MaterialName}, MaterialToken{type = .String, value = input[7:]}}
+    expected := [?]MaterialToken {
+        MaterialToken{type = .MaterialName},
+        MaterialToken{type = .String, value = input[7:]},
+        MaterialToken{type = .EOF},
+    }
 
     iter := MaterialParserIter {
         data = input,
@@ -70,6 +74,7 @@ expect_to_get_color_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .Float, value = 0.0},
         MaterialToken{type = .Float, value = 0.0},
         MaterialToken{type = .Float, value = 0.0},
+        MaterialToken{type = .EOF},
     }
 
     iter := MaterialParserIter {
@@ -86,7 +91,11 @@ expect_to_get_color_tokens :: proc(t: ^testing.T) {
 expect_to_get_optical_density_tokens :: proc(t: ^testing.T) {
     input := "Ni 1.450000"
 
-    expected := [?]MaterialToken{MaterialToken{type = .OpticalDensity}, MaterialToken{type = .Float, value = 1.45}}
+    expected := [?]MaterialToken {
+        MaterialToken{type = .OpticalDensity},
+        MaterialToken{type = .Float, value = 1.45},
+        MaterialToken{type = .EOF},
+    }
 
     iter := MaterialParserIter {
         data = input,
@@ -105,6 +114,7 @@ expect_to_get_illumination_model_tokens :: proc(t: ^testing.T) {
     expected := [?]MaterialToken {
         MaterialToken{type = .IlluminationModel},
         MaterialToken{type = .Integer, value = i32(2)},
+        MaterialToken{type = .EOF},
     }
 
     iter := MaterialParserIter {
@@ -128,6 +138,27 @@ expect_to_get_map_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .String, value = "normal.png"},
         MaterialToken{type = .SpecularMap},
         MaterialToken{type = .String, value = "specular.jpg"},
+        MaterialToken{type = .EOF},
+    }
+
+    iter := MaterialParserIter {
+        data = input,
+    }
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
+@(test)
+expect_to_ignore_comments :: proc(t: ^testing.T) {
+    input := "# map_Kd diffuse.jpg\n" + "map_Ks specular.jpg"
+
+    expected := [?]MaterialToken {
+        MaterialToken{type = .SpecularMap},
+        MaterialToken{type = .String, value = "specular.jpg"},
+        MaterialToken{type = .EOF},
     }
 
     iter := MaterialParserIter {

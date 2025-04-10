@@ -52,6 +52,12 @@ iter_get_next_token :: proc(iter: ^MaterialParserIter) -> MaterialToken {
         current := iter_current(iter)
 
         switch current {
+        case '#':
+            for current != '\n' {
+                iter_advance(iter)
+                if iter.index >= len(iter.data) do break
+                current = iter_current(iter)
+            }
         case 'A' ..= 'Z', 'a' ..= 'z':
             start_index = iter.index
 
