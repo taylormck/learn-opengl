@@ -97,3 +97,22 @@ expect_to_get_optical_density_tokens :: proc(t: ^testing.T) {
         testing.expect_value(t, actual, expected_value)
     }
 }
+
+@(test)
+expect_to_get_illumination_model_tokens :: proc(t: ^testing.T) {
+    input := "illum 2"
+
+    expected := [?]MaterialToken {
+        MaterialToken{type = .IlluminationModel},
+        MaterialToken{type = .Integer, value = i32(2)},
+    }
+
+    iter := MaterialParserIter {
+        data = input,
+    }
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}

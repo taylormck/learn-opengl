@@ -99,6 +99,8 @@ iter_get_next_token :: proc(iter: ^MaterialParserIter) -> MaterialToken {
         return MaterialToken{type = .Emissive}
     case "Ni":
         return MaterialToken{type = .OpticalDensity}
+    case "illum":
+        return MaterialToken{type = .IlluminationModel}
     case:
         switch {
         case len(value) == 0:
