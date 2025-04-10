@@ -7,9 +7,7 @@ import "core:testing"
 expect_to_get_eof_token :: proc(t: ^testing.T) {
     input := ""
 
-    iter := common.StringIter {
-        data = input[:],
-    }
+    iter := common.iter_init(input)
 
     actual := iter_get_next_token(&iter)
 
@@ -25,9 +23,7 @@ expect_to_get_material_name_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.StringIter {
-        data = input,
-    }
+    iter := common.iter_init(input)
 
     for expected_value in expected {
         actual := iter_get_next_token(&iter)
@@ -40,9 +36,7 @@ expect_to_get_shininess_tokens :: proc(t: ^testing.T) {
     input := "Ns 225.00000"
     expected := [?]MaterialToken{MaterialToken{type = .Shininess}, MaterialToken{type = .Float, value = 225.0}}
 
-    iter := common.StringIter {
-        data = input,
-    }
+    iter := common.iter_init(input)
 
     for expected_value in expected {
         actual := iter_get_next_token(&iter)
@@ -55,7 +49,7 @@ expect_to_get_color_tokens :: proc(t: ^testing.T) {
     input :=
         "Ka 1.000000 1.000000 1.000000\n" +
         "Kd 0.800000 0.800000 0.800000\n" +
-        "Ks 0.500000 0.500000 0.500000" +
+        "Ks 0.500000 0.500000 0.500000\n" +
         "Ke 0.000000 0.000000 0.000000"
 
     expected := [?]MaterialToken {
@@ -78,9 +72,7 @@ expect_to_get_color_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.StringIter {
-        data = input,
-    }
+    iter := common.iter_init(input)
 
     for expected_value in expected {
         actual := iter_get_next_token(&iter)
@@ -98,9 +90,7 @@ expect_to_get_optical_density_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.StringIter {
-        data = input,
-    }
+    iter := common.iter_init(input)
 
     for expected_value in expected {
         actual := iter_get_next_token(&iter)
@@ -118,9 +108,7 @@ expect_to_get_illumination_model_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.StringIter {
-        data = input,
-    }
+    iter := common.iter_init(input)
 
     for expected_value in expected {
         actual := iter_get_next_token(&iter)
@@ -142,9 +130,7 @@ expect_to_get_map_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.StringIter {
-        data = input,
-    }
+    iter := common.iter_init(input)
 
     for expected_value in expected {
         actual := iter_get_next_token(&iter)
@@ -162,9 +148,7 @@ expect_to_ignore_comments :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.StringIter {
-        data = input,
-    }
+    iter := common.iter_init(input)
 
     for expected_value in expected {
         actual := iter_get_next_token(&iter)

@@ -1,7 +1,7 @@
 package common
 
-is_valid_identifier_char :: proc(c: u8) -> bool {
-    switch c {
+is_valid_identifier_char :: proc(r: rune) -> bool {
+    switch r {
     case 'a' ..= 'z', 'A' ..= 'Z', '0' ..= '9', '-', '_', '.':
         return true
 
@@ -10,8 +10,8 @@ is_valid_identifier_char :: proc(c: u8) -> bool {
     }
 }
 
-is_valid_numerical_char :: proc(c: u8) -> bool {
-    switch c {
+is_valid_numerical_char :: proc(r: rune) -> bool {
+    switch r {
     case '0' ..= '9', '.':
         return true
     case:

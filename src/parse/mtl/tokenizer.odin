@@ -35,50 +35,46 @@ MaterialToken :: struct {
 }
 
 iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
-    start_index := iter.index
-    end_index := iter.index
+    start_index := iter.reader.i
+    end_index := iter.reader.i
 
-    find_next_token_start: for iter.index < len(iter.data) {
-        current := common.iter_current(iter)
 
+    find_next_token_start: for !common.iter_is_at_end(iter) {
+        current := common.iter_next(iter)
         switch current {
         case '#':
             for current != '\n' {
-                common.iter_advance(iter)
-                if iter.index >= len(iter.data) do break
-                current = common.iter_current(iter)
+                current = common.iter_next(iter)
+                if common.iter_is_at_end(iter) do break
             }
+
         case 'A' ..= 'Z', 'a' ..= 'z':
-            start_index = iter.index
+            start_index = iter.reader.i - 1
 
-            for common.is_valid_identifier_char(current) {
-                common.iter_advance(iter)
-                if iter.index >= len(iter.data) do break
-
-                current = common.iter_current(iter)
+            for !common.iter_is_at_end(iter) && common.is_valid_identifier_char(current) {
+                current = common.iter_next(iter)
             }
 
-            end_index = iter.index
+            end_index = iter.reader.i - 1
+            if common.iter_is_at_end(iter) do end_index += 1
             break find_next_token_start
+
         case '0' ..= '9':
-            start_index = iter.index
+            start_index = iter.reader.i - 1
 
-            for common.is_valid_numerical_char(current) {
-                common.iter_advance(iter)
-                if iter.index >= len(iter.data) do break
-
-                current = common.iter_current(iter)
+            for !common.iter_is_at_end(iter) && common.is_valid_numerical_char(current) {
+                current = common.iter_next(iter)
             }
 
-            end_index = iter.index
+            end_index = iter.reader.i - 1
+            if common.iter_is_at_end(iter) do end_index += 1
+
             break find_next_token_start
         }
-
-
-        common.iter_advance(iter)
     }
 
-    value := iter.data[start_index:end_index]
+    value := common.iter_slice(iter, start_index, end_index)
+    log.infof("value: {}", value)
 
     switch value {
     case "newmtl":
