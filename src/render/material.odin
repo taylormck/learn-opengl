@@ -13,6 +13,12 @@ MaterialSampled :: struct {
     shininess:         f32,
 }
 
+Material :: struct {
+    ambient, diffuse, specular:            types.Vec3,
+    diffuse_map, normal_map, specular_map: string,
+    shininess:                             f32,
+}
+
 material_calculated_set_uniform :: proc(material: ^MaterialCalculated, shader_id: u32) {
     gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.ambient"), 1, raw_data(&material.ambient))
     gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.diffuse"), 1, raw_data(&material.diffuse))
