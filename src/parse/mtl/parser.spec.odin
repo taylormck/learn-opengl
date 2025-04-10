@@ -47,7 +47,11 @@ expect_to_get_shininess_tokens :: proc(t: ^testing.T) {
 
 @(test)
 expect_to_get_color_tokens :: proc(t: ^testing.T) {
-    input := "Ka 1.000000 1.000000 1.000000\nKd 0.800000 0.800000 0.800000\nKs 0.500000 0.500000 0.500000"
+    input :=
+        "Ka 1.000000 1.000000 1.000000\n" +
+        "Kd 0.800000 0.800000 0.800000\n" +
+        "Ks 0.500000 0.500000 0.500000" +
+        "Ke 0.000000 0.000000 0.000000"
 
     expected := [?]MaterialToken {
         MaterialToken{type = .Ambient},
@@ -62,6 +66,10 @@ expect_to_get_color_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .Float, value = 0.5},
         MaterialToken{type = .Float, value = 0.5},
         MaterialToken{type = .Float, value = 0.5},
+        MaterialToken{type = .Emissive},
+        MaterialToken{type = .Float, value = 0.0},
+        MaterialToken{type = .Float, value = 0.0},
+        MaterialToken{type = .Float, value = 0.0},
     }
 
     iter := MaterialParserIter {

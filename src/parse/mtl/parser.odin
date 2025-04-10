@@ -95,6 +95,8 @@ iter_get_next_token :: proc(iter: ^MaterialParserIter) -> MaterialToken {
         return MaterialToken{type = .Diffuse}
     case "Ks":
         return MaterialToken{type = .Specular}
+    case "Ke":
+        return MaterialToken{type = .Emissive}
     case:
         switch {
         case len(value) == 0:
