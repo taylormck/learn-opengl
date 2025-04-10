@@ -83,6 +83,7 @@ iter_get_next_token :: proc(iter: ^MaterialParserIter) -> MaterialToken {
     }
 
     value := iter.data[start_index:end_index]
+    log.infof("value: {}", value)
 
     switch value {
     case "newmtl":
@@ -101,6 +102,12 @@ iter_get_next_token :: proc(iter: ^MaterialParserIter) -> MaterialToken {
         return MaterialToken{type = .OpticalDensity}
     case "illum":
         return MaterialToken{type = .IlluminationModel}
+    case "map_Kd":
+        return MaterialToken{type = .DiffuseMap}
+    case "map_Bump":
+        return MaterialToken{type = .BumpMap}
+    case "map_Ks":
+        return MaterialToken{type = .SpecularMap}
     case:
         switch {
         case len(value) == 0:
@@ -135,7 +142,7 @@ iter_advance :: proc(iter: ^MaterialParserIter) {
 
 is_valid_identifier_char :: proc(c: u8) -> bool {
     switch c {
-    case 'a' ..= 'z', 'A' ..= 'Z', '0' ..= '9', '-', '_':
+    case 'a' ..= 'z', 'A' ..= 'Z', '0' ..= '9', '-', '_', '.':
         return true
 
     case:

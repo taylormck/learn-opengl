@@ -116,3 +116,26 @@ expect_to_get_illumination_model_tokens :: proc(t: ^testing.T) {
         testing.expect_value(t, actual, expected_value)
     }
 }
+
+@(test)
+expect_to_get_map_tokens :: proc(t: ^testing.T) {
+    input := "map_Kd diffuse.jpg\n" + "map_Bump normal.png\n" + "map_Ks specular.jpg"
+
+    expected := [?]MaterialToken {
+        MaterialToken{type = .DiffuseMap},
+        MaterialToken{type = .String, value = "diffuse.jpg"},
+        MaterialToken{type = .BumpMap},
+        MaterialToken{type = .String, value = "normal.png"},
+        MaterialToken{type = .SpecularMap},
+        MaterialToken{type = .String, value = "specular.jpg"},
+    }
+
+    iter := MaterialParserIter {
+        data = input,
+    }
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
