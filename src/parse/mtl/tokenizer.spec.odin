@@ -1,12 +1,13 @@
 package mtl
 
+import "../common"
 import "core:testing"
 
 @(test)
 expect_to_get_eof_token :: proc(t: ^testing.T) {
     input := ""
 
-    iter := MaterialParserIter {
+    iter := common.StringIter {
         data = input[:],
     }
 
@@ -24,7 +25,7 @@ expect_to_get_material_name_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := MaterialParserIter {
+    iter := common.StringIter {
         data = input,
     }
 
@@ -39,7 +40,7 @@ expect_to_get_shininess_tokens :: proc(t: ^testing.T) {
     input := "Ns 225.00000"
     expected := [?]MaterialToken{MaterialToken{type = .Shininess}, MaterialToken{type = .Float, value = 225.0}}
 
-    iter := MaterialParserIter {
+    iter := common.StringIter {
         data = input,
     }
 
@@ -77,7 +78,7 @@ expect_to_get_color_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := MaterialParserIter {
+    iter := common.StringIter {
         data = input,
     }
 
@@ -97,7 +98,7 @@ expect_to_get_optical_density_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := MaterialParserIter {
+    iter := common.StringIter {
         data = input,
     }
 
@@ -117,7 +118,7 @@ expect_to_get_illumination_model_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := MaterialParserIter {
+    iter := common.StringIter {
         data = input,
     }
 
@@ -141,7 +142,7 @@ expect_to_get_map_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := MaterialParserIter {
+    iter := common.StringIter {
         data = input,
     }
 
@@ -161,7 +162,7 @@ expect_to_ignore_comments :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := MaterialParserIter {
+    iter := common.StringIter {
         data = input,
     }
 
