@@ -81,3 +81,19 @@ expect_to_get_color_tokens :: proc(t: ^testing.T) {
         testing.expect_value(t, actual, expected_value)
     }
 }
+
+@(test)
+expect_to_get_optical_density_tokens :: proc(t: ^testing.T) {
+    input := "Ni 1.450000"
+
+    expected := [?]MaterialToken{MaterialToken{type = .OpticalDensity}, MaterialToken{type = .Float, value = 1.45}}
+
+    iter := MaterialParserIter {
+        data = input,
+    }
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
