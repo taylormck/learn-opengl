@@ -14,6 +14,8 @@ MaterialTokenType :: enum {
     Emissive,
     OpticalDensity,
     IlluminationModel,
+    Transparency,
+    TransmissionFilter,
     DiffuseMap,
     BumpMap,
     SpecularMap,
@@ -94,9 +96,13 @@ iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
         return MaterialToken{type = .OpticalDensity}
     case "illum":
         return MaterialToken{type = .IlluminationModel}
+    case "d", "Tr":
+        return MaterialToken{type = .Transparency}
+    case "Tf":
+        return MaterialToken{type = .TransmissionFilter}
     case "map_Kd":
         return MaterialToken{type = .DiffuseMap}
-    case "map_Bump":
+    case "map_Bump", "bump":
         return MaterialToken{type = .BumpMap}
     case "map_Ks":
         return MaterialToken{type = .SpecularMap}
