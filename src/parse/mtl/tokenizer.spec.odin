@@ -281,6 +281,24 @@ expect_to_get_specular_map_tokens :: proc(t: ^testing.T) {
 }
 
 @(test)
+expect_to_get_alpha_map_tokens :: proc(t: ^testing.T) {
+    input := "map_d alpha.jpg"
+
+    expected := [?]MaterialToken {
+        MaterialToken{type = .AlphaMap},
+        MaterialToken{type = .String, value = "alpha.jpg"},
+        MaterialToken{type = .EOF},
+    }
+
+    iter := common.iter_init(input)
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
+@(test)
 expect_to_ignore_comments :: proc(t: ^testing.T) {
     input := "# map_Kd diffuse.jpg\n" + "map_Ks specular.jpg"
 

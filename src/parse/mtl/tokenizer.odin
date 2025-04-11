@@ -20,6 +20,7 @@ MaterialTokenType :: enum {
     BumpMap,
     SpecularMap,
     SpecularHighlightMap,
+    AlphaMap,
     Integer,
     Float,
     String,
@@ -109,6 +110,8 @@ iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
         return MaterialToken{type = .SpecularMap}
     case "map_Ns":
         return MaterialToken{type = .SpecularHighlightMap}
+    case "map_d":
+        return MaterialToken{type = .AlphaMap}
     case:
         switch {
         case len(value) == 0:
