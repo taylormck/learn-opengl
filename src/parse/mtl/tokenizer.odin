@@ -49,25 +49,28 @@ iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
 
         case 'A' ..= 'Z', 'a' ..= 'z':
             start_index = iter.reader.i - 1
+            offset: i64 = 1
 
-            for !common.iter_is_at_end(iter) && common.is_valid_identifier_char(current) {
+            for !common.iter_is_at_end(iter) {
                 current = common.iter_next(iter)
+                if !common.is_valid_identifier_char(current) do break
+                offset += 1
             }
 
-            end_index = iter.reader.i - 1
-            if common.iter_is_at_end(iter) do end_index += 1
+            end_index = start_index + offset
             break find_next_token_start
 
         case '0' ..= '9':
             start_index = iter.reader.i - 1
+            offset: i64 = 1
 
-            for !common.iter_is_at_end(iter) && common.is_valid_numerical_char(current) {
+            for !common.iter_is_at_end(iter) {
                 current = common.iter_next(iter)
+                if !common.is_valid_numerical_char(current) do break
+                offset += 1
             }
 
-            end_index = iter.reader.i - 1
-            if common.iter_is_at_end(iter) do end_index += 1
-
+            end_index = start_index + offset
             break find_next_token_start
         }
     }

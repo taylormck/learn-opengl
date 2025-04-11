@@ -68,3 +68,71 @@ parse_string_should_parse_string :: proc(t: ^testing.T) {
     testing.expect(t, ok)
     testing.expect_value(t, actual, expected)
 }
+
+@(test)
+parse_material_should_parse_ambient_data :: proc(t: ^testing.T) {
+    input := "Ka 0.1 0.25 0.5"
+
+    expected := Material {
+        ambient = {0.1, 0.25, 0.5, 1},
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_diffuse_data :: proc(t: ^testing.T) {
+    input := "Kd 0.1 0.25 0.5"
+
+    expected := Material {
+        diffuse = {0.1, 0.25, 0.5, 1},
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_specular_data :: proc(t: ^testing.T) {
+    input := "Ks 0.1 0.25 0.5"
+
+    expected := Material {
+        specular = {0.1, 0.25, 0.5, 1},
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_emmisive_data :: proc(t: ^testing.T) {
+    input := "Ke 0.1 0.25 0.5"
+
+    expected := Material {
+        emmisive = {0.1, 0.25, 0.5, 1},
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_all_color_data :: proc(t: ^testing.T) {
+    input := "Ka 0.1 0.25 0.5\n" + "Kd 0.1 0.25 0.5\n" + "Ks 0.1 0.25 0.5\n" + "Ke 0.1 0.25 0.5\n"
+
+    expected := Material {
+        ambient  = {0.1, 0.25, 0.5, 1},
+        diffuse  = {0.1, 0.25, 0.5, 1},
+        specular = {0.1, 0.25, 0.5, 1},
+        emmisive = {0.1, 0.25, 0.5, 1},
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}

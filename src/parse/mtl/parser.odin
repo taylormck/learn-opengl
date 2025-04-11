@@ -8,9 +8,27 @@ Material :: struct {
     ambient, diffuse, specular, emmisive: types.Vec4,
 }
 
-// parse_material :: proc(s: string) -> Material {
-//     // TODO: implmenet me
-// }
+parse_material :: proc(s: string) -> (material: Material, ok: bool) {
+    iter := material_iter_init(s)
+
+    for !material_iter_is_at_end(&iter) {
+        current := material_iter_next(&iter) or_return
+
+        #partial switch current.type {
+        case .Ambient:
+            material.ambient = parse_vec4(&iter) or_return
+        case .Diffuse:
+            material.diffuse = parse_vec4(&iter) or_return
+        case .Specular:
+            material.specular = parse_vec4(&iter) or_return
+        case .Emissive:
+            material.emmisive = parse_vec4(&iter) or_return
+        }
+    }
+
+    // TODO: implmenet me
+    return material, true
+}
 
 parse_float :: proc(iter: ^MaterialTokenIter) -> (v: f32, ok: bool) {
     next_token := material_iter_peek(iter) or_return
