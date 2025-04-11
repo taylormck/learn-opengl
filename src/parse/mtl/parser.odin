@@ -12,6 +12,15 @@ Material :: struct {
 //     // TODO: implmenet me
 // }
 
+parse_float :: proc(iter: ^MaterialTokenIter) -> (v: f32, ok: bool) {
+    next_token := material_iter_peek(iter) or_return
+    if next_token.type != .Float do return
+    v = next_token.value.(f32)
+    ok = true
+
+    return
+}
+
 parse_vec4 :: proc(iter: ^MaterialTokenIter) -> (v: types.Vec4, ok: bool) {
     for i in 0 ..< 3 {
         token := material_iter_next(iter)

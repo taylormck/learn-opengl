@@ -4,6 +4,20 @@ import "../../types"
 import "../common"
 import "core:testing"
 
+
+@(test)
+parse_float_should_parse_float :: proc(t: ^testing.T) {
+    input := "225.500000"
+
+    iter := material_iter_init(input)
+
+    expected: f32 = 225.5
+    actual, ok := parse_float(&iter)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
 @(test)
 parse_vec4_should_parse_4_floats :: proc(t: ^testing.T) {
     input := "0.1 0.25 0.5 0.75"
