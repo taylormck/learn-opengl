@@ -1,5 +1,6 @@
 package main
 
+import "base:runtime"
 import "core:fmt"
 import "core:log"
 import "core:math"
@@ -262,6 +263,8 @@ main :: proc() {
 }
 
 framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, height: i32) {
+    context = runtime.default_context()
+
     gl.Viewport(0, 0, width, height)
     camera.aspect_ratio = f32(width) / f32(height)
 }

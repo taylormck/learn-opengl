@@ -1,5 +1,6 @@
 package main
 
+import "base:runtime"
 import "core:math/linalg"
 import "render"
 import "types"
@@ -39,6 +40,7 @@ process_input :: proc(window: glfw.WindowHandle, delta: f32) {
 first_mouse := true
 
 mouse_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
+    context = runtime.default_context()
     x := f32(x)
     y := f32(y)
 
@@ -54,6 +56,7 @@ mouse_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
 }
 
 scroll_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
+    context = runtime.default_context()
     SCROLL_SCALE :: 0.03
     y := f32(y) * SCROLL_SCALE
 
