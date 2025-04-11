@@ -10,8 +10,11 @@ build: ensure-bin-exists
 build-debug: ensure-bin-exists
     odin build src -debug -out:bin/learn-opengl
 
+build-debug-test: ensure-bin-exists
+    odin build src -out:bin/test -build-mode:test -debug
+
 test package="src --all-packages":
-    odin test {{package}} -out:bin/test -debug
+    odin test {{package}} -out:bin/test
 
 ensure-bin-exists:
     #!/usr/bin/env sh
