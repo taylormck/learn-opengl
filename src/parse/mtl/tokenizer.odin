@@ -31,13 +31,12 @@ MaterialTokenValue :: union {
 
 MaterialToken :: struct {
     type:  MaterialTokenType,
-    value: Maybe(MaterialTokenValue),
+    value: MaterialTokenValue,
 }
 
 iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
     start_index := iter.reader.i
     end_index := iter.reader.i
-
 
     find_next_token_start: for !common.iter_is_at_end(iter) {
         current := common.iter_next(iter)
@@ -74,7 +73,6 @@ iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
     }
 
     value := common.iter_slice(iter, start_index, end_index)
-    log.infof("value: {}", value)
 
     switch value {
     case "newmtl":

@@ -22,6 +22,7 @@ iter_current :: proc(iter: ^StringIter) -> rune {
 
 iter_next :: proc(iter: ^StringIter) -> rune {
     next_rune, size, ok := strings.reader_read_rune(&iter.reader)
+    // TODO: handle the situation when !ok
     return next_rune
 }
 
