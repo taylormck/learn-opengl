@@ -6,6 +6,7 @@ import "core:log"
 
 Material :: struct {
     ambient, diffuse, specular, emmisive: types.Vec4,
+    shininess:                            f32,
 }
 
 parse_material :: proc(s: string) -> (material: Material, ok: bool) {
@@ -23,6 +24,8 @@ parse_material :: proc(s: string) -> (material: Material, ok: bool) {
             material.specular = parse_vec4(&iter) or_return
         case .Emissive:
             material.emmisive = parse_vec4(&iter) or_return
+        case .Shininess:
+            material.shininess = parse_float(&iter) or_return
         }
     }
 

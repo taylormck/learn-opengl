@@ -136,3 +136,33 @@ parse_material_should_parse_all_color_data :: proc(t: ^testing.T) {
     testing.expect(t, ok)
     testing.expect_value(t, actual, expected)
 }
+
+@(test)
+parse_material_should_parse_shininess_coefficient :: proc(t: ^testing.T) {
+    input := "Ns 225.000000"
+
+    expected := Material {
+        shininess = 225,
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
+    input := "Ka 0.1 0.25 0.5\n" + "Kd 0.1 0.25 0.5\n" + "Ks 0.1 0.25 0.5\n" + "Ke 0.1 0.25 0.5\n" + "Ns 225.000000\n"
+
+    expected := Material {
+        ambient   = {0.1, 0.25, 0.5, 1},
+        diffuse   = {0.1, 0.25, 0.5, 1},
+        specular  = {0.1, 0.25, 0.5, 1},
+        emmisive  = {0.1, 0.25, 0.5, 1},
+        shininess = 225,
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
