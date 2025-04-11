@@ -55,3 +55,16 @@ parse_int_should_parse_int :: proc(t: ^testing.T) {
     testing.expect(t, ok)
     testing.expect_value(t, actual, expected)
 }
+
+@(test)
+parse_string_should_parse_string :: proc(t: ^testing.T) {
+    input := "test"
+
+    iter := material_iter_init(input)
+
+    expected := "test"
+    actual, ok := parse_string(&iter)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}

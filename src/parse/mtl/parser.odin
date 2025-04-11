@@ -48,3 +48,11 @@ parse_int :: proc(iter: ^MaterialTokenIter) -> (v: i32, ok: bool) {
 
     return v, true
 }
+
+parse_string :: proc(iter: ^MaterialTokenIter) -> (v: string, ok: bool) {
+    next_token := material_iter_peek(iter) or_return
+    if next_token.type != .String do return
+    v = next_token.value.(string)
+
+    return v, true
+}
