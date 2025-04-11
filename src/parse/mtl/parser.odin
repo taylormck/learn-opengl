@@ -5,8 +5,11 @@ import "../common"
 import "core:log"
 
 Material :: struct {
-    ambient, diffuse, specular, emmisive: types.Vec4,
-    shininess:                            f32,
+    ambient, diffuse, specular, emmisive:  types.Vec4,
+    shininess:                             f32,
+    // NOTE: These are strings representing the relative paths to the files.
+    // We may want to change these to be the IDs on the GPU, or keys in a map.
+    diffuse_map, normal_map, specular_map: string,
 }
 
 parse_material :: proc(s: string) -> (material: Material, ok: bool) {
@@ -26,6 +29,12 @@ parse_material :: proc(s: string) -> (material: Material, ok: bool) {
             material.emmisive = parse_vec4(&iter) or_return
         case .Shininess:
             material.shininess = parse_float(&iter) or_return
+        case .DiffuseMap:
+            material.diffuse_map = parse_string(&iter) or_return
+        case .BumpMap:
+            material.normal_map = parse_string(&iter) or_return
+        case .SpecularMap:
+            material.specular_map = parse_string(&iter) or_return
         }
     }
 

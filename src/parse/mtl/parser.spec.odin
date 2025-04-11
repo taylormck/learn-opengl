@@ -150,16 +150,72 @@ parse_material_should_parse_shininess_coefficient :: proc(t: ^testing.T) {
     testing.expect_value(t, actual, expected)
 }
 
+/*
+map_Kd diffuse.jpg
+map_Bump normal.png
+map_Ks specular.jpg
+ */
+
 @(test)
-parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
-    input := "Ka 0.1 0.25 0.5\n" + "Kd 0.1 0.25 0.5\n" + "Ks 0.1 0.25 0.5\n" + "Ke 0.1 0.25 0.5\n" + "Ns 225.000000\n"
+parse_material_should_parse_diffuse_map :: proc(t: ^testing.T) {
+    input := "map_Kd diffuse.jpg"
 
     expected := Material {
-        ambient   = {0.1, 0.25, 0.5, 1},
-        diffuse   = {0.1, 0.25, 0.5, 1},
-        specular  = {0.1, 0.25, 0.5, 1},
-        emmisive  = {0.1, 0.25, 0.5, 1},
-        shininess = 225,
+        diffuse_map = "diffuse.jpg",
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_normal_map :: proc(t: ^testing.T) {
+    input := "map_Bump normal.png"
+
+    expected := Material {
+        normal_map = "normal.png",
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_specular_map :: proc(t: ^testing.T) {
+    input := "map_Ks specular.jpg"
+
+    expected := Material {
+        specular_map = "specular.jpg",
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
+    input :=
+        "Ka 0.1 0.25 0.5\n" +
+        "Kd 0.1 0.25 0.5\n" +
+        "Ks 0.1 0.25 0.5\n" +
+        "Ke 0.1 0.25 0.5\n" +
+        "Ns 225.000000\n" +
+        "map_Kd diffuse.jpg\n" +
+        "map_Bump normal.png\n" +
+        "map_Ks specular.jpg\n"
+
+    expected := Material {
+        ambient      = {0.1, 0.25, 0.5, 1},
+        diffuse      = {0.1, 0.25, 0.5, 1},
+        specular     = {0.1, 0.25, 0.5, 1},
+        emmisive     = {0.1, 0.25, 0.5, 1},
+        shininess    = 225,
+        diffuse_map  = "diffuse.jpg",
+        normal_map   = "normal.png",
+        specular_map = "specular.jpg",
     }
     actual, ok := parse_material(input)
 
