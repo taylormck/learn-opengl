@@ -223,18 +223,52 @@ expect_to_get_transmission_filter_tokens :: proc(t: ^testing.T) {
 
 
 @(test)
-expect_to_get_map_tokens :: proc(t: ^testing.T) {
-    input := "map_Kd diffuse.jpg\n" + "map_Bump normal.png\n" + "bump normal.png\n" + "map_Ks specular.jpg"
+expect_to_get_diffuse_map_tokens :: proc(t: ^testing.T) {
+    input := "map_Kd diffuse.jpg"
 
     expected := [?]MaterialToken {
         MaterialToken{type = .DiffuseMap},
         MaterialToken{type = .String, value = "diffuse.jpg"},
+        MaterialToken{type = .EOF},
+    }
+
+    iter := common.iter_init(input)
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
+@(test)
+expect_to_get_bump_map_tokens :: proc(t: ^testing.T) {
+    input := "map_Bump normal.png\n" + "bump normal.png\n"
+
+    expected := [?]MaterialToken {
         MaterialToken{type = .BumpMap},
         MaterialToken{type = .String, value = "normal.png"},
         MaterialToken{type = .BumpMap},
         MaterialToken{type = .String, value = "normal.png"},
+        MaterialToken{type = .EOF},
+    }
+
+    iter := common.iter_init(input)
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
+@(test)
+expect_to_get_specular_map_tokens :: proc(t: ^testing.T) {
+    input := "map_Ks specular.jpg\n" + "map_Ns specular_hightlight.jpg\n"
+
+    expected := [?]MaterialToken {
         MaterialToken{type = .SpecularMap},
         MaterialToken{type = .String, value = "specular.jpg"},
+        MaterialToken{type = .SpecularHighlightMap},
+        MaterialToken{type = .String, value = "specular_hightlight.jpg"},
         MaterialToken{type = .EOF},
     }
 
