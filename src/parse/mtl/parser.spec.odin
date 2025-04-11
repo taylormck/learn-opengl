@@ -42,3 +42,16 @@ parse_vec4_should_parse_3_floats_and_imply_1 :: proc(t: ^testing.T) {
 
     testing.expect_value(t, actual, expected)
 }
+
+@(test)
+parse_int_should_parse_int :: proc(t: ^testing.T) {
+    input := "2"
+
+    iter := material_iter_init(input)
+
+    expected: i32 = 2
+    actual, ok := parse_int(&iter)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}

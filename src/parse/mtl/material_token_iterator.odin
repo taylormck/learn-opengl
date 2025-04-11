@@ -22,12 +22,14 @@ material_iter_current :: proc(iter: ^MaterialTokenIter) -> MaterialToken {
     return iter.previous
 }
 
-material_iter_next :: proc(iter: ^MaterialTokenIter) -> MaterialToken {
-    material_iter_advance(iter)
-    return iter.previous
+material_iter_next :: proc(iter: ^MaterialTokenIter) -> (token: MaterialToken, ok: bool) {
+    ok = material_iter_advance(iter)
+    return iter.previous, ok
 }
 
-material_iter_advance :: proc(iter: ^MaterialTokenIter) {
+material_iter_advance :: proc(iter: ^MaterialTokenIter) -> (ok: bool) {
+    if material_iter_is_at_end(iter) do return
+
     switch peeked_value in iter.peek {
     case MaterialToken:
         iter.previous = peeked_value
@@ -35,6 +37,8 @@ material_iter_advance :: proc(iter: ^MaterialTokenIter) {
     case nil:
         iter.previous = iter_get_next_token(&iter.reader)
     }
+
+    return true
 }
 
 material_iter_is_at_end :: proc(iter: ^MaterialTokenIter) -> bool {
