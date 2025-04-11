@@ -196,8 +196,23 @@ parse_material_should_parse_specular_map :: proc(t: ^testing.T) {
 }
 
 @(test)
+parse_material_should_parse_the_material_name_map :: proc(t: ^testing.T) {
+    input := "newmtl Scene_-_Root"
+
+    expected := Material {
+        name = "Scene_-_Root",
+    }
+    actual, ok := parse_material(input)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+
+@(test)
 parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
     input :=
+        "newmtl Scene_-_Root\n" +
         "Ka 0.1 0.25 0.5\n" +
         "Kd 0.1 0.25 0.5\n" +
         "Ks 0.1 0.25 0.5\n" +
@@ -208,6 +223,7 @@ parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
         "map_Ks specular.jpg\n"
 
     expected := Material {
+        name         = "Scene_-_Root",
         ambient      = {0.1, 0.25, 0.5, 1},
         diffuse      = {0.1, 0.25, 0.5, 1},
         specular     = {0.1, 0.25, 0.5, 1},
