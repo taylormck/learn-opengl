@@ -317,6 +317,23 @@ expect_to_get_displacement_map_tokens :: proc(t: ^testing.T) {
 }
 
 @(test)
+expect_to_get_decal_tokens :: proc(t: ^testing.T) {
+    input := "decal stencil.jpg"
+
+    expected := [?]MaterialToken {
+        MaterialToken{type = .Decal},
+        MaterialToken{type = .String, value = "stencil.jpg"},
+        MaterialToken{type = .EOF},
+    }
+
+    iter := common.iter_init(input)
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+@(test)
 expect_to_ignore_comments :: proc(t: ^testing.T) {
     input := "# map_Kd diffuse.jpg\n" + "map_Ks specular.jpg"
 
