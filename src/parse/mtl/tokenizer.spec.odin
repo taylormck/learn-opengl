@@ -299,6 +299,24 @@ expect_to_get_alpha_map_tokens :: proc(t: ^testing.T) {
 }
 
 @(test)
+expect_to_get_displacement_map_tokens :: proc(t: ^testing.T) {
+    input := "disp displacement.jpg"
+
+    expected := [?]MaterialToken {
+        MaterialToken{type = .DisplacementMap},
+        MaterialToken{type = .String, value = "displacement.jpg"},
+        MaterialToken{type = .EOF},
+    }
+
+    iter := common.iter_init(input)
+
+    for expected_value in expected {
+        actual := iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
+@(test)
 expect_to_ignore_comments :: proc(t: ^testing.T) {
     input := "# map_Kd diffuse.jpg\n" + "map_Ks specular.jpg"
 
