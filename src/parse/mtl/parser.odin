@@ -19,6 +19,8 @@ parse_material :: proc(s: string) -> (material: Material, ok: bool) {
         current := material_iter_next(&iter) or_return
 
         #partial switch current.type {
+        case .MaterialName:
+            material.name = parse_string(&iter) or_return
         case .Ambient:
             material.ambient = parse_vec4(&iter) or_return
         case .Diffuse:
@@ -29,18 +31,18 @@ parse_material :: proc(s: string) -> (material: Material, ok: bool) {
             material.emmisive = parse_vec4(&iter) or_return
         case .Shininess:
             material.shininess = parse_float(&iter) or_return
+
+        // TODO: Add support for all of the various options that can apply to textures
         case .DiffuseMap:
             material.diffuse_map = parse_string(&iter) or_return
         case .BumpMap:
             material.normal_map = parse_string(&iter) or_return
         case .SpecularMap:
             material.specular_map = parse_string(&iter) or_return
-        case .MaterialName:
-            material.name = parse_string(&iter) or_return
+        // TODO: log errors if we see other tokens
         }
     }
 
-    // TODO: implmenet me
     return material, true
 }
 
