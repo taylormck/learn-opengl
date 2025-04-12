@@ -1,6 +1,6 @@
 package common
 
-is_valid_identifier_char :: proc(r: rune) -> bool {
+is_valid_string_char :: proc(r: rune) -> bool {
     switch r {
     case 'a' ..= 'z', 'A' ..= 'Z', '0' ..= '9', '-', '_', '.':
         return true

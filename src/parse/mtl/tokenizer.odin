@@ -59,7 +59,7 @@ string_iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
 
             for !common.string_iter_is_at_end(iter) {
                 current = common.string_iter_next(iter)
-                if !common.is_valid_identifier_char(current) do break
+                if !common.is_valid_string_char(current) do break
                 offset += 1
             }
 
