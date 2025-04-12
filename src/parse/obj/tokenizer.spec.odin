@@ -255,3 +255,39 @@ obj_tokenizer_should_get_line_element_tokens :: proc(t: ^testing.T) {
     }
 }
 
+@(test)
+obj_tokenizer_should_get_material_name_tokens :: proc(t: ^testing.T) {
+    input := "mtllib my_mat.mtl"
+
+    expected := [?]ObjToken {
+        ObjToken{type = .MaterialFile},
+        ObjToken{type = .String, value = "my_mat.mtl"},
+        ObjToken{type = .EOF},
+    }
+
+    iter := common.string_iter_init(input)
+
+    for expected_value in expected {
+        actual := string_iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
+@(test)
+obj_tokenizer_should_get_use_material_tokens :: proc(t: ^testing.T) {
+    input := "usemtl my_mat"
+
+    expected := [?]ObjToken {
+        ObjToken{type = .UseMaterial},
+        ObjToken{type = .String, value = "my_mat"},
+        ObjToken{type = .EOF},
+    }
+
+    iter := common.string_iter_init(input)
+
+    for expected_value in expected {
+        actual := string_iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+

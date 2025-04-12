@@ -7,7 +7,7 @@ import "core:strconv"
 ObjTokenType :: enum {
     ObjectName,
     GroupName,
-    Material,
+    MaterialFile,
     UseMaterial,
     Vertex,
     TextureCoordinates,
@@ -78,8 +78,8 @@ string_iter_get_next_token :: proc(iter: ^common.StringIter) -> ObjToken {
     value := common.string_iter_slice(iter, start_index, end_index)
 
     switch value {
-    case "matllib":
-        return ObjToken{type = .Material}
+    case "mtllib":
+        return ObjToken{type = .MaterialFile}
     case "usemtl":
         return ObjToken{type = .UseMaterial}
     case "v":
