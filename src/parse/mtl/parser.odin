@@ -4,8 +4,10 @@ import "../../render"
 import "../../types"
 import "../common"
 import "core:log"
+import "core:mem"
 
-parse_material :: proc(s: string) -> (material: render.Material, ok: bool) {
+
+parse_material_ref :: proc(s: string, material: ^render.Material) -> (ok: bool) {
     iter := material_iter_init(s)
 
     for !material_iter_is_at_end(&iter) {
@@ -36,7 +38,25 @@ parse_material :: proc(s: string) -> (material: render.Material, ok: bool) {
         }
     }
 
-    return material, true
+    return true
+}
+
+parse_material_val :: proc(s: string) -> (material: render.Material, ok: bool) {
+    ok = parse_material_ref(s, &material)
+    return
+}
+
+parse_material_alloc :: proc(s: string, allocator: mem.Allocator) -> (material: ^render.Material, ok: bool) {
+    context.allocator = allocator
+    material = new(render.Material)
+    ok = parse_material_ref(s, material)
+    return
+}
+
+parse_material :: proc {
+    parse_material_ref,
+    parse_material_val,
+    parse_material_alloc,
 }
 
 parse_float :: proc(iter: ^MaterialTokenIter) -> (v: f32, ok: bool) {

@@ -209,7 +209,6 @@ parse_material_should_parse_the_material_name_map :: proc(t: ^testing.T) {
     testing.expect_value(t, actual, expected)
 }
 
-
 @(test)
 parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
     input :=
@@ -238,4 +237,67 @@ parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
 
     testing.expect(t, ok)
     testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_all_needed_data_into_preallocated_memory :: proc(t: ^testing.T) {
+    input :=
+        "newmtl Scene_-_Root\n" +
+        "Ka 0.1 0.25 0.5\n" +
+        "Kd 0.1 0.25 0.5\n" +
+        "Ks 0.1 0.25 0.5\n" +
+        "Ke 0.1 0.25 0.5\n" +
+        "Ns 225.000000\n" +
+        "map_Kd diffuse.jpg\n" +
+        "map_Bump normal.png\n" +
+        "map_Ks specular.jpg\n"
+
+    expected := render.Material {
+        name         = "Scene_-_Root",
+        ambient      = {0.1, 0.25, 0.5, 1},
+        diffuse      = {0.1, 0.25, 0.5, 1},
+        specular     = {0.1, 0.25, 0.5, 1},
+        emmisive     = {0.1, 0.25, 0.5, 1},
+        shininess    = 225,
+        diffuse_map  = "diffuse.jpg",
+        normal_map   = "normal.png",
+        specular_map = "specular.jpg",
+    }
+    actual: render.Material
+    ok := parse_material(input, &actual)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_material_should_parse_all_needed_data_into_heap_allocated_memory :: proc(t: ^testing.T) {
+    input :=
+        "newmtl Scene_-_Root\n" +
+        "Ka 0.1 0.25 0.5\n" +
+        "Kd 0.1 0.25 0.5\n" +
+        "Ks 0.1 0.25 0.5\n" +
+        "Ke 0.1 0.25 0.5\n" +
+        "Ns 225.000000\n" +
+        "map_Kd diffuse.jpg\n" +
+        "map_Bump normal.png\n" +
+        "map_Ks specular.jpg\n"
+
+    expected := render.Material {
+        name         = "Scene_-_Root",
+        ambient      = {0.1, 0.25, 0.5, 1},
+        diffuse      = {0.1, 0.25, 0.5, 1},
+        specular     = {0.1, 0.25, 0.5, 1},
+        emmisive     = {0.1, 0.25, 0.5, 1},
+        shininess    = 225,
+        diffuse_map  = "diffuse.jpg",
+        normal_map   = "normal.png",
+        specular_map = "specular.jpg",
+    }
+
+    actual, ok := parse_material(input, context.allocator)
+    defer free(actual)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual^, expected)
 }
