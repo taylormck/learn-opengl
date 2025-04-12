@@ -25,6 +25,8 @@ is_digit :: proc(c: rune) -> bool {
 
 is_float :: proc(s: string) -> bool {
     found_period := false
+    s := s[1:] if s[0] == '-' else s
+
     for c in s {
         if is_digit(c) do continue
         if c != '.' do return false
@@ -36,6 +38,8 @@ is_float :: proc(s: string) -> bool {
 }
 
 is_integer :: proc(s: string) -> bool {
+    s := s[1:] if s[0] == '-' else s
+
     for c in s {
         if !is_digit(c) do return false
     }
