@@ -16,7 +16,7 @@ obj_tokenizer_should_get_eof_token :: proc(t: ^testing.T) {
 
 @(test)
 obj_tokenizer_should_get_string_tokens :: proc(t: ^testing.T) {
-    input := "foo  bar\n"
+    input := "foo bar\n"
 
     expected := [?]ObjToken {
         ObjToken{type = .String, value = "foo"},
@@ -192,3 +192,66 @@ obj_tokenizer_should_get_face_tokens :: proc(t: ^testing.T) {
         testing.expect_value(t, actual, expected_value)
     }
 }
+
+@(test)
+obj_tokenizer_should_get_group_tokens :: proc(t: ^testing.T) {
+    input := "g my_group\n"
+
+    expected := [?]ObjToken {
+        ObjToken{type = .GroupName},
+        ObjToken{type = .String, value = "my_group"},
+        ObjToken{type = .EOF},
+    }
+
+    iter := common.string_iter_init(input)
+
+    for expected_value in expected {
+        actual := string_iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
+@(test)
+obj_tokenizer_should_get_shading_group_tokens :: proc(t: ^testing.T) {
+    input := "s off\n" + "s 1\n"
+
+    expected := [?]ObjToken {
+        ObjToken{type = .SmoothShading},
+        ObjToken{type = .String, value = "off"},
+        ObjToken{type = .SmoothShading},
+        ObjToken{type = .Integer, value = 1},
+        ObjToken{type = .EOF},
+    }
+
+    iter := common.string_iter_init(input)
+
+    for expected_value in expected {
+        actual := string_iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
+
+@(test)
+obj_tokenizer_should_get_line_element_tokens :: proc(t: ^testing.T) {
+    input := "l 5 8 1 2 4 9"
+
+    expected := [?]ObjToken {
+        ObjToken{type = .LineElement},
+        ObjToken{type = .Integer, value = 5},
+        ObjToken{type = .Integer, value = 8},
+        ObjToken{type = .Integer, value = 1},
+        ObjToken{type = .Integer, value = 2},
+        ObjToken{type = .Integer, value = 4},
+        ObjToken{type = .Integer, value = 9},
+        ObjToken{type = .EOF},
+    }
+
+    iter := common.string_iter_init(input)
+
+    for expected_value in expected {
+        actual := string_iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
