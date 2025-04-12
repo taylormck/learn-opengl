@@ -1,5 +1,6 @@
 package mtl
 
+import "../../render"
 import "../../types"
 import "../common"
 import "core:testing"
@@ -73,7 +74,7 @@ parse_string_should_parse_string :: proc(t: ^testing.T) {
 parse_material_should_parse_ambient_data :: proc(t: ^testing.T) {
     input := "Ka 0.1 0.25 0.5"
 
-    expected := Material {
+    expected := render.Material {
         ambient = {0.1, 0.25, 0.5, 1},
     }
     actual, ok := parse_material(input)
@@ -86,7 +87,7 @@ parse_material_should_parse_ambient_data :: proc(t: ^testing.T) {
 parse_material_should_parse_diffuse_data :: proc(t: ^testing.T) {
     input := "Kd 0.1 0.25 0.5"
 
-    expected := Material {
+    expected := render.Material {
         diffuse = {0.1, 0.25, 0.5, 1},
     }
     actual, ok := parse_material(input)
@@ -99,7 +100,7 @@ parse_material_should_parse_diffuse_data :: proc(t: ^testing.T) {
 parse_material_should_parse_specular_data :: proc(t: ^testing.T) {
     input := "Ks 0.1 0.25 0.5"
 
-    expected := Material {
+    expected := render.Material {
         specular = {0.1, 0.25, 0.5, 1},
     }
     actual, ok := parse_material(input)
@@ -112,7 +113,7 @@ parse_material_should_parse_specular_data :: proc(t: ^testing.T) {
 parse_material_should_parse_emmisive_data :: proc(t: ^testing.T) {
     input := "Ke 0.1 0.25 0.5"
 
-    expected := Material {
+    expected := render.Material {
         emmisive = {0.1, 0.25, 0.5, 1},
     }
     actual, ok := parse_material(input)
@@ -125,7 +126,7 @@ parse_material_should_parse_emmisive_data :: proc(t: ^testing.T) {
 parse_material_should_parse_all_color_data :: proc(t: ^testing.T) {
     input := "Ka 0.1 0.25 0.5\n" + "Kd 0.1 0.25 0.5\n" + "Ks 0.1 0.25 0.5\n" + "Ke 0.1 0.25 0.5\n"
 
-    expected := Material {
+    expected := render.Material {
         ambient  = {0.1, 0.25, 0.5, 1},
         diffuse  = {0.1, 0.25, 0.5, 1},
         specular = {0.1, 0.25, 0.5, 1},
@@ -141,7 +142,7 @@ parse_material_should_parse_all_color_data :: proc(t: ^testing.T) {
 parse_material_should_parse_shininess_coefficient :: proc(t: ^testing.T) {
     input := "Ns 225.000000"
 
-    expected := Material {
+    expected := render.Material {
         shininess = 225,
     }
     actual, ok := parse_material(input)
@@ -160,7 +161,7 @@ map_Ks specular.jpg
 parse_material_should_parse_diffuse_map :: proc(t: ^testing.T) {
     input := "map_Kd diffuse.jpg"
 
-    expected := Material {
+    expected := render.Material {
         diffuse_map = "diffuse.jpg",
     }
     actual, ok := parse_material(input)
@@ -173,7 +174,7 @@ parse_material_should_parse_diffuse_map :: proc(t: ^testing.T) {
 parse_material_should_parse_normal_map :: proc(t: ^testing.T) {
     input := "map_Bump normal.png"
 
-    expected := Material {
+    expected := render.Material {
         normal_map = "normal.png",
     }
     actual, ok := parse_material(input)
@@ -186,7 +187,7 @@ parse_material_should_parse_normal_map :: proc(t: ^testing.T) {
 parse_material_should_parse_specular_map :: proc(t: ^testing.T) {
     input := "map_Ks specular.jpg"
 
-    expected := Material {
+    expected := render.Material {
         specular_map = "specular.jpg",
     }
     actual, ok := parse_material(input)
@@ -199,7 +200,7 @@ parse_material_should_parse_specular_map :: proc(t: ^testing.T) {
 parse_material_should_parse_the_material_name_map :: proc(t: ^testing.T) {
     input := "newmtl Scene_-_Root"
 
-    expected := Material {
+    expected := render.Material {
         name = "Scene_-_Root",
     }
     actual, ok := parse_material(input)
@@ -222,7 +223,7 @@ parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
         "map_Bump normal.png\n" +
         "map_Ks specular.jpg\n"
 
-    expected := Material {
+    expected := render.Material {
         name         = "Scene_-_Root",
         ambient      = {0.1, 0.25, 0.5, 1},
         diffuse      = {0.1, 0.25, 0.5, 1},

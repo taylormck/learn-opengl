@@ -1,18 +1,11 @@
 package mtl
 
+import "../../render"
 import "../../types"
 import "../common"
 import "core:log"
 
-Material :: struct {
-    ambient, diffuse, specular, emmisive:        types.Vec4,
-    shininess:                                   f32,
-    // NOTE: These are strings representing the relative paths to the files.
-    // We may want to change these to be the IDs on the GPU, or keys in a map.
-    name, diffuse_map, normal_map, specular_map: string,
-}
-
-parse_material :: proc(s: string) -> (material: Material, ok: bool) {
+parse_material :: proc(s: string) -> (material: render.Material, ok: bool) {
     iter := material_iter_init(s)
 
     for !material_iter_is_at_end(&iter) {
