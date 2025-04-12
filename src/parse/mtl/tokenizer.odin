@@ -40,25 +40,25 @@ MaterialToken :: struct {
     value: MaterialTokenValue,
 }
 
-iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
+string_iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
     start_index := iter.reader.i
     end_index := iter.reader.i
 
-    find_next_token_start: for !common.iter_is_at_end(iter) {
-        current := common.iter_next(iter)
+    find_next_token_start: for !common.string_iter_is_at_end(iter) {
+        current := common.string_iter_next(iter)
         switch current {
         case '#':
             for current != '\n' {
-                current = common.iter_next(iter)
-                if common.iter_is_at_end(iter) do break
+                current = common.string_iter_next(iter)
+                if common.string_iter_is_at_end(iter) do break
             }
 
         case 'A' ..= 'Z', 'a' ..= 'z':
             start_index = iter.reader.i - 1
             offset: i64 = 1
 
-            for !common.iter_is_at_end(iter) {
-                current = common.iter_next(iter)
+            for !common.string_iter_is_at_end(iter) {
+                current = common.string_iter_next(iter)
                 if !common.is_valid_identifier_char(current) do break
                 offset += 1
             }
@@ -70,8 +70,8 @@ iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
             start_index = iter.reader.i - 1
             offset: i64 = 1
 
-            for !common.iter_is_at_end(iter) {
-                current = common.iter_next(iter)
+            for !common.string_iter_is_at_end(iter) {
+                current = common.string_iter_next(iter)
                 if !common.is_valid_numerical_char(current) do break
                 offset += 1
             }
@@ -81,7 +81,7 @@ iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
         }
     }
 
-    value := common.iter_slice(iter, start_index, end_index)
+    value := common.string_iter_slice(iter, start_index, end_index)
 
     switch value {
     case "newmtl":
@@ -126,14 +126,14 @@ iter_get_next_token :: proc(iter: ^common.StringIter) -> MaterialToken {
             val, ok := strconv.parse_f32(value)
             if !ok {
                 log.errorf("Failed to parse float: {}", value)
-                return iter_get_next_token(iter)
+                return string_iter_get_next_token(iter)
             }
             return MaterialToken{type = .Float, value = val}
         case common.is_integer(value):
             val, ok := strconv.parse_int(value)
             if !ok {
                 log.errorf("Failed to parse integer: {}", value)
-                return iter_get_next_token(iter)
+                return string_iter_get_next_token(iter)
             }
             return MaterialToken{type = .Integer, value = i32(val)}
         case:

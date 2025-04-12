@@ -3,6 +3,7 @@ package mtl
 import "../../render"
 import "../../types"
 import "../common"
+import "core:log"
 import "core:testing"
 
 
@@ -10,7 +11,7 @@ import "core:testing"
 parse_float_should_parse_float :: proc(t: ^testing.T) {
     input := "225.500000"
 
-    iter := material_iter_init(input)
+    iter := common.token_iter_init(MaterialToken, input, string_iter_get_next_token)
 
     expected: f32 = 225.5
     actual, ok := parse_float(&iter)
@@ -23,7 +24,7 @@ parse_float_should_parse_float :: proc(t: ^testing.T) {
 parse_vec4_should_parse_4_floats :: proc(t: ^testing.T) {
     input := "0.1 0.25 0.5 0.75"
 
-    iter := material_iter_init(input)
+    iter := common.token_iter_init(MaterialToken, input, string_iter_get_next_token)
 
     expected := types.Vec4{0.1, 0.25, 0.5, 0.75}
     actual, ok := parse_vec4(&iter)
@@ -36,7 +37,7 @@ parse_vec4_should_parse_4_floats :: proc(t: ^testing.T) {
 parse_vec4_should_parse_3_floats_and_imply_1 :: proc(t: ^testing.T) {
     input := "0.1 0.25 0.5"
 
-    iter := material_iter_init(input)
+    iter := common.token_iter_init(MaterialToken, input, string_iter_get_next_token)
 
     expected := types.Vec4{0.1, 0.25, 0.5, 1}
     actual, ok := parse_vec4(&iter)
@@ -48,7 +49,7 @@ parse_vec4_should_parse_3_floats_and_imply_1 :: proc(t: ^testing.T) {
 parse_int_should_parse_int :: proc(t: ^testing.T) {
     input := "2"
 
-    iter := material_iter_init(input)
+    iter := common.token_iter_init(MaterialToken, input, string_iter_get_next_token)
 
     expected: i32 = 2
     actual, ok := parse_int(&iter)
@@ -61,7 +62,7 @@ parse_int_should_parse_int :: proc(t: ^testing.T) {
 parse_string_should_parse_string :: proc(t: ^testing.T) {
     input := "test"
 
-    iter := material_iter_init(input)
+    iter := common.token_iter_init(MaterialToken, input, string_iter_get_next_token)
 
     expected := "test"
     actual, ok := parse_string(&iter)
@@ -77,6 +78,7 @@ parse_material_should_parse_ambient_data :: proc(t: ^testing.T) {
     expected := render.Material {
         ambient = {0.1, 0.25, 0.5, 1},
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -90,6 +92,7 @@ parse_material_should_parse_diffuse_data :: proc(t: ^testing.T) {
     expected := render.Material {
         diffuse = {0.1, 0.25, 0.5, 1},
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -103,6 +106,7 @@ parse_material_should_parse_specular_data :: proc(t: ^testing.T) {
     expected := render.Material {
         specular = {0.1, 0.25, 0.5, 1},
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -116,6 +120,7 @@ parse_material_should_parse_emmisive_data :: proc(t: ^testing.T) {
     expected := render.Material {
         emmisive = {0.1, 0.25, 0.5, 1},
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -132,6 +137,7 @@ parse_material_should_parse_all_color_data :: proc(t: ^testing.T) {
         specular = {0.1, 0.25, 0.5, 1},
         emmisive = {0.1, 0.25, 0.5, 1},
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -145,17 +151,12 @@ parse_material_should_parse_shininess_coefficient :: proc(t: ^testing.T) {
     expected := render.Material {
         shininess = 225,
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual, expected)
 }
-
-/*
-map_Kd diffuse.jpg
-map_Bump normal.png
-map_Ks specular.jpg
- */
 
 @(test)
 parse_material_should_parse_diffuse_map :: proc(t: ^testing.T) {
@@ -164,6 +165,7 @@ parse_material_should_parse_diffuse_map :: proc(t: ^testing.T) {
     expected := render.Material {
         diffuse_map = "diffuse.jpg",
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -177,6 +179,7 @@ parse_material_should_parse_normal_map :: proc(t: ^testing.T) {
     expected := render.Material {
         normal_map = "normal.png",
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -190,6 +193,7 @@ parse_material_should_parse_specular_map :: proc(t: ^testing.T) {
     expected := render.Material {
         specular_map = "specular.jpg",
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -203,6 +207,7 @@ parse_material_should_parse_the_material_name_map :: proc(t: ^testing.T) {
     expected := render.Material {
         name = "Scene_-_Root",
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -233,6 +238,7 @@ parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
         normal_map   = "normal.png",
         specular_map = "specular.jpg",
     }
+
     actual, ok := parse_material(input)
 
     testing.expect(t, ok)
@@ -263,6 +269,7 @@ parse_material_should_parse_all_needed_data_into_preallocated_memory :: proc(t: 
         normal_map   = "normal.png",
         specular_map = "specular.jpg",
     }
+
     actual: render.Material
     ok := parse_material(input, &actual)
 

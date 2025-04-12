@@ -9,31 +9,31 @@ StringIter :: struct {
     reader:       strings.Reader,
 }
 
-iter_init :: proc(s: string) -> StringIter {
+string_iter_init :: proc(s: string) -> StringIter {
     iter: StringIter
     strings.reader_init(&iter.reader, s)
 
     return iter
 }
 
-iter_current :: proc(iter: ^StringIter) -> rune {
+string_iter_current :: proc(iter: ^StringIter) -> rune {
     return rune(iter.reader.prev_rune)
 }
 
-iter_next :: proc(iter: ^StringIter) -> rune {
+string_iter_next :: proc(iter: ^StringIter) -> rune {
     next_rune, size, ok := strings.reader_read_rune(&iter.reader)
     // TODO: handle the situation when !ok
     return next_rune
 }
 
-iter_advance :: proc(iter: ^StringIter) {
+string_iter_advance :: proc(iter: ^StringIter) {
     strings.reader_read_rune(&iter.reader)
 }
 
-iter_is_at_end :: proc(iter: ^StringIter) -> bool {
+string_iter_is_at_end :: proc(iter: ^StringIter) -> bool {
     return strings.reader_length(&iter.reader) == 0
 }
 
-iter_slice :: proc(iter: ^StringIter, start, end: i64) -> string {
+string_iter_slice :: proc(iter: ^StringIter, start, end: i64) -> string {
     return iter.reader.s[start:end]
 }

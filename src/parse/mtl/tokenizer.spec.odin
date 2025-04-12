@@ -7,9 +7,9 @@ import "core:testing"
 expect_to_get_eof_token :: proc(t: ^testing.T) {
     input := ""
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
-    actual := iter_get_next_token(&iter)
+    actual := string_iter_get_next_token(&iter)
 
     testing.expect_value(t, actual, MaterialToken{type = .EOF, value = nil})
 }
@@ -24,10 +24,10 @@ expect_to_get_string_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -43,10 +43,10 @@ expect_to_get_int_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -62,10 +62,10 @@ expect_to_get_float_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -79,10 +79,10 @@ expect_to_get_material_name_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -92,10 +92,10 @@ expect_to_get_shininess_tokens :: proc(t: ^testing.T) {
     input := "Ns 225.00000"
     expected := [?]MaterialToken{MaterialToken{type = .Shininess}, MaterialToken{type = .Float, value = 225.0}}
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -128,10 +128,10 @@ expect_to_get_color_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -146,10 +146,10 @@ expect_to_get_optical_density_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -164,10 +164,10 @@ expect_to_get_illumination_model_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -184,10 +184,10 @@ expect_to_get_transparency_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -213,10 +213,10 @@ expect_to_get_transmission_filter_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -232,10 +232,10 @@ expect_to_get_diffuse_map_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -252,10 +252,10 @@ expect_to_get_bump_map_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -272,10 +272,10 @@ expect_to_get_specular_map_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -290,10 +290,10 @@ expect_to_get_alpha_map_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -308,10 +308,10 @@ expect_to_get_displacement_map_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -326,10 +326,10 @@ expect_to_get_decal_tokens :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
@@ -343,10 +343,10 @@ expect_to_ignore_comments :: proc(t: ^testing.T) {
         MaterialToken{type = .EOF},
     }
 
-    iter := common.iter_init(input)
+    iter := common.string_iter_init(input)
 
     for expected_value in expected {
-        actual := iter_get_next_token(&iter)
+        actual := string_iter_get_next_token(&iter)
         testing.expect_value(t, actual, expected_value)
     }
 }
