@@ -105,6 +105,26 @@ parse_string_should_parse_material_file_name :: proc(t: ^testing.T) {
     expect_scene_match(t, &actual, &expected)
 }
 
+@(test)
+parse_string_should_parse_vertex :: proc(t: ^testing.T) {
+    input := "v 1.0 1.0 1.0"
+
+    vertices: [dynamic]types.Vec3
+    defer delete(vertices)
+
+    append(&vertices, types.Vec3{1.0, 1.0, 1.0})
+
+    expected := render.Scene {
+        vertices = vertices,
+    }
+
+    actual, ok := parse_obj(input)
+    defer render.scene_destroy(&actual)
+
+    testing.expect(t, ok)
+    expect_scene_match(t, &actual, &expected)
+}
+
 expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     testing.expect_value(t, len(actual.materials), len(expected.materials))
     for i in 0 ..< len(expected.materials) {
@@ -114,5 +134,10 @@ expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     testing.expect_value(t, len(actual.meshes), len(expected.meshes))
     for i in 0 ..< len(expected.meshes) {
         testing.expect_value(t, actual.meshes[i], expected.meshes[i])
+    }
+
+    testing.expect_value(t, len(actual.vertices), len(expected.vertices))
+    for i in 0 ..< len(expected.vertices) {
+        testing.expect_value(t, actual.vertices[i], expected.vertices[i])
     }
 }

@@ -1,5 +1,7 @@
 package render
 
+import "../types"
+
 Scene :: struct {
     meshes:    [dynamic]Mesh,
 
@@ -7,6 +9,7 @@ Scene :: struct {
     // The materials are stored in a global map so that they may be reused
     // acrosss multiple scenes.
     materials: [dynamic]string,
+    vertices:  [dynamic]types.Vec3,
 }
 
 Mesh :: struct {}

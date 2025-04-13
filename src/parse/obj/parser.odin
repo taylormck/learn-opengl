@@ -20,6 +20,9 @@ parse_obj_ref :: proc(s: string, scene: ^render.Scene) -> (ok: bool) {
 
         case .UseMaterial:
         case .Vertex:
+            vertex := parse_vec3(&iter) or_return
+            append(&scene.vertices, vertex)
+
         case .TextureCoordinates:
         case .VertexNormal:
         case .VertexParameter:
