@@ -146,6 +146,26 @@ parse_string_should_parse_texture_coordinates :: proc(t: ^testing.T) {
     expect_scene_match(t, &actual, &expected)
 }
 
+@(test)
+parse_string_should_parse_vertex_normal :: proc(t: ^testing.T) {
+    input := "vn 0.0001 0.9989 0.0473"
+
+    normals: [dynamic]types.Vec3
+    defer delete(normals)
+
+    append(&normals, types.Vec3{0.0001, 0.9989, 0.0473})
+
+    expected := render.Scene {
+        normals = normals,
+    }
+
+    actual, ok := parse_obj(input)
+    defer render.scene_destroy(&actual)
+
+    testing.expect(t, ok)
+    expect_scene_match(t, &actual, &expected)
+}
+
 expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     testing.expect_value(t, len(actual.materials), len(expected.materials))
     for i in 0 ..< len(expected.materials) {
@@ -165,5 +185,10 @@ expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     testing.expect_value(t, len(actual.texture_coordinates), len(expected.texture_coordinates))
     for i in 0 ..< len(expected.texture_coordinates) {
         testing.expect_value(t, actual.texture_coordinates[i], expected.texture_coordinates[i])
+    }
+
+    testing.expect_value(t, len(actual.normals), len(expected.normals))
+    for i in 0 ..< len(expected.normals) {
+        testing.expect_value(t, actual.normals[i], expected.normals[i])
     }
 }

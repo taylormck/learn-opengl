@@ -11,6 +11,7 @@ Scene :: struct {
     materials:           [dynamic]string,
     vertices:            [dynamic]types.Vec3,
     texture_coordinates: [dynamic]types.Vec2,
+    normals:             [dynamic]types.Vec3,
 }
 
 Mesh :: struct {}
@@ -20,4 +21,5 @@ scene_destroy :: proc(scene: ^Scene) {
     delete(scene.materials)
     delete(scene.vertices)
     delete(scene.texture_coordinates)
+    delete(scene.normals)
 }

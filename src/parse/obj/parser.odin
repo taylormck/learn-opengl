@@ -28,6 +28,9 @@ parse_obj_ref :: proc(s: string, scene: ^render.Scene) -> (ok: bool) {
             append(&scene.texture_coordinates, coordinates)
 
         case .VertexNormal:
+            normal := parse_vec3(&iter) or_return
+            append(&scene.normals, normal)
+
         case .VertexParameter:
         case .Face:
         case .GroupName:
