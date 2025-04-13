@@ -24,6 +24,9 @@ parse_obj_ref :: proc(s: string, scene: ^render.Scene) -> (ok: bool) {
             append(&scene.vertices, vertex)
 
         case .TextureCoordinates:
+            coordinates := parse_vec2(&iter) or_return
+            append(&scene.texture_coordinates, coordinates)
+
         case .VertexNormal:
         case .VertexParameter:
         case .Face:
@@ -61,6 +64,16 @@ parse_float :: proc(iter: ^ObjTokenIter) -> (v: f32, ok: bool) {
     if next_token.type != .Float do return
     v = next_token.value.(f32)
 
+    return v, true
+}
+
+parse_vec2 :: proc(iter: ^ObjTokenIter) -> (v: types.Vec2, ok: bool) {
+    for i in 0 ..< 2 {
+        token := common.token_iter_next(iter) or_return
+        assert(token.type == .Float)
+        value := token.value.(f32)
+        v[i] = value
+    }
     return v, true
 }
 
