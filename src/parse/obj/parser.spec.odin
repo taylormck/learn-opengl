@@ -21,6 +21,20 @@ parse_float_should_parse_float :: proc(t: ^testing.T) {
 }
 
 @(test)
+parse_vec3_should_parse_4_floats :: proc(t: ^testing.T) {
+    input := "0.1 0.25 0.5"
+
+    iter := common.token_iter_init(ObjToken, input, string_iter_get_next_token)
+
+    expected := types.Vec3{0.1, 0.25, 0.5}
+    actual, ok := parse_vec3(&iter)
+
+    testing.expect(t, ok)
+    testing.expect_value(t, actual, expected)
+}
+
+
+@(test)
 parse_vec4_should_parse_4_floats :: proc(t: ^testing.T) {
     input := "0.1 0.25 0.5 0.75"
 
@@ -69,4 +83,36 @@ parse_string_should_parse_string :: proc(t: ^testing.T) {
 
     testing.expect(t, ok)
     testing.expect_value(t, actual, expected)
+}
+
+@(test)
+parse_string_should_parse_material_file_name :: proc(t: ^testing.T) {
+    input := "mtllib test.mtl"
+
+    materials: [dynamic]string
+    defer delete(materials)
+
+    append(&materials, "test.mtl")
+
+    expected := render.Scene {
+        materials = materials,
+    }
+
+    actual, ok := parse_obj(input)
+    defer render.scene_destroy(&actual)
+
+    testing.expect(t, ok)
+    expect_scene_match(t, &actual, &expected)
+}
+
+expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
+    testing.expect_value(t, len(actual.materials), len(expected.materials))
+    for i in 0 ..< len(expected.materials) {
+        testing.expect_value(t, actual.materials[i], expected.materials[i])
+    }
+
+    testing.expect_value(t, len(actual.meshes), len(expected.meshes))
+    for i in 0 ..< len(expected.meshes) {
+        testing.expect_value(t, actual.meshes[i], expected.meshes[i])
+    }
 }

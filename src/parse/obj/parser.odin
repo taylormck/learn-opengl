@@ -7,7 +7,7 @@ import "core:mem"
 
 ObjTokenIter :: common.TokenIter(ObjToken)
 
-parser_obj_ref :: proc(s: string, material: ^render.Scene) -> (ok: bool) {
+parse_obj_ref :: proc(s: string, scene: ^render.Scene) -> (ok: bool) {
     iter := common.token_iter_init(ObjToken, s, string_iter_get_next_token)
 
     for !common.token_iter_is_at_end(&iter) {
@@ -15,6 +15,9 @@ parser_obj_ref :: proc(s: string, material: ^render.Scene) -> (ok: bool) {
 
         #partial switch current.type {
         case .MaterialFile:
+            material_file_name := parse_string(&iter) or_return
+            append(&scene.materials, material_file_name)
+
         case .UseMaterial:
         case .Vertex:
         case .TextureCoordinates:
@@ -32,22 +35,22 @@ parser_obj_ref :: proc(s: string, material: ^render.Scene) -> (ok: bool) {
     return true
 }
 
-parser_obj_val :: proc(s: string) -> (material: render.Scene, ok: bool) {
-    ok = parser_obj_ref(s, &material)
+parse_obj_val :: proc(s: string) -> (material: render.Scene, ok: bool) {
+    ok = parse_obj_ref(s, &material)
     return
 }
 
-parser_obj_alloc :: proc(s: string, allocator: mem.Allocator) -> (material: ^render.Scene, ok: bool) {
+parse_obj_alloc :: proc(s: string, allocator: mem.Allocator) -> (material: ^render.Scene, ok: bool) {
     context.allocator = allocator
     material = new(render.Scene)
-    ok = parser_obj_ref(s, material)
+    ok = parse_obj_ref(s, material)
     return
 }
 
-parser_obj :: proc {
-    parser_obj_ref,
-    parser_obj_val,
-    parser_obj_alloc,
+parse_obj :: proc {
+    parse_obj_ref,
+    parse_obj_val,
+    parse_obj_alloc,
 }
 
 parse_float :: proc(iter: ^ObjTokenIter) -> (v: f32, ok: bool) {
