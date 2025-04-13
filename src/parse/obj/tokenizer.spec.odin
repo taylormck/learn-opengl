@@ -173,10 +173,20 @@ obj_tokenizer_should_get_vertex_parameter_tokens :: proc(t: ^testing.T) {
 
 @(test)
 obj_tokenizer_should_get_face_tokens :: proc(t: ^testing.T) {
-    input := "f 1/2/3\n"
+    input := "f 1/2/3 1/2/3 1/2/3\n"
 
     expected := [?]ObjToken {
         ObjToken{type = .Face},
+        ObjToken{type = .Integer, value = 1},
+        ObjToken{type = .Slash},
+        ObjToken{type = .Integer, value = 2},
+        ObjToken{type = .Slash},
+        ObjToken{type = .Integer, value = 3},
+        ObjToken{type = .Integer, value = 1},
+        ObjToken{type = .Slash},
+        ObjToken{type = .Integer, value = 2},
+        ObjToken{type = .Slash},
+        ObjToken{type = .Integer, value = 3},
         ObjToken{type = .Integer, value = 1},
         ObjToken{type = .Slash},
         ObjToken{type = .Integer, value = 2},
@@ -200,6 +210,24 @@ obj_tokenizer_should_get_group_tokens :: proc(t: ^testing.T) {
     expected := [?]ObjToken {
         ObjToken{type = .GroupName},
         ObjToken{type = .String, value = "my_group"},
+        ObjToken{type = .EOF},
+    }
+
+    iter := common.string_iter_init(input)
+
+    for expected_value in expected {
+        actual := string_iter_get_next_token(&iter)
+        testing.expect_value(t, actual, expected_value)
+    }
+}
+
+@(test)
+obj_tokenizer_should_get_object_name_tokens :: proc(t: ^testing.T) {
+    input := "o my_object\n"
+
+    expected := [?]ObjToken {
+        ObjToken{type = .ObjectName},
+        ObjToken{type = .String, value = "my_object"},
         ObjToken{type = .EOF},
     }
 
@@ -290,4 +318,3 @@ obj_tokenizer_should_get_use_material_tokens :: proc(t: ^testing.T) {
         testing.expect_value(t, actual, expected_value)
     }
 }
-

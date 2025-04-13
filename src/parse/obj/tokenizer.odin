@@ -94,6 +94,8 @@ string_iter_get_next_token :: proc(iter: ^common.StringIter) -> ObjToken {
         return ObjToken{type = .Face}
     case "g":
         return ObjToken{type = .GroupName}
+    case "o":
+        return ObjToken{type = .ObjectName}
     case "s":
         return ObjToken{type = .SmoothShading}
     case "l":
