@@ -58,6 +58,16 @@ parse_float :: proc(iter: ^ObjTokenIter) -> (v: f32, ok: bool) {
     return v, true
 }
 
+parse_vec3 :: proc(iter: ^ObjTokenIter) -> (v: types.Vec3, ok: bool) {
+    for i in 0 ..< 3 {
+        token := common.token_iter_next(iter) or_return
+        assert(token.type == .Float)
+        value := token.value.(f32)
+        v[i] = value
+    }
+    return v, true
+}
+
 parse_vec4 :: proc(iter: ^ObjTokenIter) -> (v: types.Vec4, ok: bool) {
     for i in 0 ..< 3 {
         token := common.token_iter_next(iter) or_return
