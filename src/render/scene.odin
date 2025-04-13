@@ -9,7 +9,7 @@ Scene :: struct {
     // The materials are stored in a global map so that they may be reused
     // acrosss multiple scenes.
     materials:           [dynamic]string,
-    vertices:            [dynamic]types.Vec3,
+    vertices:            [dynamic]types.Vec4,
     texture_coordinates: [dynamic]types.Vec2,
     normals:             [dynamic]types.Vec3,
 }

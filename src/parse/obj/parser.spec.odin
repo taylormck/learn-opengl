@@ -108,12 +108,32 @@ parse_string_should_parse_material_file_name :: proc(t: ^testing.T) {
 
 @(test)
 parse_string_should_parse_vertex :: proc(t: ^testing.T) {
-    input := "v 1.0 1.0 1.0"
+    input := "v 1.0 1.0 1.0 0.5"
 
-    vertices: [dynamic]types.Vec3
+    vertices: [dynamic]types.Vec4
     defer delete(vertices)
 
-    append(&vertices, types.Vec3{1.0, 1.0, 1.0})
+    append(&vertices, types.Vec4{1.0, 1.0, 1.0, 0.5})
+
+    expected := render.Scene {
+        vertices = vertices,
+    }
+
+    actual, ok := parse_obj(input)
+    defer render.scene_destroy(&actual)
+
+    testing.expect(t, ok)
+    expect_scene_match(t, &actual, &expected)
+}
+
+@(test)
+parse_string_should_parse_vertex_with_default_w :: proc(t: ^testing.T) {
+    input := "v 1.0 1.0 1.0"
+
+    vertices: [dynamic]types.Vec4
+    defer delete(vertices)
+
+    append(&vertices, types.Vec4{1.0, 1.0, 1.0, 1.0})
 
     expected := render.Scene {
         vertices = vertices,

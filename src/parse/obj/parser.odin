@@ -20,7 +20,7 @@ parse_obj_ref :: proc(s: string, scene: ^render.Scene) -> (ok: bool) {
 
         case .UseMaterial:
         case .Vertex:
-            vertex := parse_vec3(&iter) or_return
+            vertex := parse_vec4(&iter) or_return
             append(&scene.vertices, vertex)
 
         case .TextureCoordinates:
@@ -32,8 +32,11 @@ parse_obj_ref :: proc(s: string, scene: ^render.Scene) -> (ok: bool) {
             append(&scene.normals, normal)
 
         case .VertexParameter:
-        case .Face:
+        // TODO: implement vertex parameters
+
+        case .ObjectName:
         case .GroupName:
+        case .Face:
 
         // Ignore these for now
         // case .SmoothShading:
