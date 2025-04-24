@@ -87,19 +87,29 @@ parse_string_should_parse_string :: proc(t: ^testing.T) {
 }
 
 @(test)
-parse_string_should_parse_material_file_name :: proc(t: ^testing.T) {
+parse_string_should_parse_material_file :: proc(t: ^testing.T) {
     input := "mtllib test.mtl"
 
-    materials: [dynamic]string
+    materials: render.MaterialMap
     defer delete(materials)
 
-    append(&materials, "test.mtl")
+    materials["mymat"] = render.Material {
+        name         = "mymat",
+        ambient      = {0.1, 0.25, 0.5, 1},
+        diffuse      = {0.1, 0.25, 0.5, 1},
+        specular     = {0.1, 0.25, 0.5, 1},
+        emmisive     = {0.1, 0.25, 0.5, 1},
+        shininess    = 225,
+        diffuse_map  = "diffuse.jpg",
+        normal_map   = "normal.png",
+        specular_map = "specular.jpg",
+    }
 
     expected := render.Scene {
         materials = materials,
     }
 
-    actual, ok := parse_obj(input)
+    actual, ok := parse_obj(input, load_mock_material_data)
     defer render.scene_destroy(&actual)
 
     testing.expect(t, ok)
@@ -188,8 +198,8 @@ parse_string_should_parse_vertex_normal :: proc(t: ^testing.T) {
 
 expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     testing.expect_value(t, len(actual.materials), len(expected.materials))
-    for i in 0 ..< len(expected.materials) {
-        testing.expect_value(t, actual.materials[i], expected.materials[i])
+    for key, expected_value in expected.materials {
+        testing.expect_value(t, actual.materials[key], expected_value)
     }
 
     testing.expect_value(t, len(actual.meshes), len(expected.meshes))
@@ -211,4 +221,33 @@ expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     for i in 0 ..< len(expected.normals) {
         testing.expect_value(t, actual.normals[i], expected.normals[i])
     }
+}
+
+load_mock_material_data :: proc(
+    name: string,
+    allocator := context.allocator,
+    loc := #caller_location,
+) -> (
+    data: []u8,
+    success: bool,
+) {
+    // TODO: this needs to be tracked so we can free it later.
+    // Right now, it leaks
+    data =
+    transmute([]u8)string(
+        "newmtl mymat\n" +
+        "Ns 225.000000\n" +
+        "Ka 0.100000 0.250000 0.500000\n" +
+        "Kd 0.100000 0.250000 0.500000\n" +
+        "Ks 0.100000 0.250000 0.500000\n" +
+        "Ke 0.1 0.25 0.5\n" +
+        "Ni 1.450000\n" +
+        "d 1.000000\n" +
+        "illum 2\n" +
+        "map_Kd diffuse.jpg\n" +
+        "map_Bump normal.png\n" +
+        "map_Ks specular.jpg\n",
+    )
+
+    return data, true
 }
