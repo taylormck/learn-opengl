@@ -174,6 +174,7 @@ parse_material_should_parse_shininess_coefficient :: proc(t: ^testing.T) {
     }
 
     actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
