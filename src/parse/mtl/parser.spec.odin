@@ -72,132 +72,159 @@ parse_string_should_parse_string :: proc(t: ^testing.T) {
 }
 
 @(test)
-parse_material_should_parse_ambient_data :: proc(t: ^testing.T) {
+parse_materials_should_return_not_ok_when_there_is_no_material_name :: proc(t: ^testing.T) {
     input := "Ka 0.1 0.25 0.5"
 
+    _, ok := parse_materials(input)
+
+    testing.expect(t, !ok)
+
+}
+
+@(test)
+parse_material_should_parse_ambient_data :: proc(t: ^testing.T) {
+    input := "newmtl mymat\n" + "Ka 0.1 0.25 0.5"
+
     expected := render.Material {
+        name    = "mymat",
         ambient = {0.1, 0.25, 0.5, 1},
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["mymat"], expected)
 }
 
 @(test)
 parse_material_should_parse_diffuse_data :: proc(t: ^testing.T) {
-    input := "Kd 0.1 0.25 0.5"
+    input := "newmtl mymat\n" + "Kd 0.1 0.25 0.5"
 
     expected := render.Material {
+        name    = "mymat",
         diffuse = {0.1, 0.25, 0.5, 1},
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["mymat"], expected)
 }
 
 @(test)
 parse_material_should_parse_specular_data :: proc(t: ^testing.T) {
-    input := "Ks 0.1 0.25 0.5"
+    input := "newmtl mymat\n" + "Ks 0.1 0.25 0.5"
 
     expected := render.Material {
+        name     = "mymat",
         specular = {0.1, 0.25, 0.5, 1},
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["mymat"], expected)
 }
 
 @(test)
 parse_material_should_parse_emmisive_data :: proc(t: ^testing.T) {
-    input := "Ke 0.1 0.25 0.5"
+    input := "newmtl mymat\n" + "Ke 0.1 0.25 0.5"
 
     expected := render.Material {
+        name     = "mymat",
         emmisive = {0.1, 0.25, 0.5, 1},
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["mymat"], expected)
 }
 
 @(test)
 parse_material_should_parse_all_color_data :: proc(t: ^testing.T) {
-    input := "Ka 0.1 0.25 0.5\n" + "Kd 0.1 0.25 0.5\n" + "Ks 0.1 0.25 0.5\n" + "Ke 0.1 0.25 0.5\n"
+    input := "newmtl mymat\n" + "Ka 0.1 0.25 0.5\n" + "Kd 0.1 0.25 0.5\n" + "Ks 0.1 0.25 0.5\n" + "Ke 0.1 0.25 0.5\n"
 
     expected := render.Material {
+        name     = "mymat",
         ambient  = {0.1, 0.25, 0.5, 1},
         diffuse  = {0.1, 0.25, 0.5, 1},
         specular = {0.1, 0.25, 0.5, 1},
         emmisive = {0.1, 0.25, 0.5, 1},
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["mymat"], expected)
 }
 
 @(test)
 parse_material_should_parse_shininess_coefficient :: proc(t: ^testing.T) {
-    input := "Ns 225.000000"
+    input := "newmtl mymat\n" + "Ns 225.000000"
 
     expected := render.Material {
+        name      = "mymat",
         shininess = 225,
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["mymat"], expected)
 }
 
 @(test)
 parse_material_should_parse_diffuse_map :: proc(t: ^testing.T) {
-    input := "map_Kd diffuse.jpg"
+    input := "newmtl mymat\n" + "map_Kd diffuse.jpg"
 
     expected := render.Material {
+        name        = "mymat",
         diffuse_map = "diffuse.jpg",
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["mymat"], expected)
 }
 
 @(test)
 parse_material_should_parse_normal_map :: proc(t: ^testing.T) {
-    input := "map_Bump normal.png"
+    input := "newmtl mymat\n" + "map_Bump normal.png"
 
     expected := render.Material {
+        name       = "mymat",
         normal_map = "normal.png",
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["mymat"], expected)
 }
 
 @(test)
 parse_material_should_parse_specular_map :: proc(t: ^testing.T) {
-    input := "map_Ks specular.jpg"
+    input := "newmtl mymat\n" + "map_Ks specular.jpg"
 
     expected := render.Material {
+        name         = "mymat",
         specular_map = "specular.jpg",
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["mymat"], expected)
 }
 
 @(test)
@@ -208,10 +235,11 @@ parse_material_should_parse_the_material_name_map :: proc(t: ^testing.T) {
         name = "Scene_-_Root",
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
+    testing.expect_value(t, actual["Scene_-_Root"], expected)
 }
 
 @(test)
@@ -239,72 +267,9 @@ parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
         specular_map = "specular.jpg",
     }
 
-    actual, ok := parse_material(input)
+    actual, ok := parse_materials(input)
+    defer delete(actual)
 
     testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
-}
-
-@(test)
-parse_material_should_parse_all_needed_data_into_preallocated_memory :: proc(t: ^testing.T) {
-    input :=
-        "newmtl Scene_-_Root\n" +
-        "Ka 0.1 0.25 0.5\n" +
-        "Kd 0.1 0.25 0.5\n" +
-        "Ks 0.1 0.25 0.5\n" +
-        "Ke 0.1 0.25 0.5\n" +
-        "Ns 225.000000\n" +
-        "map_Kd diffuse.jpg\n" +
-        "map_Bump normal.png\n" +
-        "map_Ks specular.jpg\n"
-
-    expected := render.Material {
-        name         = "Scene_-_Root",
-        ambient      = {0.1, 0.25, 0.5, 1},
-        diffuse      = {0.1, 0.25, 0.5, 1},
-        specular     = {0.1, 0.25, 0.5, 1},
-        emmisive     = {0.1, 0.25, 0.5, 1},
-        shininess    = 225,
-        diffuse_map  = "diffuse.jpg",
-        normal_map   = "normal.png",
-        specular_map = "specular.jpg",
-    }
-
-    actual: render.Material
-    ok := parse_material(input, &actual)
-
-    testing.expect(t, ok)
-    testing.expect_value(t, actual, expected)
-}
-
-@(test)
-parse_material_should_parse_all_needed_data_into_heap_allocated_memory :: proc(t: ^testing.T) {
-    input :=
-        "newmtl Scene_-_Root\n" +
-        "Ka 0.1 0.25 0.5\n" +
-        "Kd 0.1 0.25 0.5\n" +
-        "Ks 0.1 0.25 0.5\n" +
-        "Ke 0.1 0.25 0.5\n" +
-        "Ns 225.000000\n" +
-        "map_Kd diffuse.jpg\n" +
-        "map_Bump normal.png\n" +
-        "map_Ks specular.jpg\n"
-
-    expected := render.Material {
-        name         = "Scene_-_Root",
-        ambient      = {0.1, 0.25, 0.5, 1},
-        diffuse      = {0.1, 0.25, 0.5, 1},
-        specular     = {0.1, 0.25, 0.5, 1},
-        emmisive     = {0.1, 0.25, 0.5, 1},
-        shininess    = 225,
-        diffuse_map  = "diffuse.jpg",
-        normal_map   = "normal.png",
-        specular_map = "specular.jpg",
-    }
-
-    actual, ok := parse_material(input, context.allocator)
-    defer free(actual)
-
-    testing.expect(t, ok)
-    testing.expect_value(t, actual^, expected)
+    testing.expect_value(t, actual["Scene_-_Root"], expected)
 }

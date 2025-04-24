@@ -3,60 +3,74 @@ package mtl
 import "../../render"
 import "../../types"
 import "../common"
+import "core:log"
 import "core:mem"
 
 MaterialTokenIter :: common.TokenIter(MaterialToken)
 
-parse_material_ref :: proc(s: string, material: ^render.Material) -> (ok: bool) {
+parse_materials :: proc(
+    s: string,
+    allocator: mem.Allocator = context.allocator,
+) -> (
+    materials: render.MaterialMap,
+    ok: bool,
+) {
+    context.allocator = allocator
+    materials = make(render.MaterialMap)
+    current_material: ^render.Material
+
     iter := common.token_iter_init(MaterialToken, s, string_iter_get_next_token)
+
+    if !common.token_iter_is_at_end(&iter) {
+        current := common.token_iter_next(&iter) or_return
+
+        #partial switch current.type {
+        case .MaterialName:
+            new_name := parse_string(&iter) or_return
+            materials[new_name] = render.Material {
+                name = new_name,
+            }
+            current_material = &materials[new_name]
+        case:
+            log.info("Material data has entries before any material name.")
+            delete(materials)
+            return materials, false
+        }
+    }
 
     for !common.token_iter_is_at_end(&iter) {
         current := common.token_iter_next(&iter) or_return
 
         #partial switch current.type {
         case .MaterialName:
-            material.name = parse_string(&iter) or_return
+            new_name := parse_string(&iter) or_return
+            materials[new_name] = render.Material {
+                name = new_name,
+            }
+            current_material = &materials[new_name]
         case .Ambient:
-            material.ambient = parse_vec4(&iter) or_return
+            current_material.ambient = parse_vec4(&iter) or_return
         case .Diffuse:
-            material.diffuse = parse_vec4(&iter) or_return
+            current_material.diffuse = parse_vec4(&iter) or_return
         case .Specular:
-            material.specular = parse_vec4(&iter) or_return
+            current_material.specular = parse_vec4(&iter) or_return
         case .Emissive:
-            material.emmisive = parse_vec4(&iter) or_return
+            current_material.emmisive = parse_vec4(&iter) or_return
         case .Shininess:
-            material.shininess = parse_float(&iter) or_return
+            current_material.shininess = parse_float(&iter) or_return
 
         // TODO: Add support for all of the various options that can apply to textures
         case .DiffuseMap:
-            material.diffuse_map = parse_string(&iter) or_return
+            current_material.diffuse_map = parse_string(&iter) or_return
         case .BumpMap:
-            material.normal_map = parse_string(&iter) or_return
+            current_material.normal_map = parse_string(&iter) or_return
         case .SpecularMap:
-            material.specular_map = parse_string(&iter) or_return
+            current_material.specular_map = parse_string(&iter) or_return
         // TODO: log errors if we see other tokens
         }
     }
 
-    return true
-}
-
-parse_material_val :: proc(s: string) -> (material: render.Material, ok: bool) {
-    ok = parse_material_ref(s, &material)
-    return
-}
-
-parse_material_alloc :: proc(s: string, allocator: mem.Allocator) -> (material: ^render.Material, ok: bool) {
-    context.allocator = allocator
-    material = new(render.Material)
-    ok = parse_material_ref(s, material)
-    return
-}
-
-parse_material :: proc {
-    parse_material_ref,
-    parse_material_val,
-    parse_material_alloc,
+    return materials, true
 }
 
 parse_float :: proc(iter: ^MaterialTokenIter) -> (v: f32, ok: bool) {

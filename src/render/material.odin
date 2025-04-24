@@ -21,6 +21,8 @@ Material :: struct {
     name, diffuse_map, normal_map, specular_map: string,
 }
 
+MaterialMap :: map[string]Material
+
 material_calculated_set_uniform :: proc(material: ^MaterialCalculated, shader_id: u32) {
     gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.ambient"), 1, raw_data(&material.ambient))
     gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.diffuse"), 1, raw_data(&material.diffuse))
