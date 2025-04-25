@@ -66,6 +66,7 @@ parse_string_should_parse_string :: proc(t: ^testing.T) {
 
     expected := "test"
     actual, ok := parse_string(&iter)
+    defer if ok do delete(actual)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual, expected)
@@ -92,6 +93,7 @@ parse_material_should_parse_ambient_data :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
@@ -108,6 +110,7 @@ parse_material_should_parse_diffuse_data :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
@@ -124,6 +127,7 @@ parse_material_should_parse_specular_data :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
@@ -140,6 +144,7 @@ parse_material_should_parse_emmisive_data :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
@@ -159,6 +164,7 @@ parse_material_should_parse_all_color_data :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
@@ -175,6 +181,7 @@ parse_material_should_parse_shininess_coefficient :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
@@ -191,6 +198,7 @@ parse_material_should_parse_diffuse_map :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
@@ -207,6 +215,7 @@ parse_material_should_parse_normal_map :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
@@ -223,6 +232,7 @@ parse_material_should_parse_specular_map :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["mymat"], expected)
@@ -238,6 +248,7 @@ parse_material_should_parse_the_material_name_map :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["Scene_-_Root"], expected)
@@ -270,6 +281,7 @@ parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
 
     actual, ok := parse_materials(input)
     defer delete(actual)
+    defer for key, &material in actual do render.material_free(&material)
 
     testing.expect(t, ok)
     testing.expect_value(t, actual["Scene_-_Root"], expected)

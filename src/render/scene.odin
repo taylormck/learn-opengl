@@ -18,7 +18,10 @@ Mesh :: struct {}
 
 scene_destroy :: proc(scene: ^Scene) {
     delete(scene.meshes)
+
+    for key, &material in scene.materials do material_free(&material)
     delete(scene.materials)
+
     delete(scene.vertices)
     delete(scene.texture_coordinates)
     delete(scene.normals)

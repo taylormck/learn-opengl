@@ -4,6 +4,7 @@ import "../../render"
 import "../../types"
 import "../common"
 import "core:log"
+import "core:strings"
 import "core:testing"
 
 
@@ -231,10 +232,7 @@ load_mock_material_data :: proc(
     data: []u8,
     success: bool,
 ) {
-    // TODO: this needs to be tracked so we can free it later.
-    // Right now, it leaks
-    data =
-    transmute([]u8)string(
+    data_string := strings.clone(
         "newmtl mymat\n" +
         "Ns 225.000000\n" +
         "Ka 0.100000 0.250000 0.500000\n" +
@@ -248,6 +246,8 @@ load_mock_material_data :: proc(
         "map_Bump normal.png\n" +
         "map_Ks specular.jpg\n",
     )
+
+    data = transmute([]u8)data_string
 
     return data, true
 }

@@ -5,6 +5,7 @@ import "../../types"
 import "../common"
 import "core:log"
 import "core:mem"
+import "core:strings"
 
 MaterialTokenIter :: common.TokenIter(MaterialToken)
 
@@ -114,6 +115,7 @@ parse_string :: proc(iter: ^MaterialTokenIter) -> (v: string, ok: bool) {
     next_token := common.token_iter_peek(iter) or_return
     if next_token.type != .String do return
     v = next_token.value.(string)
+    v = strings.clone(v)
 
     return v, true
 }

@@ -173,12 +173,14 @@ parse_material :: proc(
         log.error("Failed to load material data: {}", material_file_name)
         return false
     }
+    defer delete(mtl_data)
 
     new_mats, parse_ok := mtl.parse_materials(string(mtl_data))
     if !parse_ok {
         log.error("Failed to parse material data: {}", material_file_name)
         return false
     }
+    defer delete(new_mats)
 
     for mat_name, mat in new_mats {
         materials[mat_name] = mat
