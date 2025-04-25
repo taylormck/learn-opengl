@@ -204,23 +204,23 @@ expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     }
 
     testing.expect_value(t, len(actual.meshes), len(expected.meshes))
-    for i in 0 ..< len(expected.meshes) {
-        testing.expect_value(t, actual.meshes[i], expected.meshes[i])
-    }
+    for key, expected_mesh in expected.meshes {
+        actual_mesh := &actual.meshes[key]
 
-    testing.expect_value(t, len(actual.vertices), len(expected.vertices))
-    for i in 0 ..< len(expected.vertices) {
-        testing.expect_value(t, actual.vertices[i], expected.vertices[i])
-    }
+        testing.expect_value(t, len(actual_mesh.vertices), len(expected_mesh.vertices))
+        for i in 0 ..< len(expected.vertices) {
+            testing.expect_value(t, actual_mesh.vertices[i], expected_mesh.vertices[i])
+        }
 
-    testing.expect_value(t, len(actual.texture_coordinates), len(expected.texture_coordinates))
-    for i in 0 ..< len(expected.texture_coordinates) {
-        testing.expect_value(t, actual.texture_coordinates[i], expected.texture_coordinates[i])
-    }
+        testing.expect_value(t, len(actual_mesh.texture_coordinates), len(expected_mesh.texture_coordinates))
+        for i in 0 ..< len(expected_mesh.texture_coordinates) {
+            testing.expect_value(t, actual_mesh.texture_coordinates[i], expected_mesh.texture_coordinates[i])
+        }
 
-    testing.expect_value(t, len(actual.normals), len(expected.normals))
-    for i in 0 ..< len(expected.normals) {
-        testing.expect_value(t, actual.normals[i], expected.normals[i])
+        testing.expect_value(t, len(actual_mesh.normals), len(expected_mesh.normals))
+        for i in 0 ..< len(expected_mesh.normals) {
+            testing.expect_value(t, actual_mesh.normals[i], expected_mesh.normals[i])
+        }
     }
 }
 

@@ -3,20 +3,15 @@ package render
 import "../types"
 
 Scene :: struct {
-    meshes:              [dynamic]Mesh,
-
-    // These correspond to filenames rather than the materials themselves.
-    // The materials are stored in a global map so that they may be reused
-    // acrosss multiple scenes.
+    meshes:              MeshMap,
     materials:           MaterialMap,
     vertices:            [dynamic]types.Vec4,
     texture_coordinates: [dynamic]types.Vec2,
     normals:             [dynamic]types.Vec3,
 }
 
-Mesh :: struct {}
-
 scene_destroy :: proc(scene: ^Scene) {
+    for key, &mesh in scene.meshes do mesh_free(&mesh)
     delete(scene.meshes)
 
     for key, &material in scene.materials do material_free(&material)
@@ -26,3 +21,18 @@ scene_destroy :: proc(scene: ^Scene) {
     delete(scene.texture_coordinates)
     delete(scene.normals)
 }
+
+MeshMap :: map[string]Mesh
+
+Mesh :: struct {
+    vertices:            [dynamic]types.Vec4,
+    texture_coordinates: [dynamic]types.Vec2,
+    normals:             [dynamic]types.Vec3,
+    vao, vbo, ebo:       u32,
+}
+
+mesh_init :: proc() -> (mesh: Mesh) {
+    return
+}
+
+mesh_free :: proc(mesh: ^Mesh) {}

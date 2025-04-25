@@ -44,10 +44,10 @@ parse_obj_ref :: proc(
         // TODO: implement vertex parameters
 
         case .ObjectName:
-        case .GroupName:
         case .Face:
 
         // Ignore these for now
+        // case .GroupName:
         // case .SmoothShading:
         // case .LineElement:
         }
