@@ -24,15 +24,22 @@ scene_destroy :: proc(scene: ^Scene) {
 
 MeshMap :: map[string]Mesh
 
+MeshVertex :: struct {
+    position:            types.Vec3,
+    texture_coordinates: types.Vec2,
+    normal:              types.Vec3,
+}
+
 Mesh :: struct {
-    vertices:            [dynamic]types.Vec4,
-    texture_coordinates: [dynamic]types.Vec2,
-    normals:             [dynamic]types.Vec3,
-    vao, vbo, ebo:       u32,
+    vertices:      [dynamic]MeshVertex,
+    vao, vbo, ebo: u32,
 }
 
 mesh_init :: proc() -> (mesh: Mesh) {
+    mesh.vertices = make([dynamic]MeshVertex)
     return
 }
 
-mesh_free :: proc(mesh: ^Mesh) {}
+mesh_free :: proc(mesh: ^Mesh) {
+    delete(mesh.vertices)
+}

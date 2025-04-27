@@ -19,6 +19,14 @@ parse_obj_ref :: proc(
 ) {
     iter := common.token_iter_init(ObjToken, s, string_iter_get_next_token)
 
+    if scene.meshes != nil {
+        delete(scene.meshes)
+    }
+
+    scene.meshes = make(render.MeshMap)
+    scene.meshes[""] = render.Mesh{}
+    current_mesh := &scene.meshes[""]
+
     for !common.token_iter_is_at_end(&iter) {
         current := common.token_iter_next(&iter) or_return
 
@@ -51,6 +59,12 @@ parse_obj_ref :: proc(
         // case .SmoothShading:
         // case .LineElement:
         }
+    }
+
+    // Remove any meshes that didn't have any vertices
+    for key, &mesh in scene.meshes {
+        render.mesh_free(&mesh)
+        delete_key(&scene.meshes, key)
     }
 
     return true

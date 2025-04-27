@@ -211,16 +211,6 @@ expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
         for i in 0 ..< len(expected.vertices) {
             testing.expect_value(t, actual_mesh.vertices[i], expected_mesh.vertices[i])
         }
-
-        testing.expect_value(t, len(actual_mesh.texture_coordinates), len(expected_mesh.texture_coordinates))
-        for i in 0 ..< len(expected_mesh.texture_coordinates) {
-            testing.expect_value(t, actual_mesh.texture_coordinates[i], expected_mesh.texture_coordinates[i])
-        }
-
-        testing.expect_value(t, len(actual_mesh.normals), len(expected_mesh.normals))
-        for i in 0 ..< len(expected_mesh.normals) {
-            testing.expect_value(t, actual_mesh.normals[i], expected_mesh.normals[i])
-        }
     }
 }
 
