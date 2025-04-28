@@ -34,7 +34,9 @@
         {
             "label": "Ensure bin folder exists",
             "type": "shell",
-            "linux": "mkdir -p bin",
+            "linux": {
+                "command": "mkdir -p bin"
+            },
         },
         {
             "label": "Run unit tests",
