@@ -99,7 +99,7 @@ parse_string_should_parse_material_file :: proc(t: ^testing.T) {
         ambient      = {0.1, 0.25, 0.5, 1},
         diffuse      = {0.1, 0.25, 0.5, 1},
         specular     = {0.1, 0.25, 0.5, 1},
-        emmisive     = {0.1, 0.25, 0.5, 1},
+        emissive     = {0.1, 0.25, 0.5, 1},
         shininess    = 225,
         diffuse_map  = "diffuse.jpg",
         normal_map   = "normal.png",

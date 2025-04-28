@@ -134,12 +134,12 @@ parse_material_should_parse_specular_data :: proc(t: ^testing.T) {
 }
 
 @(test)
-parse_material_should_parse_emmisive_data :: proc(t: ^testing.T) {
+parse_material_should_parse_emissive_data :: proc(t: ^testing.T) {
     input := "newmtl mymat\n" + "Ke 0.1 0.25 0.5"
 
     expected := render.Material {
         name     = "mymat",
-        emmisive = {0.1, 0.25, 0.5, 1},
+        emissive = {0.1, 0.25, 0.5, 1},
     }
 
     actual, ok := parse_materials(input)
@@ -159,7 +159,7 @@ parse_material_should_parse_all_color_data :: proc(t: ^testing.T) {
         ambient  = {0.1, 0.25, 0.5, 1},
         diffuse  = {0.1, 0.25, 0.5, 1},
         specular = {0.1, 0.25, 0.5, 1},
-        emmisive = {0.1, 0.25, 0.5, 1},
+        emissive = {0.1, 0.25, 0.5, 1},
     }
 
     actual, ok := parse_materials(input)
@@ -272,7 +272,7 @@ parse_material_should_parse_all_needed_data :: proc(t: ^testing.T) {
         ambient      = {0.1, 0.25, 0.5, 1},
         diffuse      = {0.1, 0.25, 0.5, 1},
         specular     = {0.1, 0.25, 0.5, 1},
-        emmisive     = {0.1, 0.25, 0.5, 1},
+        emissive     = {0.1, 0.25, 0.5, 1},
         shininess    = 225,
         diffuse_map  = "diffuse.jpg",
         normal_map   = "normal.png",

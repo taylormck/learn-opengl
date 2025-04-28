@@ -56,7 +56,7 @@ parse_materials :: proc(
         case .Specular:
             current_material.specular = parse_vec4(&iter) or_return
         case .Emissive:
-            current_material.emmisive = parse_vec4(&iter) or_return
+            current_material.emissive = parse_vec4(&iter) or_return
         case .Shininess:
             current_material.shininess = parse_float(&iter) or_return
 
