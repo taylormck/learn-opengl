@@ -76,10 +76,13 @@ parse_string_should_parse_string :: proc(t: ^testing.T) {
 parse_materials_should_return_not_ok_when_there_is_no_material_name :: proc(t: ^testing.T) {
     input := "Ka 0.1 0.25 0.5"
 
+    // Wrap the logger with an empty multi-logger to prevent the log statements from printing to the console.
+    context.logger = log.create_multi_logger()
+    defer log.destroy_multi_logger(context.logger)
+
     _, ok := parse_materials(input)
 
     testing.expect(t, !ok)
-
 }
 
 @(test)
