@@ -88,7 +88,7 @@ parse_string_should_parse_string :: proc(t: ^testing.T) {
 }
 
 @(test)
-parse_string_should_parse_material_file :: proc(t: ^testing.T) {
+parse_obj_should_parse_material_file :: proc(t: ^testing.T) {
     input := "mtllib test.mtl"
 
     materials: render.MaterialMap
@@ -118,7 +118,7 @@ parse_string_should_parse_material_file :: proc(t: ^testing.T) {
 }
 
 @(test)
-parse_string_should_parse_vertex :: proc(t: ^testing.T) {
+parse_obj_should_parse_vertex :: proc(t: ^testing.T) {
     input := "v 1.0 1.0 1.0 0.5"
 
     vertices: [dynamic]types.Vec4
@@ -138,7 +138,7 @@ parse_string_should_parse_vertex :: proc(t: ^testing.T) {
 }
 
 @(test)
-parse_string_should_parse_vertex_with_default_w :: proc(t: ^testing.T) {
+parse_obj_should_parse_vertex_with_default_w :: proc(t: ^testing.T) {
     input := "v 1.0 1.0 1.0"
 
     vertices: [dynamic]types.Vec4
@@ -158,7 +158,7 @@ parse_string_should_parse_vertex_with_default_w :: proc(t: ^testing.T) {
 }
 
 @(test)
-parse_string_should_parse_texture_coordinates :: proc(t: ^testing.T) {
+parse_obj_should_parse_texture_coordinates :: proc(t: ^testing.T) {
     input := "vt 1.0 1.0"
 
     texture_coordinates: [dynamic]types.Vec2
@@ -178,7 +178,7 @@ parse_string_should_parse_texture_coordinates :: proc(t: ^testing.T) {
 }
 
 @(test)
-parse_string_should_parse_vertex_normal :: proc(t: ^testing.T) {
+parse_obj_should_parse_vertex_normal :: proc(t: ^testing.T) {
     input := "vn 0.0001 0.9989 0.0473"
 
     normals: [dynamic]types.Vec3
@@ -197,6 +197,53 @@ parse_string_should_parse_vertex_normal :: proc(t: ^testing.T) {
     expect_scene_match(t, &actual, &expected)
 }
 
+@(test)
+parse_obj_should_parse_a_single_face :: proc(t: ^testing.T) {
+    input :=
+        ("v -0.5 -0.5 0.5\n" +
+            "v 0.5 -0.5 1.0\n" +
+            "v 0.0 0.5 -0.5\n" +
+            "vt 0.25 0.25\n" +
+            "vt 0.75 0.75\n" +
+            "vt 0.5 0.75\n" +
+            "vn 0.0001 0.9989 0.0473\n" +
+            "f 1/1/1 2/2/1 3/3/1\n")
+
+    expected_vertices := [?]render.MeshVertex {
+        render.MeshVertex {
+            position = {-0.5, -0.5, 0.5},
+            texture_coordinates = {0.25, 0.25},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {0.5, -0.5, 1.0},
+            texture_coordinates = {0.75, 0.75},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {0.0, 0.5, -0.5},
+            texture_coordinates = {0.5, 0.75},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+    }
+    expected_indices := [?]types.Vec3u{{1, 2, 3}}
+
+    expected := render.Mesh{}
+    defer render.mesh_free(&expected)
+
+    append(&expected.vertices, ..expected_vertices[:])
+    append(&expected.indices, ..expected_indices[:])
+
+    actual_scene, ok := parse_obj(input)
+    defer render.scene_destroy(&actual_scene)
+
+    testing.expect(t, ok)
+
+    actual_mesh := actual_scene.meshes[""]
+    expect_mesh_match(t, &actual_mesh, &expected)
+}
+
+
 expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     testing.expect_value(t, len(actual.materials), len(expected.materials))
     for key, expected_value in expected.materials {
@@ -211,6 +258,18 @@ expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
         for i in 0 ..< len(expected.vertices) {
             testing.expect_value(t, actual_mesh.vertices[i], expected_mesh.vertices[i])
         }
+    }
+}
+
+expect_mesh_match :: proc(t: ^testing.T, actual, expected: ^render.Mesh) {
+    testing.expect_value(t, len(actual.vertices), len(expected.vertices))
+    for i in 0 ..< len(expected.vertices) {
+        testing.expect_value(t, actual.vertices[i], expected.vertices[i])
+    }
+
+    testing.expect_value(t, len(actual.indices), len(expected.indices))
+    for i in 0 ..< len(expected.indices) {
+        testing.expect_value(t, actual.indices[i], expected.indices[i])
     }
 }
 

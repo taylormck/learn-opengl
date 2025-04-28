@@ -9,6 +9,7 @@ import "core:mem"
 import "core:os"
 
 ObjTokenIter :: common.TokenIter(ObjToken)
+VertexMap :: map[render.MeshVertex]int
 
 parse_obj_ref :: proc(
     s: string,
@@ -26,6 +27,8 @@ parse_obj_ref :: proc(
     scene.meshes = make(render.MeshMap)
     scene.meshes[""] = render.Mesh{}
     current_mesh := &scene.meshes[""]
+    vertex_map := make(VertexMap)
+    defer delete(vertex_map)
 
     for !common.token_iter_is_at_end(&iter) {
         current := common.token_iter_next(&iter) or_return
@@ -52,7 +55,29 @@ parse_obj_ref :: proc(
         // TODO: implement vertex parameters
 
         case .ObjectName:
+            new_mesh_name := parse_string(&iter) or_return
+            if !(new_mesh_name in scene.meshes) do scene.meshes[new_mesh_name] = render.Mesh{}
+            current_mesh = &scene.meshes[new_mesh_name]
+
+            delete(vertex_map)
+            vertex_map := make(VertexMap)
+
         case .Face:
+            new_indices: types.Vec3u
+            for i in 0 ..< 3 {
+                new_vertex := parse_vertex(&iter, scene) or_return
+                index, found := vertex_map[new_vertex]
+
+                if !found {
+                    append(&current_mesh.vertices, new_vertex)
+                    index = len(current_mesh.vertices)
+                    vertex_map[new_vertex] = index
+                }
+
+                new_indices[i] = u32(index)
+            }
+
+            append(&current_mesh.indices, new_indices)
 
         // Ignore these for now
         // case .GroupName:
@@ -63,6 +88,9 @@ parse_obj_ref :: proc(
 
     // Remove any meshes that didn't have any vertices
     for key, &mesh in scene.meshes {
+        if len(mesh.vertices) != 0 do continue
+        if len(mesh.indices) != 0 do continue
+
         render.mesh_free(&mesh)
         delete_key(&scene.meshes, key)
     }
@@ -103,7 +131,10 @@ parse_obj :: proc {
 
 parse_float :: proc(iter: ^ObjTokenIter) -> (v: f32, ok: bool) {
     next_token := common.token_iter_peek(iter) or_return
+
     if next_token.type != .Float do return
+    common.token_iter_advance(iter)
+
     v = next_token.value.(f32)
 
     return v, true
@@ -152,7 +183,10 @@ parse_vec4 :: proc(iter: ^ObjTokenIter) -> (v: types.Vec4, ok: bool) {
 
 parse_int :: proc(iter: ^ObjTokenIter) -> (v: i32, ok: bool) {
     next_token := common.token_iter_peek(iter) or_return
+
     if next_token.type != .Integer do return
+    common.token_iter_advance(iter)
+
     v = next_token.value.(i32)
 
     return v, true
@@ -160,8 +194,46 @@ parse_int :: proc(iter: ^ObjTokenIter) -> (v: i32, ok: bool) {
 
 parse_string :: proc(iter: ^ObjTokenIter) -> (v: string, ok: bool) {
     next_token := common.token_iter_peek(iter) or_return
+
     if next_token.type != .String do return
+    common.token_iter_advance(iter)
+
     v = next_token.value.(string)
+
+    return v, true
+}
+
+parse_vertex :: proc(iter: ^ObjTokenIter, scene: ^render.Scene) -> (v: render.MeshVertex, ok: bool) {
+    // Start by getting the position
+    next_token := common.token_iter_next(iter) or_return
+    if next_token.type != .Integer do return
+    index := next_token.value.(i32)
+    assert(int(index) <= len(scene.vertices))
+
+    // We only need x, y, and z.
+    v.position = scene.vertices[index - 1].xyz
+
+    next_token = common.token_iter_next(iter) or_return
+    if next_token.type != .Slash do return
+
+    // The vertex coordinates are optional, and default to {0, 0}
+    next_token = common.token_iter_next(iter) or_return
+    if next_token.type == .Integer {
+        index = next_token.value.(i32)
+        assert(int(index) <= len(scene.texture_coordinates))
+        v.texture_coordinates = scene.texture_coordinates[index - 1]
+
+        next_token = common.token_iter_next(iter) or_return
+    }
+
+    if next_token.type != .Slash do return
+
+    // Finally, get the normal
+    next_token = common.token_iter_next(iter) or_return
+    if next_token.type != .Integer do return
+    index = next_token.value.(i32)
+    assert(int(index) <= len(scene.normals))
+    v.normal = scene.normals[index - 1]
 
     return v, true
 }

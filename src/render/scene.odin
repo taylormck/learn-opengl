@@ -32,14 +32,17 @@ MeshVertex :: struct {
 
 Mesh :: struct {
     vertices:      [dynamic]MeshVertex,
+    indices:       [dynamic]types.Vec3u,
     vao, vbo, ebo: u32,
 }
 
 mesh_init :: proc() -> (mesh: Mesh) {
     mesh.vertices = make([dynamic]MeshVertex)
+    mesh.indices = make([dynamic]types.Vec3u)
     return
 }
 
 mesh_free :: proc(mesh: ^Mesh) {
     delete(mesh.vertices)
+    delete(mesh.indices)
 }
