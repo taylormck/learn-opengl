@@ -243,6 +243,44 @@ parse_obj_should_parse_a_single_face :: proc(t: ^testing.T) {
     expect_mesh_match(t, &actual_mesh, &expected)
 }
 
+@(test)
+parse_obj_should_parse_multiple_faces_with_shared_vertices :: proc(t: ^testing.T) {
+    input :=
+        ("v -1.0 -1.0 0.0\n" +
+            "v 1.0 -1.0 0.0\n" +
+            "v -1.0 1.0 0.0\n" +
+            "v 1.0 1.0 0.0\n" +
+            "vt 0.0 0.0\n" +
+            "vt 1.0 0.0\n" +
+            "vt 0.0 1.0\n" +
+            "vt 1.0 1.0\n" +
+            "vn 0.0001 0.9989 0.0473\n" +
+            "f 1/1/1 2/2/1 3/3/1\n" +
+            "f 2/2/1 4/4/1 3/3/1\n")
+
+    expected_vertices := [?]render.MeshVertex {
+        render.MeshVertex{position = {-1, -1, 0}, texture_coordinates = {0, 0}, normal = {0.0001, 0.9989, 0.0473}},
+        render.MeshVertex{position = {1, -1, 0}, texture_coordinates = {1, 0}, normal = {0.0001, 0.9989, 0.0473}},
+        render.MeshVertex{position = {-1, 1, 0}, texture_coordinates = {0, 1}, normal = {0.0001, 0.9989, 0.0473}},
+        render.MeshVertex{position = {1, 1, 0}, texture_coordinates = {1, 1}, normal = {0.0001, 0.9989, 0.0473}},
+    }
+    expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
+
+    expected := render.Mesh{}
+    defer render.mesh_free(&expected)
+
+    append(&expected.vertices, ..expected_vertices[:])
+    append(&expected.indices, ..expected_indices[:])
+
+    actual_scene, ok := parse_obj(input)
+    defer render.scene_destroy(&actual_scene)
+
+    testing.expect(t, ok)
+
+    actual_mesh := actual_scene.meshes[""]
+    expect_mesh_match(t, &actual_mesh, &expected)
+}
+
 
 expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     testing.expect_value(t, len(actual.materials), len(expected.materials))
