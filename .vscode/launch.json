@@ -1,0 +1,32 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Run Release",
+            "program": "${workspaceFolder}/bin/learn-opengl",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build - Release"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug",
+            "program": "${workspaceFolder}/bin/learn-opengl",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build - Debug"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug unit tests",
+            "program": "${workspaceFolder}/bin/test",
+            "args": [],
+            "cwd": "${workspaceFolder}",
+            "preLaunchTask": "Build unit tests"
+        },
+    ]
+}

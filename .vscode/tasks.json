@@ -1,0 +1,61 @@
+{
+    // See https://go.microsoft.com/fwlink/?LinkId=733558
+    // for the documentation about the tasks.json format
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Run application",
+            "type": "shell",
+            "command": "bin/app",
+            "group": {
+                "kind": "build",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "Build - Release"
+            ]
+        },
+        {
+            "label": "Build - Release",
+            "type": "shell",
+            "command": "odin build src -o:speed -out:bin/app",
+            "dependsOn": [
+                "Ensure bin folder exists"
+            ]
+        },
+        {
+            "label": "Build - Debug",
+            "type": "shell",
+            "command": "odin build src -debug -out:bin/app",
+            "dependsOn": [
+                "Ensure bin folder exists"
+            ]
+        },
+        {
+            "label": "Ensure bin folder exists",
+            "type": "shell",
+            "linux": "mkdir -p bin",
+        },
+        {
+            "label": "Run unit tests",
+            "type": "shell",
+            "command": "bin/test",
+            "problemMatcher": [],
+            "group": {
+                "kind": "test",
+                "isDefault": true
+            },
+            "dependsOn": [
+                "Build unit tests"
+            ]
+        },
+        {
+            "label": "Build unit tests",
+            "type": "shell",
+            "command": "odin build src -out:bin/test -build-mode:test -debug --all-packages",
+            "dependsOn": [
+                "Ensure bin folder exists"
+            ]
+        }
+    ]
+}
