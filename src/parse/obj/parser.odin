@@ -7,6 +7,7 @@ import "../mtl"
 import "core:log"
 import "core:mem"
 import "core:os"
+import "core:strings"
 
 ObjTokenIter :: common.TokenIter(ObjToken)
 VertexMap :: map[render.MeshVertex]int
@@ -30,6 +31,8 @@ parse_obj_ref :: proc(
     vertex_map := make(VertexMap)
     defer delete(vertex_map)
 
+    current_material := ""
+
     for !common.token_iter_is_at_end(&iter) {
         current := common.token_iter_next(&iter) or_return
 
@@ -39,6 +42,11 @@ parse_obj_ref :: proc(
             parse_material(material_file_name, &scene.materials, load_material_fn)
 
         case .UseMaterial:
+            current_material = parse_string(&iter) or_return
+
+            delete(current_mesh.material)
+            current_mesh.material = strings.clone(current_material)
+
         case .Vertex:
             vertex := parse_vec4(&iter) or_return
             append(&scene.vertices, vertex)
@@ -58,6 +66,9 @@ parse_obj_ref :: proc(
             new_mesh_name := parse_string(&iter) or_return
             if !(new_mesh_name in scene.meshes) do scene.meshes[new_mesh_name] = render.Mesh{}
             current_mesh = &scene.meshes[new_mesh_name]
+
+            delete(current_mesh.material)
+            current_mesh.material = strings.clone(current_material)
 
             delete(vertex_map)
             vertex_map := make(VertexMap)

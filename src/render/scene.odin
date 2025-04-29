@@ -33,6 +33,7 @@ MeshVertex :: struct {
 Mesh :: struct {
     vertices:      [dynamic]MeshVertex,
     indices:       [dynamic]types.Vec3u,
+    material:      string,
     vao, vbo, ebo: u32,
 }
 
@@ -45,4 +46,5 @@ mesh_init :: proc() -> (mesh: Mesh) {
 mesh_free :: proc(mesh: ^Mesh) {
     delete(mesh.vertices)
     delete(mesh.indices)
+    delete(mesh.material)
 }

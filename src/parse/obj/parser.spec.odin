@@ -282,11 +282,11 @@ parse_obj_should_parse_multiple_faces_with_shared_vertices :: proc(t: ^testing.T
 }
 
 @(test)
-parse_obj_should_parse_object_with_material :: proc(t: ^testing.T) {
+parse_obj_should_parse_object_with_material_with_usemtl_after_o :: proc(t: ^testing.T) {
     input :=
         ("mtllib mymat.mtl\n" +
-            "usemtl myymat\n" +
             "o myobj\n" +
+            "usemtl mymat\n" +
             "v -1.0 -1.0 0.0\n" +
             "v 1.0 -1.0 0.0\n" +
             "v -1.0 1.0 0.0\n" +
@@ -307,7 +307,9 @@ parse_obj_should_parse_object_with_material :: proc(t: ^testing.T) {
     }
     expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
 
-    expected_mesh := render.Mesh{}
+    expected_mesh := render.Mesh {
+        material = strings.clone("mymat"),
+    }
 
     append(&expected_mesh.vertices, ..expected_vertices[:])
     append(&expected_mesh.indices, ..expected_indices[:])
@@ -353,6 +355,81 @@ parse_obj_should_parse_object_with_material :: proc(t: ^testing.T) {
     expect_scene_match(t, &actual_scene, &expected_scene)
 }
 
+@(test)
+parse_obj_should_parse_object_with_material_with_usemtl_before_o :: proc(t: ^testing.T) {
+    input :=
+        ("mtllib mymat.mtl\n" +
+            "usemtl mymat\n" +
+            "o myobj\n" +
+            "v -1.0 -1.0 0.0\n" +
+            "v 1.0 -1.0 0.0\n" +
+            "v -1.0 1.0 0.0\n" +
+            "v 1.0 1.0 0.0\n" +
+            "vt 0.0 0.0\n" +
+            "vt 1.0 0.0\n" +
+            "vt 0.0 1.0\n" +
+            "vt 1.0 1.0\n" +
+            "vn 0.0001 0.9989 0.0473\n" +
+            "f 1/1/1 2/2/1 3/3/1\n" +
+            "f 2/2/1 4/4/1 3/3/1\n")
+
+    expected_vertices := [?]render.MeshVertex {
+        render.MeshVertex{position = {-1, -1, 0}, texture_coordinates = {0, 0}, normal = {0.0001, 0.9989, 0.0473}},
+        render.MeshVertex{position = {1, -1, 0}, texture_coordinates = {1, 0}, normal = {0.0001, 0.9989, 0.0473}},
+        render.MeshVertex{position = {-1, 1, 0}, texture_coordinates = {0, 1}, normal = {0.0001, 0.9989, 0.0473}},
+        render.MeshVertex{position = {1, 1, 0}, texture_coordinates = {1, 1}, normal = {0.0001, 0.9989, 0.0473}},
+    }
+    expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
+
+    expected_mesh := render.Mesh {
+        material = strings.clone("mymat"),
+    }
+
+    append(&expected_mesh.vertices, ..expected_vertices[:])
+    append(&expected_mesh.indices, ..expected_indices[:])
+
+    meshes: render.MeshMap
+    meshes["myobj"] = expected_mesh
+
+    materials: render.MaterialMap
+
+    materials["mymat"] = render.Material {
+        name         = strings.clone("mymat"),
+        ambient      = {0.1, 0.25, 0.5, 1},
+        diffuse      = {0.1, 0.25, 0.5, 1},
+        specular     = {0.1, 0.25, 0.5, 1},
+        emissive     = {0.1, 0.25, 0.5, 1},
+        shininess    = 225,
+        diffuse_map  = strings.clone("diffuse.jpg"),
+        normal_map   = strings.clone("normal.png"),
+        specular_map = strings.clone("specular.jpg"),
+    }
+
+    expected_scene := render.Scene {
+        materials = materials,
+        meshes    = meshes,
+    }
+    // Note that most of the things allocated in this test will be freed by scene_destroy here.
+    defer render.scene_destroy(&expected_scene)
+
+    append(
+        &expected_scene.vertices,
+        types.Vec4{-1, -1, 0, 1},
+        types.Vec4{1, -1, 0, 1},
+        types.Vec4{-1, 1, 0, 1},
+        types.Vec4{1, 1, 0, 1},
+    )
+    append(&expected_scene.texture_coordinates, types.Vec2{0, 0}, types.Vec2{1, 0}, types.Vec2{0, 1}, types.Vec2{1, 1})
+    append(&expected_scene.normals, types.Vec3{0.0001, 0.9989, 0.0473})
+
+    actual_scene, ok := parse_obj(input, load_mock_material_data)
+    defer render.scene_destroy(&actual_scene)
+
+    testing.expect(t, ok)
+    expect_scene_match(t, &actual_scene, &expected_scene)
+}
+
+
 expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
     testing.expect_value(t, len(actual.materials), len(expected.materials))
     for key, expected_value in expected.materials {
@@ -368,6 +445,8 @@ expect_scene_match :: proc(t: ^testing.T, actual, expected: ^render.Scene) {
 }
 
 expect_mesh_match :: proc(t: ^testing.T, actual, expected: ^render.Mesh) {
+    testing.expect_value(t, actual.material, expected.material)
+
     testing.expect_value(t, len(actual.vertices), len(expected.vertices))
     for i in 0 ..< len(expected.vertices) {
         testing.expect_value(t, actual.vertices[i], expected.vertices[i])
