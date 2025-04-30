@@ -4,12 +4,12 @@
     "version": "2.0.0",
     "presentation": {
         "echo": true,
-        "reveal": "never",
+        "reveal": "always",
         "revealProblems": "onProblem",
-        "focus": false,
+        "focus": true,
         "panel": "shared",
         "showReuseMessage": false,
-        "clear": false,
+        "clear": true,
         "close": true,
     },
     "tasks": [
@@ -24,9 +24,6 @@
             "dependsOn": [
                 "Build - Release"
             ],
-            "presentation": {
-                "close": true
-            }
         },
         {
             "label": "Build - Release",

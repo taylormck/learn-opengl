@@ -15,7 +15,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Run Release",
-            "program": "${workspaceFolder}/bin/learn-opengl",
+            "program": "${workspaceFolder}/bin/app",
             "args": [],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build - Release",
@@ -27,7 +27,7 @@
             "type": "lldb",
             "request": "launch",
             "name": "Debug",
-            "program": "${workspaceFolder}/bin/learn-opengl",
+            "program": "${workspaceFolder}/bin/app",
             "args": [],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Build - Debug"

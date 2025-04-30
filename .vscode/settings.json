@@ -1,9 +1,17 @@
 {
     "cSpell.words": [
+        "cdecl",
+        "glfw",
         "illum",
+        "infof",
+        "linalg",
         "mtllib",
         "mymat",
+        "myobj",
         "newmtl",
-        "opengl"
+        "opengl",
+        "phong",
+        "rawptr",
+        "usemtl"
     ]
 }
