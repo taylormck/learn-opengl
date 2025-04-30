@@ -2,6 +2,16 @@
     // See https://go.microsoft.com/fwlink/?LinkId=733558
     // for the documentation about the tasks.json format
     "version": "2.0.0",
+    "presentation": {
+        "echo": true,
+        "reveal": "never",
+        "revealProblems": "onProblem",
+        "focus": false,
+        "panel": "shared",
+        "showReuseMessage": false,
+        "clear": false,
+        "close": true,
+    },
     "tasks": [
         {
             "label": "Run application",
@@ -13,14 +23,17 @@
             },
             "dependsOn": [
                 "Build - Release"
-            ]
+            ],
+            "presentation": {
+                "close": true
+            }
         },
         {
             "label": "Build - Release",
             "type": "shell",
             "command": "odin build src -o:speed -out:bin/app",
             "dependsOn": [
-                "Ensure bin folder exists"
+                "Create build directory"
             ]
         },
         {
@@ -28,11 +41,11 @@
             "type": "shell",
             "command": "odin build src -debug -out:bin/app",
             "dependsOn": [
-                "Ensure bin folder exists"
+                "Create build directory"
             ]
         },
         {
-            "label": "Ensure bin folder exists",
+            "label": "Create build directory",
             "type": "shell",
             "linux": {
                 "command": "mkdir -p bin"
@@ -49,14 +62,22 @@
             },
             "dependsOn": [
                 "Build unit tests"
-            ]
+            ],
+            "presentation": {
+                "echo": true,
+                "reveal": "always",
+                "focus": true,
+                "panel": "shared",
+                "showReuseMessage": false,
+                "clear": true
+            }
         },
         {
             "label": "Build unit tests",
             "type": "shell",
             "command": "odin build src -out:bin/test -build-mode:test -debug --all-packages",
             "dependsOn": [
-                "Ensure bin folder exists"
+                "Create build directory"
             ]
         }
     ]
