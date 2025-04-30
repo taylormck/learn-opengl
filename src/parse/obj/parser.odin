@@ -10,7 +10,19 @@ import "core:os"
 import "core:strings"
 
 ObjTokenIter :: common.TokenIter(ObjToken)
-VertexMap :: map[render.MeshVertex]int
+VertexMap :: map[render.MeshVertex]uint
+
+load_scene_from_file_obj :: proc(path: string) -> (scene: render.Scene, ok: bool) {
+    scene_file_data := os.read_entire_file(path) or_return
+    defer delete(scene_file_data)
+
+    scene = parse_obj(string(scene_file_data)) or_return
+
+    // TODO: should we delete scene.vertices/texture_coordinates/normals?
+    // All of the data is already in the mesh struct, so we don't need to keep copies around.
+
+    return scene, true
+}
 
 parse_obj_ref :: proc(
     s: string,
@@ -39,7 +51,7 @@ parse_obj_ref :: proc(
         #partial switch current.type {
         case .MaterialFile:
             material_file_name := parse_string(&iter) or_return
-            parse_material(material_file_name, &scene.materials, load_material_fn)
+        // parse_material(material_file_name, &scene.materials, load_material_fn)
 
         case .UseMaterial:
             current_material = parse_string(&iter) or_return
@@ -70,8 +82,7 @@ parse_obj_ref :: proc(
             delete(current_mesh.material)
             current_mesh.material = strings.clone(current_material)
 
-            delete(vertex_map)
-            vertex_map := make(VertexMap)
+            clear(&vertex_map)
 
         case .Face:
             new_indices: types.Vec3u
@@ -214,12 +225,18 @@ parse_string :: proc(iter: ^ObjTokenIter) -> (v: string, ok: bool) {
     return v, true
 }
 
-parse_vertex :: proc(iter: ^ObjTokenIter, scene: ^render.Scene) -> (v: render.MeshVertex, ok: bool) {
+parse_vertex :: proc(
+    iter: ^ObjTokenIter,
+    scene: ^render.Scene,
+) -> (
+    v: render.MeshVertex,
+    ok: bool,
+) {
     // Start by getting the position
     next_token := common.token_iter_next(iter) or_return
     if next_token.type != .Integer do return
     index := next_token.value.(i32)
-    assert(int(index) <= len(scene.vertices))
+    assert(index > 0 && int(index) <= len(scene.vertices))
 
     // We only need x, y, and z.
     v.position = scene.vertices[index - 1].xyz
@@ -231,7 +248,7 @@ parse_vertex :: proc(iter: ^ObjTokenIter, scene: ^render.Scene) -> (v: render.Me
     next_token = common.token_iter_next(iter) or_return
     if next_token.type == .Integer {
         index = next_token.value.(i32)
-        assert(int(index) <= len(scene.texture_coordinates))
+        assert(index > 0 && int(index) <= len(scene.texture_coordinates))
         v.texture_coordinates = scene.texture_coordinates[index - 1]
 
         next_token = common.token_iter_next(iter) or_return
@@ -243,7 +260,7 @@ parse_vertex :: proc(iter: ^ObjTokenIter, scene: ^render.Scene) -> (v: render.Me
     next_token = common.token_iter_next(iter) or_return
     if next_token.type != .Integer do return
     index = next_token.value.(i32)
-    assert(int(index) <= len(scene.normals))
+    assert(index > 0 && int(index) <= len(scene.normals))
     v.normal = scene.normals[index - 1]
 
     return v, true

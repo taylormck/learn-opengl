@@ -259,10 +259,26 @@ parse_obj_should_parse_multiple_faces_with_shared_vertices :: proc(t: ^testing.T
             "f 2/2/1 4/4/1 3/3/1\n")
 
     expected_vertices := [?]render.MeshVertex {
-        render.MeshVertex{position = {-1, -1, 0}, texture_coordinates = {0, 0}, normal = {0.0001, 0.9989, 0.0473}},
-        render.MeshVertex{position = {1, -1, 0}, texture_coordinates = {1, 0}, normal = {0.0001, 0.9989, 0.0473}},
-        render.MeshVertex{position = {-1, 1, 0}, texture_coordinates = {0, 1}, normal = {0.0001, 0.9989, 0.0473}},
-        render.MeshVertex{position = {1, 1, 0}, texture_coordinates = {1, 1}, normal = {0.0001, 0.9989, 0.0473}},
+        render.MeshVertex {
+            position = {-1, -1, 0},
+            texture_coordinates = {0, 0},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {1, -1, 0},
+            texture_coordinates = {1, 0},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {-1, 1, 0},
+            texture_coordinates = {0, 1},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {1, 1, 0},
+            texture_coordinates = {1, 1},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
     }
     expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
 
@@ -300,10 +316,26 @@ parse_obj_should_parse_object_with_material_with_usemtl_after_o :: proc(t: ^test
             "f 2/2/1 4/4/1 3/3/1\n")
 
     expected_vertices := [?]render.MeshVertex {
-        render.MeshVertex{position = {-1, -1, 0}, texture_coordinates = {0, 0}, normal = {0.0001, 0.9989, 0.0473}},
-        render.MeshVertex{position = {1, -1, 0}, texture_coordinates = {1, 0}, normal = {0.0001, 0.9989, 0.0473}},
-        render.MeshVertex{position = {-1, 1, 0}, texture_coordinates = {0, 1}, normal = {0.0001, 0.9989, 0.0473}},
-        render.MeshVertex{position = {1, 1, 0}, texture_coordinates = {1, 1}, normal = {0.0001, 0.9989, 0.0473}},
+        render.MeshVertex {
+            position = {-1, -1, 0},
+            texture_coordinates = {0, 0},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {1, -1, 0},
+            texture_coordinates = {1, 0},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {-1, 1, 0},
+            texture_coordinates = {0, 1},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {1, 1, 0},
+            texture_coordinates = {1, 1},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
     }
     expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
 
@@ -345,7 +377,13 @@ parse_obj_should_parse_object_with_material_with_usemtl_after_o :: proc(t: ^test
         types.Vec4{-1, 1, 0, 1},
         types.Vec4{1, 1, 0, 1},
     )
-    append(&expected_scene.texture_coordinates, types.Vec2{0, 0}, types.Vec2{1, 0}, types.Vec2{0, 1}, types.Vec2{1, 1})
+    append(
+        &expected_scene.texture_coordinates,
+        types.Vec2{0, 0},
+        types.Vec2{1, 0},
+        types.Vec2{0, 1},
+        types.Vec2{1, 1},
+    )
     append(&expected_scene.normals, types.Vec3{0.0001, 0.9989, 0.0473})
 
     actual_scene, ok := parse_obj(input, load_mock_material_data)
@@ -374,10 +412,26 @@ parse_obj_should_parse_object_with_material_with_usemtl_before_o :: proc(t: ^tes
             "f 2/2/1 4/4/1 3/3/1\n")
 
     expected_vertices := [?]render.MeshVertex {
-        render.MeshVertex{position = {-1, -1, 0}, texture_coordinates = {0, 0}, normal = {0.0001, 0.9989, 0.0473}},
-        render.MeshVertex{position = {1, -1, 0}, texture_coordinates = {1, 0}, normal = {0.0001, 0.9989, 0.0473}},
-        render.MeshVertex{position = {-1, 1, 0}, texture_coordinates = {0, 1}, normal = {0.0001, 0.9989, 0.0473}},
-        render.MeshVertex{position = {1, 1, 0}, texture_coordinates = {1, 1}, normal = {0.0001, 0.9989, 0.0473}},
+        render.MeshVertex {
+            position = {-1, -1, 0},
+            texture_coordinates = {0, 0},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {1, -1, 0},
+            texture_coordinates = {1, 0},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {-1, 1, 0},
+            texture_coordinates = {0, 1},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
+        render.MeshVertex {
+            position = {1, 1, 0},
+            texture_coordinates = {1, 1},
+            normal = {0.0001, 0.9989, 0.0473},
+        },
     }
     expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
 
@@ -419,7 +473,13 @@ parse_obj_should_parse_object_with_material_with_usemtl_before_o :: proc(t: ^tes
         types.Vec4{-1, 1, 0, 1},
         types.Vec4{1, 1, 0, 1},
     )
-    append(&expected_scene.texture_coordinates, types.Vec2{0, 0}, types.Vec2{1, 0}, types.Vec2{0, 1}, types.Vec2{1, 1})
+    append(
+        &expected_scene.texture_coordinates,
+        types.Vec2{0, 0},
+        types.Vec2{1, 0},
+        types.Vec2{0, 1},
+        types.Vec2{1, 1},
+    )
     append(&expected_scene.normals, types.Vec3{0.0001, 0.9989, 0.0473})
 
     actual_scene, ok := parse_obj(input, load_mock_material_data)

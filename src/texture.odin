@@ -8,12 +8,13 @@ import glfw "vendor:glfw"
 import "vendor:stb/image"
 
 
-Texture :: struct {
-    width, height, channels: i32,
-    buffer:                  [^]u8,
-}
-
-prepare_texture :: proc(path: cstring, channels: i32, shader_program, texture_id, gl_texture: u32) -> (img: Texture) {
+prepare_texture :: proc(
+    path: cstring,
+    channels: i32,
+    shader_program, texture_id, gl_texture: u32,
+) -> (
+    img: render.Texture,
+) {
     gl.ActiveTexture(gl_texture)
     gl.BindTexture(gl.TEXTURE_2D, texture_id)
 
@@ -52,7 +53,7 @@ prepare_texture :: proc(path: cstring, channels: i32, shader_program, texture_id
     return img
 }
 
-load_texture_2d :: proc(path: cstring, t: ^Texture, channels: i32, flip_vertically: bool = true) -> (ok: bool) {
+load_texture_2d :: proc(path: cstring, t: ^render.Texture, channels: i32, flip_vertically: bool = true) -> (ok: bool) {
     if flip_vertically do image.set_flip_vertically_on_load(1)
     t.buffer = image.load(path, &t.width, &t.height, &t.channels, channels)
 
