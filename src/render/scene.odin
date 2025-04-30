@@ -106,7 +106,7 @@ mesh_draw :: proc(mesh: ^Mesh) {
     gl.BindVertexArray(mesh.vao)
     defer gl.BindVertexArray(0)
 
-    gl.DrawElements(gl.TRIANGLES, i32(len(mesh.indices) * 3), gl.UNSIGNED_INT, nil)
+    gl.DrawElements(gl.TRIANGLES, i32(len(mesh.indices)) * 3, gl.UNSIGNED_INT, nil)
 }
 
 mesh_gpu_free :: proc(mesh: ^Mesh) {

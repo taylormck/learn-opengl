@@ -226,6 +226,7 @@ parse_obj_should_parse_a_single_face :: proc(t: ^testing.T) {
             normal = {0.0001, 0.9989, 0.0473},
         },
     }
+
     expected_indices := [?]types.Vec3u{{1, 2, 3}}
 
     expected := render.Mesh{}
@@ -337,6 +338,7 @@ parse_obj_should_parse_object_with_material_with_usemtl_after_o :: proc(t: ^test
             normal = {0.0001, 0.9989, 0.0473},
         },
     }
+
     expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
 
     expected_mesh := render.Mesh {
@@ -433,6 +435,7 @@ parse_obj_should_parse_object_with_material_with_usemtl_before_o :: proc(t: ^tes
             normal = {0.0001, 0.9989, 0.0473},
         },
     }
+
     expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
 
     expected_mesh := render.Mesh {

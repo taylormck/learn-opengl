@@ -114,7 +114,7 @@ main :: proc() {
     glfw.WindowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
     glfw.WindowHint(glfw.OPENGL_FORWARD_COMPAT, gl.TRUE)
 
-    window := glfw.CreateWindow(WIDTH, HEIGHT, "Hello", nil, nil)
+    window := glfw.CreateWindow(WIDTH, HEIGHT, "Renderer", nil, nil)
     defer glfw.DestroyWindow(window)
 
     if window == nil {

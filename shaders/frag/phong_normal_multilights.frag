@@ -110,7 +110,7 @@ void main() {
     }
 
     result += calculate_directional_light(directional_light);
-    result += calculate_spot_light(spot_light);
+    // result += calculate_spot_light(spot_light);
 
     FragColor = vec4(result, 1.0);
 }

@@ -92,7 +92,7 @@ parse_obj_ref :: proc(
 
                 if !found {
                     append(&current_mesh.vertices, new_vertex)
-                    index = len(current_mesh.vertices)
+                    index = len(current_mesh.vertices) - 1
                     vertex_map[new_vertex] = index
                 }
 
