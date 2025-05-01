@@ -148,7 +148,7 @@ main :: proc() {
     // defer gl.DeleteVertexArrays(1, &cube_vao)
 
     scene :=
-        obj.load_scene_from_file_obj("models/backpack/backpack.obj") or_else panic(
+        obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic(
             "Failed to load backpack model.",
         )
     defer render.scene_destroy(&scene)

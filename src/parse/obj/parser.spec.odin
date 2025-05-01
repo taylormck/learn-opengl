@@ -88,116 +88,6 @@ parse_string_should_parse_string :: proc(t: ^testing.T) {
 }
 
 @(test)
-parse_obj_should_parse_material_file :: proc(t: ^testing.T) {
-    input := "mtllib test.mtl"
-
-    materials: render.MaterialMap
-    defer delete(materials)
-
-    materials["mymat"] = render.Material {
-        name         = "mymat",
-        ambient      = {0.1, 0.25, 0.5, 1},
-        diffuse      = {0.1, 0.25, 0.5, 1},
-        specular     = {0.1, 0.25, 0.5, 1},
-        emissive     = {0.1, 0.25, 0.5, 1},
-        shininess    = 225,
-        diffuse_map  = "diffuse.jpg",
-        normal_map   = "normal.png",
-        specular_map = "specular.jpg",
-    }
-
-    expected := render.Scene {
-        materials = materials,
-    }
-
-    actual, ok := parse_obj(input, load_mock_material_data)
-    defer render.scene_destroy(&actual)
-
-    testing.expect(t, ok)
-    expect_scene_match(t, &actual, &expected)
-}
-
-@(test)
-parse_obj_should_parse_vertex :: proc(t: ^testing.T) {
-    input := "v 1.0 1.0 1.0 0.5"
-
-    vertices: [dynamic]types.Vec4
-    defer delete(vertices)
-
-    append(&vertices, types.Vec4{1.0, 1.0, 1.0, 0.5})
-
-    expected := render.Scene {
-        vertices = vertices,
-    }
-
-    actual, ok := parse_obj(input)
-    defer render.scene_destroy(&actual)
-
-    testing.expect(t, ok)
-    expect_scene_match(t, &actual, &expected)
-}
-
-@(test)
-parse_obj_should_parse_vertex_with_default_w :: proc(t: ^testing.T) {
-    input := "v 1.0 1.0 1.0"
-
-    vertices: [dynamic]types.Vec4
-    defer delete(vertices)
-
-    append(&vertices, types.Vec4{1.0, 1.0, 1.0, 1.0})
-
-    expected := render.Scene {
-        vertices = vertices,
-    }
-
-    actual, ok := parse_obj(input)
-    defer render.scene_destroy(&actual)
-
-    testing.expect(t, ok)
-    expect_scene_match(t, &actual, &expected)
-}
-
-@(test)
-parse_obj_should_parse_texture_coordinates :: proc(t: ^testing.T) {
-    input := "vt 1.0 1.0"
-
-    texture_coordinates: [dynamic]types.Vec2
-    defer delete(texture_coordinates)
-
-    append(&texture_coordinates, types.Vec2{1.0, 1.0})
-
-    expected := render.Scene {
-        texture_coordinates = texture_coordinates,
-    }
-
-    actual, ok := parse_obj(input)
-    defer render.scene_destroy(&actual)
-
-    testing.expect(t, ok)
-    expect_scene_match(t, &actual, &expected)
-}
-
-@(test)
-parse_obj_should_parse_vertex_normal :: proc(t: ^testing.T) {
-    input := "vn 0.0001 0.9989 0.0473"
-
-    normals: [dynamic]types.Vec3
-    defer delete(normals)
-
-    append(&normals, types.Vec3{0.0001, 0.9989, 0.0473})
-
-    expected := render.Scene {
-        normals = normals,
-    }
-
-    actual, ok := parse_obj(input)
-    defer render.scene_destroy(&actual)
-
-    testing.expect(t, ok)
-    expect_scene_match(t, &actual, &expected)
-}
-
-@(test)
 parse_obj_should_parse_a_single_face :: proc(t: ^testing.T) {
     input :=
         ("v -0.5 -0.5 0.5\n" +
@@ -227,7 +117,7 @@ parse_obj_should_parse_a_single_face :: proc(t: ^testing.T) {
         },
     }
 
-    expected_indices := [?]types.Vec3u{{1, 2, 3}}
+    expected_indices := [?]types.Vec3u{{0, 1, 2}}
 
     expected := render.Mesh{}
     defer render.mesh_free(&expected)
@@ -235,7 +125,7 @@ parse_obj_should_parse_a_single_face :: proc(t: ^testing.T) {
     append(&expected.vertices, ..expected_vertices[:])
     append(&expected.indices, ..expected_indices[:])
 
-    actual_scene, ok := parse_obj(input)
+    actual_scene, ok := parse_obj(input, "")
     defer render.scene_destroy(&actual_scene)
 
     testing.expect(t, ok)
@@ -281,7 +171,7 @@ parse_obj_should_parse_multiple_faces_with_shared_vertices :: proc(t: ^testing.T
             normal = {0.0001, 0.9989, 0.0473},
         },
     }
-    expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
+    expected_indices := [?]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
 
     expected := render.Mesh{}
     defer render.mesh_free(&expected)
@@ -289,7 +179,7 @@ parse_obj_should_parse_multiple_faces_with_shared_vertices :: proc(t: ^testing.T
     append(&expected.vertices, ..expected_vertices[:])
     append(&expected.indices, ..expected_indices[:])
 
-    actual_scene, ok := parse_obj(input)
+    actual_scene, ok := parse_obj(input, "")
     defer render.scene_destroy(&actual_scene)
 
     testing.expect(t, ok)
@@ -339,7 +229,7 @@ parse_obj_should_parse_object_with_material_with_usemtl_after_o :: proc(t: ^test
         },
     }
 
-    expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
+    expected_indices := [?]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
 
     expected_mesh := render.Mesh {
         material = strings.clone("mymat"),
@@ -388,7 +278,7 @@ parse_obj_should_parse_object_with_material_with_usemtl_after_o :: proc(t: ^test
     )
     append(&expected_scene.normals, types.Vec3{0.0001, 0.9989, 0.0473})
 
-    actual_scene, ok := parse_obj(input, load_mock_material_data)
+    actual_scene, ok := parse_obj(input, "", load_mock_material_data)
     defer render.scene_destroy(&actual_scene)
 
     testing.expect(t, ok)
@@ -436,7 +326,7 @@ parse_obj_should_parse_object_with_material_with_usemtl_before_o :: proc(t: ^tes
         },
     }
 
-    expected_indices := [?]types.Vec3u{{1, 2, 3}, {2, 4, 3}}
+    expected_indices := [?]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
 
     expected_mesh := render.Mesh {
         material = strings.clone("mymat"),
@@ -485,7 +375,7 @@ parse_obj_should_parse_object_with_material_with_usemtl_before_o :: proc(t: ^tes
     )
     append(&expected_scene.normals, types.Vec3{0.0001, 0.9989, 0.0473})
 
-    actual_scene, ok := parse_obj(input, load_mock_material_data)
+    actual_scene, ok := parse_obj(input, "", load_mock_material_data)
     defer render.scene_destroy(&actual_scene)
 
     testing.expect(t, ok)

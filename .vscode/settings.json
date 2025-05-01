@@ -12,6 +12,7 @@
         "opengl",
         "phong",
         "rawptr",
+        "tprintf",
         "usemtl"
     ]
 }

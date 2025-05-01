@@ -4,6 +4,7 @@ import "../../render"
 import "../../types"
 import "../common"
 import "../mtl"
+import "core:fmt"
 import "core:log"
 import "core:mem"
 import "core:os"
@@ -12,11 +13,12 @@ import "core:strings"
 ObjTokenIter :: common.TokenIter(ObjToken)
 VertexMap :: map[render.MeshVertex]uint
 
-load_scene_from_file_obj :: proc(path: string) -> (scene: render.Scene, ok: bool) {
+load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.Scene, ok: bool) {
+    path := fmt.tprintf("{}/{}", dir_path, file_name)
     scene_file_data := os.read_entire_file(path) or_return
     defer delete(scene_file_data)
 
-    scene = parse_obj(string(scene_file_data)) or_return
+    scene = parse_obj(string(scene_file_data), dir_path) or_return
 
     // TODO: should we delete scene.vertices/texture_coordinates/normals?
     // All of the data is already in the mesh struct, so we don't need to keep copies around.
@@ -25,7 +27,7 @@ load_scene_from_file_obj :: proc(path: string) -> (scene: render.Scene, ok: bool
 }
 
 parse_obj_ref :: proc(
-    s: string,
+    s, dir: string,
     scene: ^render.Scene,
     load_material_fn: LoadMaterialDataFn = os.read_entire_file_from_filename,
 ) -> (
@@ -51,7 +53,9 @@ parse_obj_ref :: proc(
         #partial switch current.type {
         case .MaterialFile:
             material_file_name := parse_string(&iter) or_return
-        // parse_material(material_file_name, &scene.materials, load_material_fn)
+            material_path := fmt.tprintf("{}/{}", dir, material_file_name)
+
+            parse_material(material_path, &scene.materials, load_material_fn)
 
         case .UseMaterial:
             current_material = parse_string(&iter) or_return
@@ -121,18 +125,18 @@ parse_obj_ref :: proc(
 }
 
 parse_obj_val :: proc(
-    s: string,
+    s, dir: string,
     load_material_fn: LoadMaterialDataFn = os.read_entire_file_from_filename,
 ) -> (
     scene: render.Scene,
     ok: bool,
 ) {
-    ok = parse_obj_ref(s, &scene, load_material_fn)
+    ok = parse_obj_ref(s, dir, &scene, load_material_fn)
     return
 }
 
 parse_obj_alloc :: proc(
-    s: string,
+    s, dir: string,
     allocator: mem.Allocator,
     load_material_fn: LoadMaterialDataFn = os.read_entire_file_from_filename,
 ) -> (
@@ -141,7 +145,7 @@ parse_obj_alloc :: proc(
 ) {
     context.allocator = allocator
     scene = new(render.Scene)
-    ok = parse_obj_ref(s, scene, load_material_fn)
+    ok = parse_obj_ref(s, dir, scene, load_material_fn)
     return
 }
 
@@ -283,6 +287,7 @@ parse_material :: proc(
     ok: bool,
 ) {
     mtl_data, loaded_ok := load_material_data(material_file_name)
+    // mtl_data, loaded_ok := os.read_entire_file(material_file_name)
     if !loaded_ok {
         log.error("Failed to load material data: {}", material_file_name)
         return false
