@@ -1,38 +1,21 @@
 package main
 
 import "base:runtime"
-import "core:fmt"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
-import "core:time"
 import "mesh"
-import "parse/mtl"
 import "parse/obj"
 import "render"
 import "types"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
-import "vendor:stb/image"
 
 WIDTH :: 800
 HEIGHT :: 600
 
 GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
-
-CUBE_POSITIONS :: [?]types.Vec3 {
-    {0, 0, 0},
-    {2, 5, -15},
-    {-1.5, -2.2, -2.5},
-    {-3.8, -2, -12.3},
-    {2.4, -0.4, -3.5},
-    {-1.7, 3, -7.5},
-    {1.3, -2, -2.5},
-    {1.5, 2, -2.5},
-    {1.5, 0.2, -1.5},
-    {-1.3, 1, -1.5},
-}
 
 point_lights := [?]render.PointLight {
     {
@@ -143,9 +126,6 @@ main :: proc() {
         ) or_else panic("Failed to load the light shader")
 
     light_cube_vao, vbo: u32
-    // cube_vao: u32
-    // gl.GenVertexArrays(1, &cube_vao)
-    // defer gl.DeleteVertexArrays(1, &cube_vao)
 
     scene :=
         obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic(
@@ -153,8 +133,8 @@ main :: proc() {
         )
     defer render.scene_destroy(&scene)
 
-    for mesh_name, &mesh in scene.meshes do render.mesh_send_to_gpu(&mesh)
-    defer for mesh_name, &mesh in scene.meshes do render.mesh_gpu_free(&mesh)
+    for _, &mesh in scene.meshes do render.mesh_send_to_gpu(&mesh)
+    defer for _, &mesh in scene.meshes do render.mesh_gpu_free(&mesh)
 
     gl.GenVertexArrays(1, &light_cube_vao)
     defer gl.DeleteVertexArrays(1, &light_cube_vao)
@@ -167,35 +147,6 @@ main :: proc() {
 
     gl.UseProgram(cube_shader)
 
-    // box_texture_ids: [2]u32
-    // gl.GenTextures(2, raw_data(box_texture_ids[:]))
-    // defer gl.DeleteTextures(2, raw_data(box_texture_ids[:]))
-
-    // diffuse_map := prepare_texture(
-    //     path = "textures/container2.png",
-    //     channels = 4,
-    //     shader_program = cube_shader,
-    //     texture_id = box_texture_ids[0],
-    //     gl_texture = gl.TEXTURE0,
-    // )
-    // defer image.image_free(diffuse_map.buffer)
-
-    // spec_map := prepare_texture(
-    //     path = "textures/container2_specular.png",
-    //     channels = 4,
-    //     shader_program = cube_shader,
-    //     texture_id = box_texture_ids[1],
-    //     gl_texture = gl.TEXTURE1,
-    // )
-    // defer image.image_free(spec_map.buffer)
-
-    // material := render.MaterialSampled {
-    //     diffuse   = box_texture_ids[0],
-    //     specular  = box_texture_ids[1],
-    //     shininess = 64,
-    // }
-
-    // render.material_sampled_set_uniform(&material, cube_shader)
     render.directional_light_set_uniform(&directional_light, cube_shader)
 
     for &point_light, i in point_lights {
@@ -262,37 +213,6 @@ main :: proc() {
         spot_light.direction = camera.direction
         render.spot_light_set_uniform(&spot_light, cube_shader)
 
-        // for position, i in CUBE_POSITIONS {
-        //     model := linalg.matrix4_translate(position)
-
-        //     angle: f32 = linalg.to_radians(20 * f32(i))
-        //     if i % 3 == 0 do angle += new_time
-
-        //     model *= linalg.matrix4_rotate(angle, types.Vec3{1, 0.3, 0.5})
-        //     mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-
-        //     transform := pv * model
-        //     gl.UniformMatrix4fv(
-        //         gl.GetUniformLocation(cube_shader, "transform"),
-        //         1,
-        //         false,
-        //         raw_data(&transform),
-        //     )
-        //     gl.UniformMatrix4fv(
-        //         gl.GetUniformLocation(cube_shader, "model"),
-        //         1,
-        //         false,
-        //         raw_data(&model),
-        //     )
-        //     gl.UniformMatrix3fv(
-        //         gl.GetUniformLocation(cube_shader, "mit"),
-        //         1,
-        //         false,
-        //         raw_data(&mit),
-        //     )
-        //     mesh.cube_draw(cube_vao)
-        // }
-
         model := linalg.identity(types.TransformMatrix)
         mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
@@ -312,7 +232,7 @@ main :: proc() {
         )
 
         gl.UniformMatrix3fv(gl.GetUniformLocation(cube_shader, "mit"), 1, false, raw_data(&mit))
-        for mesh_name, &mesh in scene.meshes {
+        for _, &mesh in scene.meshes {
             render.mesh_draw(&mesh)
         }
 

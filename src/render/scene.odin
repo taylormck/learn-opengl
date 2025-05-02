@@ -56,12 +56,7 @@ mesh_send_to_gpu :: proc(mesh: ^Mesh) {
     defer gl.BindVertexArray(0)
 
     gl.BindBuffer(gl.ARRAY_BUFFER, mesh.vbo)
-    gl.BufferData(
-        gl.ARRAY_BUFFER,
-        len(mesh.vertices) * size_of(MeshVertex),
-        raw_data(mesh.vertices),
-        gl.STATIC_DRAW,
-    )
+    gl.BufferData(gl.ARRAY_BUFFER, len(mesh.vertices) * size_of(MeshVertex), raw_data(mesh.vertices), gl.STATIC_DRAW)
 
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, mesh.ebo)
     gl.BufferData(
@@ -72,34 +67,13 @@ mesh_send_to_gpu :: proc(mesh: ^Mesh) {
     )
 
     gl.EnableVertexAttribArray(0)
-    gl.VertexAttribPointer(
-        0,
-        3,
-        gl.FLOAT,
-        gl.FALSE,
-        size_of(MeshVertex),
-        offset_of(MeshVertex, position),
-    )
+    gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(MeshVertex), offset_of(MeshVertex, position))
 
     gl.EnableVertexAttribArray(1)
-    gl.VertexAttribPointer(
-        1,
-        2,
-        gl.FLOAT,
-        gl.FALSE,
-        size_of(MeshVertex),
-        offset_of(MeshVertex, texture_coordinates),
-    )
+    gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, size_of(MeshVertex), offset_of(MeshVertex, texture_coordinates))
 
     gl.EnableVertexAttribArray(2)
-    gl.VertexAttribPointer(
-        2,
-        3,
-        gl.FLOAT,
-        gl.FALSE,
-        size_of(MeshVertex),
-        offset_of(MeshVertex, normal),
-    )
+    gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(MeshVertex), offset_of(MeshVertex, normal))
 }
 
 mesh_draw :: proc(mesh: ^Mesh) {
