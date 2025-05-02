@@ -6,6 +6,7 @@
         "infof",
         "linalg",
         "mtllib",
+        "multilights",
         "mymat",
         "myobj",
         "newmtl",

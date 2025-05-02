@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="com.lasagnerd.odin.settings.OdinSdkConfigPersistentState">
+    <option name="sdkPath" value="$USER_HOME$/tools/Odin" />
+    <option name="extraBuildFlags" value="-vet -vet-cast -strict-style" />
+    <option name="semanticAnnotatorEnabled" value="true" />
+    <option name="odinCheckerEnabled" value="true" />
+    <option name="debuggerId" value="odin-lldb-dap" />
+    <option name="debuggerPath" value="/usr/bin/lldb-dap" />
+    <option name="highlightUnknownReferencesEnabled" value="false" />
+    <option name="conditionalSymbolResolutionEnabled" value="false" />
+    <option name="cacheEnabled" value="false" />
+    <option name="useBuiltinFormatter" value="false" />
+    <option name="odinFmtPath" value="/usr/bin/odinfmt" />
+    <option name="odinFmtJsonPath" value="$PROJECT_DIR$/odinfmt.json" />
+  </component>
+</project>
