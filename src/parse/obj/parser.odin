@@ -20,9 +20,6 @@ load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.
 
     scene = parse_obj(string(scene_file_data), dir_path) or_return
 
-    // TODO: should we delete scene.vertices/texture_coordinates/normals?
-    // All of the data is already in the mesh struct, so we don't need to keep copies around.
-
     return scene, true
 }
 
@@ -33,6 +30,9 @@ parse_obj_ref :: proc(
 ) -> (
     ok: bool,
 ) {
+    builder: SceneBuilder
+    defer scene_builder_destroy(&builder)
+
     iter := common.token_iter_init(ObjToken, s, string_iter_get_next_token)
 
     if scene.meshes != nil {
@@ -65,15 +65,15 @@ parse_obj_ref :: proc(
 
         case .Vertex:
             vertex := parse_vec4(&iter) or_return
-            append(&scene.vertices, vertex)
+            append(&builder.vertices, vertex)
 
         case .TextureCoordinates:
             coordinates := parse_vec2(&iter) or_return
-            append(&scene.texture_coordinates, coordinates)
+            append(&builder.texture_coordinates, coordinates)
 
         case .VertexNormal:
             normal := parse_vec3(&iter) or_return
-            append(&scene.normals, normal)
+            append(&builder.normals, normal)
 
         case .VertexParameter:
         // TODO: implement vertex parameters
@@ -91,7 +91,7 @@ parse_obj_ref :: proc(
         case .Face:
             new_indices: types.Vec3u
             for i in 0 ..< 3 {
-                new_vertex := parse_vertex(&iter, scene) or_return
+                new_vertex := parse_vertex(&iter, &builder) or_return
                 index, found := vertex_map[new_vertex]
 
                 if !found {
@@ -153,6 +153,18 @@ parse_obj :: proc {
     parse_obj_ref,
     parse_obj_val,
     parse_obj_alloc,
+}
+
+SceneBuilder :: struct {
+    vertices:            [dynamic]types.Vec4,
+    texture_coordinates: [dynamic]types.Vec2,
+    normals:             [dynamic]types.Vec3,
+}
+
+scene_builder_destroy :: proc(builder: ^SceneBuilder) {
+    delete(builder.vertices)
+    delete(builder.texture_coordinates)
+    delete(builder.normals)
 }
 
 parse_float :: proc(iter: ^ObjTokenIter) -> (v: f32, ok: bool) {
@@ -229,21 +241,15 @@ parse_string :: proc(iter: ^ObjTokenIter) -> (v: string, ok: bool) {
     return v, true
 }
 
-parse_vertex :: proc(
-    iter: ^ObjTokenIter,
-    scene: ^render.Scene,
-) -> (
-    v: render.MeshVertex,
-    ok: bool,
-) {
+parse_vertex :: proc(iter: ^ObjTokenIter, builder: ^SceneBuilder) -> (v: render.MeshVertex, ok: bool) {
     // Start by getting the position
     next_token := common.token_iter_next(iter) or_return
     if next_token.type != .Integer do return
     index := next_token.value.(i32)
-    assert(index > 0 && int(index) <= len(scene.vertices))
+    assert(index > 0 && int(index) <= len(builder.vertices))
 
     // We only need x, y, and z.
-    v.position = scene.vertices[index - 1].xyz
+    v.position = builder.vertices[index - 1].xyz
 
     next_token = common.token_iter_next(iter) or_return
     if next_token.type != .Slash do return
@@ -252,8 +258,8 @@ parse_vertex :: proc(
     next_token = common.token_iter_next(iter) or_return
     if next_token.type == .Integer {
         index = next_token.value.(i32)
-        assert(index > 0 && int(index) <= len(scene.texture_coordinates))
-        v.texture_coordinates = scene.texture_coordinates[index - 1]
+        assert(index > 0 && int(index) <= len(builder.texture_coordinates))
+        v.texture_coordinates = builder.texture_coordinates[index - 1]
 
         next_token = common.token_iter_next(iter) or_return
     }
@@ -264,8 +270,8 @@ parse_vertex :: proc(
     next_token = common.token_iter_next(iter) or_return
     if next_token.type != .Integer do return
     index = next_token.value.(i32)
-    assert(index > 0 && int(index) <= len(scene.normals))
-    v.normal = scene.normals[index - 1]
+    assert(index > 0 && int(index) <= len(builder.normals))
+    v.normal = builder.normals[index - 1]
 
     return v, true
 }

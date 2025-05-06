@@ -6,12 +6,9 @@ import "core:os"
 import gl "vendor:OpenGL"
 
 Scene :: struct {
-    meshes:              MeshMap,
-    materials:           MaterialMap,
-    textures:            TextureMap,
-    vertices:            [dynamic]types.Vec4,
-    texture_coordinates: [dynamic]types.Vec2,
-    normals:             [dynamic]types.Vec3,
+    meshes:    MeshMap,
+    materials: MaterialMap,
+    textures:  TextureMap,
 }
 
 scene_destroy :: proc(scene: ^Scene) {
@@ -20,10 +17,6 @@ scene_destroy :: proc(scene: ^Scene) {
 
     for key, &material in scene.materials do material_free(&material)
     delete(scene.materials)
-
-    delete(scene.vertices)
-    delete(scene.texture_coordinates)
-    delete(scene.normals)
 }
 
 MeshMap :: map[string]Mesh
