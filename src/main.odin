@@ -116,7 +116,7 @@ main :: proc() {
     cube_shader :=
         gl.load_shaders_source(
             #load("../shaders/vert/pos_tex_normal_transform.vert"),
-            #load("../shaders/frag/phong_normal_multilights.frag"),
+            #load("../shaders/frag/phong_material_sampled_multilights.frag"),
         ) or_else panic("Failed to load the shader")
 
     light_shader :=
@@ -128,9 +128,7 @@ main :: proc() {
     light_cube_vao, vbo: u32
 
     scene :=
-        obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic(
-            "Failed to load backpack model.",
-        )
+        obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
     defer render.scene_destroy(&scene)
 
     for _, &mesh in scene.meshes do render.mesh_send_to_gpu(&mesh)
@@ -182,26 +180,13 @@ main :: proc() {
             model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
             transform := pv * model
 
-            gl.UniformMatrix4fv(
-                gl.GetUniformLocation(light_shader, "transform"),
-                1,
-                false,
-                raw_data(&transform),
-            )
-            gl.Uniform3fv(
-                gl.GetUniformLocation(light_shader, "light_color"),
-                1,
-                raw_data(&light_color),
-            )
+            gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+            gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light_color))
             mesh.cube_draw(light_cube_vao)
         }
 
         gl.UseProgram(cube_shader)
-        gl.Uniform3fv(
-            gl.GetUniformLocation(cube_shader, "view_position"),
-            1,
-            raw_data(&camera.position),
-        )
+        gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "view_position"), 1, raw_data(&camera.position))
 
         // gl.ActiveTexture(gl.TEXTURE0)
         // gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[0])
@@ -217,23 +202,13 @@ main :: proc() {
         mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
         transform := pv * model
-        gl.UniformMatrix4fv(
-            gl.GetUniformLocation(cube_shader, "transform"),
-            1,
-            false,
-            raw_data(&transform),
-        )
+        gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "transform"), 1, false, raw_data(&transform))
 
-        gl.UniformMatrix4fv(
-            gl.GetUniformLocation(cube_shader, "model"),
-            1,
-            false,
-            raw_data(&model),
-        )
+        gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "model"), 1, false, raw_data(&model))
 
         gl.UniformMatrix3fv(gl.GetUniformLocation(cube_shader, "mit"), 1, false, raw_data(&mit))
         for _, &mesh in scene.meshes {
-            render.mesh_draw(&mesh)
+            render.mesh_draw(&mesh, cube_shader)
         }
 
         glfw.SwapBuffers(window)

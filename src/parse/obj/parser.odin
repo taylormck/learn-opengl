@@ -20,6 +20,59 @@ load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.
 
     scene = parse_obj(string(scene_file_data), dir_path) or_return
 
+    for mesh_name, &mesh in scene.meshes {
+        material, has_material := scene.materials[mesh.material_name]
+
+        if !has_material {
+            log.errorf("material not found: {}", mesh.material_name)
+            continue
+        }
+
+        mesh.material = material
+
+        if len(material.diffuse_map) > 0 {
+            texture, has_texture := scene.textures[material.diffuse_map]
+
+            if !has_texture {
+                full_texture_path := fmt.caprintf("{}/{}", dir_path, material.diffuse_map)
+                defer delete(full_texture_path)
+
+                texture = render.prepare_texture(full_texture_path, 3, .Diffuse)
+                scene.textures[material.diffuse_map] = texture
+            }
+
+            append(&mesh.textures, texture)
+        }
+
+        if len(material.specular_map) > 0 {
+            texture, has_texture := scene.textures[material.specular_map]
+
+            if !has_texture {
+                full_texture_path := fmt.caprintf("{}/{}", dir_path, material.specular_map)
+                defer delete(full_texture_path)
+
+                texture = render.prepare_texture(full_texture_path, 3, .Specular)
+                scene.textures[material.specular_map] = texture
+            }
+
+            append(&mesh.textures, texture)
+        }
+
+        if len(material.normal_map) > 0 {
+            texture, has_texture := scene.textures[material.normal_map]
+
+            if !has_texture {
+                full_texture_path := fmt.caprintf("{}/{}", dir_path, material.normal_map)
+                defer delete(full_texture_path)
+
+                texture = render.prepare_texture(full_texture_path, 3, .Normal)
+                scene.textures[material.normal_map] = texture
+            }
+
+            append(&mesh.textures, texture)
+        }
+    }
+
     return scene, true
 }
 
@@ -55,13 +108,13 @@ parse_obj_ref :: proc(
             material_file_name := parse_string(&iter) or_return
             material_path := fmt.tprintf("{}/{}", dir, material_file_name)
 
-            parse_material(material_path, &scene.materials, load_material_fn)
+            parse_material(material_path, scene, load_material_fn)
 
         case .UseMaterial:
             current_material = parse_string(&iter) or_return
 
-            delete(current_mesh.material)
-            current_mesh.material = strings.clone(current_material)
+            delete(current_mesh.material_name)
+            current_mesh.material_name = strings.clone(current_material)
 
         case .Vertex:
             vertex := parse_vec4(&iter) or_return
@@ -83,8 +136,8 @@ parse_obj_ref :: proc(
             if !(new_mesh_name in scene.meshes) do scene.meshes[new_mesh_name] = render.Mesh{}
             current_mesh = &scene.meshes[new_mesh_name]
 
-            delete(current_mesh.material)
-            current_mesh.material = strings.clone(current_material)
+            delete(current_mesh.material_name)
+            current_mesh.material_name = strings.clone(current_material)
 
             clear(&vertex_map)
 
@@ -287,7 +340,7 @@ LoadMaterialDataFn :: #type proc(
 
 parse_material :: proc(
     material_file_name: string,
-    materials: ^render.MaterialMap,
+    scene: ^render.Scene,
     load_material_data: LoadMaterialDataFn,
 ) -> (
     ok: bool,
@@ -308,7 +361,7 @@ parse_material :: proc(
     defer delete(new_mats)
 
     for mat_name, mat in new_mats {
-        materials[mat_name] = mat
+        scene.materials[mat_name] = mat
     }
 
     return true

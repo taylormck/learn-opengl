@@ -16,8 +16,6 @@ MaterialSampled :: struct {
 Material :: struct {
     ambient, diffuse, specular, emissive:        types.Vec4,
     shininess:                                   f32,
-    // NOTE: These are strings representing the relative paths to the files.
-    // We may want to change these to be the IDs on the GPU, or keys in a map.
     name, diffuse_map, normal_map, specular_map: string,
 }
 

@@ -1,6 +1,11 @@
 {
     "cSpell.words": [
+        "aprintf",
+        "caprint",
+        "caprintf",
         "cdecl",
+        "cstring",
+        "errorf",
         "glfw",
         "illum",
         "infof",
@@ -11,8 +16,11 @@
         "myobj",
         "newmtl",
         "opengl",
+        "Parameteri",
         "phong",
         "rawptr",
+        "RGBA",
+        "stbi",
         "tprintf",
         "usemtl"
     ]
