@@ -118,12 +118,14 @@ main :: proc() {
     //         #load("../shaders/vert/pos_tex_normal_transform.vert"),
     //         #load("../shaders/frag/phong_material_sampled_multilights.frag"),
     //     ) or_else panic("Failed to load the shader")
+    // defer gl.DeleteProgram(cube_shader)
 
     depth_shader :=
         gl.load_shaders_source(
             #load("../shaders/vert/pos_tex_normal_transform.vert"),
             #load("../shaders/frag/depth.frag"),
         ) or_else panic("Failed to load the shader")
+    defer gl.DeleteProgram(depth_shader)
 
     cube_shader := depth_shader
 
@@ -132,6 +134,7 @@ main :: proc() {
             #load("../shaders/vert/pos_transform.vert"),
             #load("../shaders/frag/light_color.frag"),
         ) or_else panic("Failed to load the light shader")
+    defer gl.DeleteProgram(light_shader)
 
     light_cube_vao, vbo: u32
 
