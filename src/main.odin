@@ -113,11 +113,19 @@ main :: proc() {
     glfw.SetCursorPosCallback(window, mouse_callback)
     glfw.SetScrollCallback(window, scroll_callback)
 
-    cube_shader :=
+    // cube_shader :=
+    //     gl.load_shaders_source(
+    //         #load("../shaders/vert/pos_tex_normal_transform.vert"),
+    //         #load("../shaders/frag/phong_material_sampled_multilights.frag"),
+    //     ) or_else panic("Failed to load the shader")
+
+    depth_shader :=
         gl.load_shaders_source(
             #load("../shaders/vert/pos_tex_normal_transform.vert"),
-            #load("../shaders/frag/phong_material_sampled_multilights.frag"),
+            #load("../shaders/frag/depth.frag"),
         ) or_else panic("Failed to load the shader")
+
+    cube_shader := depth_shader
 
     light_shader :=
         gl.load_shaders_source(
