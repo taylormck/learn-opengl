@@ -113,21 +113,26 @@ main :: proc() {
     glfw.SetCursorPosCallback(window, mouse_callback)
     glfw.SetScrollCallback(window, scroll_callback)
 
-    // cube_shader :=
-    //     gl.load_shaders_source(
-    //         #load("../shaders/vert/pos_tex_normal_transform.vert"),
-    //         #load("../shaders/frag/phong_material_sampled_multilights.frag"),
-    //     ) or_else panic("Failed to load the shader")
-    // defer gl.DeleteProgram(cube_shader)
-
-    depth_shader :=
+    cube_shader :=
         gl.load_shaders_source(
             #load("../shaders/vert/pos_tex_normal_transform.vert"),
-            #load("../shaders/frag/depth.frag"),
+            #load("../shaders/frag/phong_material_sampled_multilights.frag"),
         ) or_else panic("Failed to load the shader")
-    defer gl.DeleteProgram(depth_shader)
+    defer gl.DeleteProgram(cube_shader)
 
-    cube_shader := depth_shader
+    // depth_shader :=
+    //     gl.load_shaders_source(
+    //         #load("../shaders/vert/pos_tex_normal_transform.vert"),
+    //         #load("../shaders/frag/depth.frag"),
+    //     ) or_else panic("Failed to load the shader")
+    // defer gl.DeleteProgram(depth_shader)
+
+    single_color_shader :=
+        gl.load_shaders_source(
+            #load("../shaders/vert/pos_tex_normal_transform.vert"),
+            #load("../shaders/frag/single_color.frag"),
+        ) or_else panic("Failed to load the shader")
+    defer gl.DeleteProgram(single_color_shader)
 
     light_shader :=
         gl.load_shaders_source(
@@ -162,7 +167,8 @@ main :: proc() {
         render.point_light_array_set_uniform(&point_light, cube_shader, u32(i))
     }
 
-    gl.Enable(gl.DEPTH_TEST)
+    gl.Enable(gl.STENCIL_TEST)
+    gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
 
     prev_time := f32(glfw.GetTime())
 
@@ -174,7 +180,11 @@ main :: proc() {
         process_input(window, delta)
 
         gl.ClearColor(0.1, 0.2, 0.3, 1)
-        gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+        gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
+        gl.StencilMask(0x00)
+        gl.Enable(gl.DEPTH_TEST)
+        gl.StencilFunc(gl.ALWAYS, 1, 0xff)
+        gl.StencilMask(0xff)
 
         projection := render.camera_get_projection(&camera)
         view := render.camera_get_view(&camera)
@@ -199,28 +209,44 @@ main :: proc() {
         gl.UseProgram(cube_shader)
         gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "view_position"), 1, raw_data(&camera.position))
 
-        // gl.ActiveTexture(gl.TEXTURE0)
-        // gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[0])
-
-        // gl.ActiveTexture(gl.TEXTURE1)
-        // gl.BindTexture(gl.TEXTURE_2D, box_texture_ids[1])
-
         spot_light.position = camera.position
         spot_light.direction = camera.direction
         render.spot_light_set_uniform(&spot_light, cube_shader)
 
         model := linalg.identity(types.TransformMatrix)
         mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-
         transform := pv * model
         gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "transform"), 1, false, raw_data(&transform))
-
         gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "model"), 1, false, raw_data(&model))
-
         gl.UniformMatrix3fv(gl.GetUniformLocation(cube_shader, "mit"), 1, false, raw_data(&mit))
+
+
         for _, &mesh in scene.meshes {
             render.mesh_draw(&mesh, cube_shader)
         }
+
+        // Draw the outline
+        gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
+        gl.StencilMask(0x00)
+        gl.Disable(gl.DEPTH_TEST)
+
+        gl.UseProgram(single_color_shader)
+        gl.Uniform3fv(gl.GetUniformLocation(single_color_shader, "view_position"), 1, raw_data(&camera.position))
+
+        model = linalg.matrix4_scale_f32({1.1, 1.1, 1.1})
+        mit = types.SubTransformMatrix(linalg.inverse_transpose(model))
+        transform = pv * model
+        gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
+        gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "model"), 1, false, raw_data(&model))
+        gl.UniformMatrix3fv(gl.GetUniformLocation(single_color_shader, "mit"), 1, false, raw_data(&mit))
+
+        for _, &mesh in scene.meshes {
+            render.mesh_draw(&mesh, single_color_shader)
+        }
+
+        gl.StencilFunc(gl.ALWAYS, 1, 0xff)
+        gl.StencilMask(0xff)
+        gl.Enable(gl.DEPTH_TEST)
 
         glfw.SwapBuffers(window)
         gl.BindVertexArray(0)

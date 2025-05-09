@@ -15,6 +15,7 @@
         "mymat",
         "myobj",
         "newmtl",
+        "NOTEQUAL",
         "opengl",
         "Parameteri",
         "phong",
