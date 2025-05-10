@@ -4,8 +4,8 @@ import "base:runtime"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
-import "mesh"
 import "parse/obj"
+import "primitives"
 import "render"
 import "types"
 import gl "vendor:OpenGL"
@@ -150,14 +150,8 @@ main :: proc() {
     for _, &mesh in scene.meshes do render.mesh_send_to_gpu(&mesh)
     defer for _, &mesh in scene.meshes do render.mesh_gpu_free(&mesh)
 
-    gl.GenVertexArrays(1, &light_cube_vao)
-    defer gl.DeleteVertexArrays(1, &light_cube_vao)
-
-    gl.GenBuffers(1, &vbo)
-    defer gl.DeleteBuffers(1, &vbo)
-
-    // mesh.cube_send_to_gpu(cube_vao, vbo)
-    mesh.cube_send_to_gpu(light_cube_vao, vbo)
+    primitives.cube_send_to_gpu()
+    defer primitives.cube_clear_from_gpu()
 
     gl.UseProgram(cube_shader)
 
@@ -167,8 +161,6 @@ main :: proc() {
         render.point_light_array_set_uniform(&point_light, cube_shader, u32(i))
     }
 
-    gl.Enable(gl.STENCIL_TEST)
-    gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
 
     prev_time := f32(glfw.GetTime())
 
@@ -179,74 +171,8 @@ main :: proc() {
         glfw.PollEvents()
         process_input(window, delta)
 
-        gl.ClearColor(0.1, 0.2, 0.3, 1)
-        gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
-        gl.StencilMask(0x00)
-        gl.Enable(gl.DEPTH_TEST)
-        gl.StencilFunc(gl.ALWAYS, 1, 0xff)
-        gl.StencilMask(0xff)
-
-        projection := render.camera_get_projection(&camera)
-        view := render.camera_get_view(&camera)
-        pv := projection * view
-
-        gl.BindVertexArray(light_cube_vao)
-        gl.UseProgram(light_shader)
-
-        for point_light in point_lights {
-            // NOTE: This is just a quick hack to make the lights look brighter.
-            light_color := point_light.diffuse * 2
-
-            model := linalg.matrix4_translate(point_light.position)
-            model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
-            transform := pv * model
-
-            gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
-            gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light_color))
-            mesh.cube_draw(light_cube_vao)
-        }
-
-        gl.UseProgram(cube_shader)
-        gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "view_position"), 1, raw_data(&camera.position))
-
-        spot_light.position = camera.position
-        spot_light.direction = camera.direction
-        render.spot_light_set_uniform(&spot_light, cube_shader)
-
-        model := linalg.identity(types.TransformMatrix)
-        mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-        transform := pv * model
-        gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "transform"), 1, false, raw_data(&transform))
-        gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "model"), 1, false, raw_data(&model))
-        gl.UniformMatrix3fv(gl.GetUniformLocation(cube_shader, "mit"), 1, false, raw_data(&mit))
-
-
-        for _, &mesh in scene.meshes {
-            render.mesh_draw(&mesh, cube_shader)
-        }
-
-        // Draw the outline
-        gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
-        gl.StencilMask(0x00)
-        gl.Disable(gl.DEPTH_TEST)
-
-        gl.UseProgram(single_color_shader)
-        gl.Uniform3fv(gl.GetUniformLocation(single_color_shader, "view_position"), 1, raw_data(&camera.position))
-
-        model = linalg.matrix4_scale_f32({1.1, 1.1, 1.1})
-        mit = types.SubTransformMatrix(linalg.inverse_transpose(model))
-        transform = pv * model
-        gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
-        gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "model"), 1, false, raw_data(&model))
-        gl.UniformMatrix3fv(gl.GetUniformLocation(single_color_shader, "mit"), 1, false, raw_data(&mit))
-
-        for _, &mesh in scene.meshes {
-            render.mesh_draw(&mesh, single_color_shader)
-        }
-
-        gl.StencilFunc(gl.ALWAYS, 1, 0xff)
-        gl.StencilMask(0xff)
-        gl.Enable(gl.DEPTH_TEST)
+        // draw_backpack_scene(scene, light_shader, cube_shader, single_color_shader)
+        draw_block_scene(scene, light_shader, cube_shader, single_color_shader)
 
         glfw.SwapBuffers(window)
         gl.BindVertexArray(0)
@@ -259,4 +185,97 @@ framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, hei
 
     gl.Viewport(0, 0, width, height)
     camera.aspect_ratio = f32(width) / f32(height)
+}
+
+draw_backpack_scene :: proc(scene: render.Scene, light_shader, cube_shader, single_color_shader: u32) {
+    gl.Enable(gl.STENCIL_TEST)
+    gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
+
+    gl.ClearColor(0.1, 0.2, 0.3, 1)
+    gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
+    gl.StencilMask(0x00)
+    gl.Enable(gl.DEPTH_TEST)
+    gl.StencilFunc(gl.ALWAYS, 1, 0xff)
+    gl.StencilMask(0xff)
+
+    projection := render.camera_get_projection(&camera)
+    view := render.camera_get_view(&camera)
+    pv := projection * view
+
+    gl.UseProgram(light_shader)
+
+    for point_light in point_lights {
+        // NOTE: This is just a quick hack to make the lights look brighter.
+        light_color := point_light.diffuse * 2
+
+        model := linalg.matrix4_translate(point_light.position)
+        model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
+        transform := pv * model
+
+        gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+        gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light_color))
+        primitives.cube_draw()
+    }
+
+    gl.UseProgram(cube_shader)
+    gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "view_position"), 1, raw_data(&camera.position))
+
+    spot_light.position = camera.position
+    spot_light.direction = camera.direction
+    render.spot_light_set_uniform(&spot_light, cube_shader)
+
+    model := linalg.identity(types.TransformMatrix)
+    mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+    transform := pv * model
+    gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "transform"), 1, false, raw_data(&transform))
+    gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "model"), 1, false, raw_data(&model))
+    gl.UniformMatrix3fv(gl.GetUniformLocation(cube_shader, "mit"), 1, false, raw_data(&mit))
+
+    for _, &mesh in scene.meshes {
+        render.mesh_draw(&mesh, cube_shader)
+    }
+
+    // Draw the outline
+    gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
+    gl.StencilMask(0x00)
+    gl.Disable(gl.DEPTH_TEST)
+
+    gl.UseProgram(single_color_shader)
+    gl.Uniform3fv(gl.GetUniformLocation(single_color_shader, "view_position"), 1, raw_data(&camera.position))
+
+    model = linalg.matrix4_scale_f32({1.1, 1.1, 1.1})
+    mit = types.SubTransformMatrix(linalg.inverse_transpose(model))
+    transform = pv * model
+    gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
+    gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "model"), 1, false, raw_data(&model))
+    gl.UniformMatrix3fv(gl.GetUniformLocation(single_color_shader, "mit"), 1, false, raw_data(&mit))
+
+    for _, &mesh in scene.meshes {
+        render.mesh_draw(&mesh, single_color_shader)
+    }
+
+    gl.StencilFunc(gl.ALWAYS, 1, 0xff)
+    gl.StencilMask(0xff)
+    gl.Enable(gl.DEPTH_TEST)
+}
+
+
+draw_block_scene :: proc(scene: render.Scene, light_shader, cube_shader, single_color_shader: u32) {
+    gl.ClearColor(0.1, 0.2, 0.3, 1)
+    gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+    projection := render.camera_get_projection(&camera)
+    view := render.camera_get_view(&camera)
+    pv := projection * view
+
+    model := linalg.identity(types.TransformMatrix)
+    mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+    transform := pv * model
+
+    gl.UseProgram(cube_shader)
+    gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "transform"), 1, false, raw_data(&transform))
+    gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "model"), 1, false, raw_data(&model))
+    gl.UniformMatrix3fv(gl.GetUniformLocation(cube_shader, "mit"), 1, false, raw_data(&mit))
+
+    primitives.cube_draw()
 }
