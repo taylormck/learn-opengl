@@ -57,7 +57,7 @@ point_lights := [?]render.PointLight {
 }
 
 directional_light := render.DirectionalLight {
-    direction = {-0.2, -1, 0.3},
+    direction = {-0.2, -1, -0.3},
     ambient   = {0.2, 0.2, 0.2},
     diffuse   = {0.5, 0.5, 0.5},
     specular  = {1, 1, 1},
@@ -82,6 +82,8 @@ camera := render.Camera {
     far          = 100,
     speed        = 5,
 }
+
+marble_texture, metal_texture: render.Texture
 
 main :: proc() {
     context.logger = log.create_console_logger()
@@ -113,12 +115,19 @@ main :: proc() {
     glfw.SetCursorPosCallback(window, mouse_callback)
     glfw.SetScrollCallback(window, scroll_callback)
 
-    cube_shader :=
+    mesh_shader :=
         gl.load_shaders_source(
             #load("../shaders/vert/pos_tex_normal_transform.vert"),
             #load("../shaders/frag/phong_material_sampled_multilights.frag"),
         ) or_else panic("Failed to load the shader")
-    defer gl.DeleteProgram(cube_shader)
+    defer gl.DeleteProgram(mesh_shader)
+
+    texture_shader :=
+        gl.load_shaders_source(
+            #load("../shaders/vert/pos_tex_normal_transform.vert"),
+            #load("../shaders/frag/single_tex.frag"),
+        ) or_else panic("Failed to load the shader")
+    defer gl.DeleteProgram(texture_shader)
 
     // depth_shader :=
     //     gl.load_shaders_source(
@@ -141,8 +150,6 @@ main :: proc() {
         ) or_else panic("Failed to load the light shader")
     defer gl.DeleteProgram(light_shader)
 
-    light_cube_vao, vbo: u32
-
     scene :=
         obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
     defer render.scene_destroy(&scene)
@@ -153,14 +160,19 @@ main :: proc() {
     primitives.cube_send_to_gpu()
     defer primitives.cube_clear_from_gpu()
 
-    gl.UseProgram(cube_shader)
+    gl.UseProgram(mesh_shader)
 
-    render.directional_light_set_uniform(&directional_light, cube_shader)
+    render.directional_light_set_uniform(&directional_light, mesh_shader)
 
     for &point_light, i in point_lights {
-        render.point_light_array_set_uniform(&point_light, cube_shader, u32(i))
+        render.point_light_array_set_uniform(&point_light, mesh_shader, u32(i))
     }
 
+    gl.UseProgram(texture_shader)
+    render.directional_light_set_uniform(&directional_light, texture_shader)
+    gl.Uniform1i(gl.GetUniformLocation(texture_shader, "num_point_lights"), 0)
+    metal_texture = render.prepare_texture("textures/metal.png", 3, .Diffuse, true)
+    marble_texture = render.prepare_texture("textures/marble.jpg", 3, .Diffuse, true)
 
     prev_time := f32(glfw.GetTime())
 
@@ -171,8 +183,8 @@ main :: proc() {
         glfw.PollEvents()
         process_input(window, delta)
 
-        // draw_backpack_scene(scene, light_shader, cube_shader, single_color_shader)
-        draw_block_scene(scene, light_shader, cube_shader, single_color_shader)
+        // draw_backpack_scene(scene, light_shader, mesh_shader, single_color_shader)
+        draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
 
         glfw.SwapBuffers(window)
         gl.BindVertexArray(0)
@@ -187,7 +199,7 @@ framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, hei
     camera.aspect_ratio = f32(width) / f32(height)
 }
 
-draw_backpack_scene :: proc(scene: render.Scene, light_shader, cube_shader, single_color_shader: u32) {
+draw_backpack_scene :: proc(scene: render.Scene, light_shader, mesh_shader, single_color_shader: u32) {
     gl.Enable(gl.STENCIL_TEST)
     gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
 
@@ -217,22 +229,22 @@ draw_backpack_scene :: proc(scene: render.Scene, light_shader, cube_shader, sing
         primitives.cube_draw()
     }
 
-    gl.UseProgram(cube_shader)
-    gl.Uniform3fv(gl.GetUniformLocation(cube_shader, "view_position"), 1, raw_data(&camera.position))
+    gl.UseProgram(mesh_shader)
+    gl.Uniform3fv(gl.GetUniformLocation(mesh_shader, "view_position"), 1, raw_data(&camera.position))
 
     spot_light.position = camera.position
     spot_light.direction = camera.direction
-    render.spot_light_set_uniform(&spot_light, cube_shader)
+    render.spot_light_set_uniform(&spot_light, mesh_shader)
 
     model := linalg.identity(types.TransformMatrix)
     mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
     transform := pv * model
-    gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "transform"), 1, false, raw_data(&transform))
-    gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "model"), 1, false, raw_data(&model))
-    gl.UniformMatrix3fv(gl.GetUniformLocation(cube_shader, "mit"), 1, false, raw_data(&mit))
+    gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
+    gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
+    gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
 
     for _, &mesh in scene.meshes {
-        render.mesh_draw(&mesh, cube_shader)
+        render.mesh_draw(&mesh, mesh_shader)
     }
 
     // Draw the outline
@@ -260,9 +272,15 @@ draw_backpack_scene :: proc(scene: render.Scene, light_shader, cube_shader, sing
 }
 
 
-draw_block_scene :: proc(scene: render.Scene, light_shader, cube_shader, single_color_shader: u32) {
+draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, single_color_shader: u32) {
     gl.ClearColor(0.1, 0.2, 0.3, 1)
     gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+    gl.Enable(gl.DEPTH_TEST)
+
+    gl.ActiveTexture(gl.TEXTURE0)
+
+    gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
+    gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
 
     projection := render.camera_get_projection(&camera)
     view := render.camera_get_view(&camera)
@@ -272,10 +290,10 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, cube_shader, single_
     mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
     transform := pv * model
 
-    gl.UseProgram(cube_shader)
-    gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "transform"), 1, false, raw_data(&transform))
-    gl.UniformMatrix4fv(gl.GetUniformLocation(cube_shader, "model"), 1, false, raw_data(&model))
-    gl.UniformMatrix3fv(gl.GetUniformLocation(cube_shader, "mit"), 1, false, raw_data(&mit))
+    gl.UseProgram(texture_shader)
+    gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+    gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
+    gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
 
     primitives.cube_draw()
 }

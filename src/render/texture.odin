@@ -21,8 +21,8 @@ Image :: struct {
     buffer:                  [^]u8,
 }
 
-load_texture_2d :: proc(path: cstring, channels: i32, flip_vertically: bool = true) -> (img: Image, ok: bool) {
-    // if flip_vertically do stbi.set_flip_vertically_on_load(1)
+load_texture_2d :: proc(path: cstring, channels: i32, flip_vertically: bool = false) -> (img: Image, ok: bool) {
+    if flip_vertically do stbi.set_flip_vertically_on_load(1)
     img.buffer = stbi.load(path, &img.width, &img.height, &img.channels, channels)
 
     ok = img.buffer != nil && img.channels == channels
@@ -33,8 +33,15 @@ load_texture_2d :: proc(path: cstring, channels: i32, flip_vertically: bool = tr
     return
 }
 
-prepare_texture :: proc(path: cstring, channels: i32, texture_type: TextureType) -> (t: Texture) {
-    img, img_ok := load_texture_2d(path, channels)
+prepare_texture :: proc(
+    path: cstring,
+    channels: i32,
+    texture_type: TextureType,
+    flip_vertically: bool = false,
+) -> (
+    t: Texture,
+) {
+    img, img_ok := load_texture_2d(path, channels, flip_vertically)
     if !img_ok {
         panic(fmt.aprintf("Failed to load texture: {}", path))
     }
