@@ -4,6 +4,7 @@ import "base:runtime"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
+import "core:slice"
 import "parse/obj"
 import "primitives"
 import "render"
@@ -124,7 +125,7 @@ main :: proc() {
 
     texture_shader :=
         gl.load_shaders_source(
-            #load("../shaders/vert/pos_tex_normal_transform.vert"),
+            #load("../shaders/vert/pos_tex_transform.vert"),
             #load("../shaders/frag/single_tex.frag"),
         ) or_else panic("Failed to load the shader")
     defer gl.DeleteProgram(texture_shader)
@@ -171,13 +172,18 @@ main :: proc() {
         render.point_light_array_set_uniform(&point_light, mesh_shader, u32(i))
     }
 
-    gl.UseProgram(texture_shader)
-    render.directional_light_set_uniform(&directional_light, texture_shader)
-    gl.Uniform1i(gl.GetUniformLocation(texture_shader, "num_point_lights"), 0)
     metal_texture = render.prepare_texture("textures/metal.png", 3, .Diffuse, true)
     marble_texture = render.prepare_texture("textures/marble.jpg", 3, .Diffuse, true)
     grass_texture = render.prepare_texture("textures/grass.png", 4, .Diffuse, true)
     window_texture = render.prepare_texture("textures/blending_transparent_window.png", 4, .Diffuse, true)
+
+    gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+    gl.BindTexture(gl.TEXTURE_2D, window_texture.id)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
     prev_time := f32(glfw.GetTime())
 
@@ -297,12 +303,9 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
         model := linalg.matrix4_translate(types.Vec3{0, -1, 0})
         model = model * linalg.matrix4_rotate(linalg.to_radians(f32(-90)), types.Vec3{1, 0, 0})
         model = linalg.matrix4_scale_f32(types.Vec3{10, 1, 10}) * model
-        mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
         transform := pv * model
 
         gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
-        gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
 
         primitives.quad_draw()
     }
@@ -311,16 +314,24 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
     for position in cube_positions {
         gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
         model := linalg.matrix4_translate(position)
-        mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
         transform := pv * model
 
         gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
-        gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
 
         primitives.cube_draw()
     }
 
+    gl.Enable(gl.BLEND)
+    defer gl.Disable(gl.BLEND)
+
+    gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+    // gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+    // gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+    // defer gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+    // defer gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+
+    gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
     grass_positions := [?]types.Vec3 {
         {0, -0.5, 0.55},
         {-1.5, -0.5, -0.48},
@@ -329,56 +340,36 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
         {0.5, -0.5, -0.6},
     }
     for position in grass_positions {
-        // Draw grass
-        gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
-
-        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-
         model := linalg.matrix4_translate(position)
-        mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
         transform := pv * model
-
         gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
-        gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
 
         primitives.quad_draw()
-
-        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
     }
 
+    gl.BindTexture(gl.TEXTURE_2D, window_texture.id)
     window_positions := [?]types.Vec3 {
         {1, -0.5, 0.55},
         {-1.75, -0.5, -0.58},
         {1.25, -0.5, 0.71},
         {-0.3, -0.5, -2.6},
-        {0.5, -0.5, -0.5},
+        {0.5, -0.5, -0.7},
     }
+    slice.sort_by(window_positions[:], distance_order)
     for position in window_positions {
-        //Draw grass
-        gl.BindTexture(gl.TEXTURE_2D, window_texture.id)
-
-        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-
-        gl.Enable(gl.BLEND)
-        gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
         model := linalg.matrix4_translate(position)
-        mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
         transform := pv * model
-
         gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
-        gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
 
         primitives.quad_draw()
-
-        gl.Disable(gl.BLEND)
-        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
     }
+}
 
+distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
+    diff := camera.position - v
+    return linalg.dot(diff, diff)
+}
+
+distance_order :: proc(lhs, rhs: types.Vec3) -> bool {
+    return distance_squared_from_camera(lhs) > distance_squared_from_camera(rhs)
 }
