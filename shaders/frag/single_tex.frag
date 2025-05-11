@@ -37,8 +37,10 @@ uniform PointLight point_lights[MAX_POINT_LIGHTS];
 uniform DirectionalLight directional_light;
 uniform int num_point_lights;
 
+vec4 tex_color;
+
 vec3 calculate_point_light(PointLight light) {
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse_0, tex_coords));
+    vec3 ambient = light.ambient * vec3(tex_color);
 
     vec3 norm = normalize(normal);
     vec3 light_diff = light.position - frag_position;
@@ -46,7 +48,7 @@ vec3 calculate_point_light(PointLight light) {
     float distance = length(light_diff);
 
     float diff = max(dot(norm, light_dir), 0.0);
-    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse_0, tex_coords));
+    vec3 diffuse = light.diffuse * diff * vec3(tex_color);
 
     // vec3 view_dir = normalize(view_position - frag_position);
     // vec3 reflect_dir = reflect(-light_dir, norm);
@@ -61,12 +63,12 @@ vec3 calculate_point_light(PointLight light) {
 }
 
 vec3 calculate_directional_light(DirectionalLight light) {
-    vec3 ambient = light.ambient * vec3(texture(material.diffuse_0, tex_coords));
+    vec3 ambient = light.ambient * vec3(tex_color);
 
     vec3 norm = normalize(normal);
     vec3 light_dir = normalize(-light.direction);
     float diff = max(dot(norm, light_dir), 0.0);
-    vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse_0, tex_coords));
+    vec3 diffuse = light.diffuse * diff * vec3(tex_color);
 
     // vec3 view_dir = normalize(view_position - frag_position);
     // vec3 reflect_dir = reflect(-light_dir, norm);
@@ -77,6 +79,12 @@ vec3 calculate_directional_light(DirectionalLight light) {
 }
 
 void main() {
+    tex_color = texture(material.diffuse_0, tex_coords);
+
+    if (tex_color.a < 0.1) {
+        discard;
+    }
+
     vec3 result = vec3(0.0);
 
     for (int i = 0; i < num_point_lights; i += 1) {

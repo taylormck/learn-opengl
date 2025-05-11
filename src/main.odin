@@ -83,7 +83,7 @@ camera := render.Camera {
     speed        = 5,
 }
 
-marble_texture, metal_texture: render.Texture
+marble_texture, metal_texture, grass_texture: render.Texture
 
 main :: proc() {
     context.logger = log.create_console_logger()
@@ -160,6 +160,9 @@ main :: proc() {
     primitives.cube_send_to_gpu()
     defer primitives.cube_clear_from_gpu()
 
+    primitives.quad_send_to_gpu()
+    defer primitives.quad_clear_from_gpu()
+
     gl.UseProgram(mesh_shader)
 
     render.directional_light_set_uniform(&directional_light, mesh_shader)
@@ -173,6 +176,7 @@ main :: proc() {
     gl.Uniform1i(gl.GetUniformLocation(texture_shader, "num_point_lights"), 0)
     metal_texture = render.prepare_texture("textures/metal.png", 3, .Diffuse, true)
     marble_texture = render.prepare_texture("textures/marble.jpg", 3, .Diffuse, true)
+    grass_texture = render.prepare_texture("textures/grass.png", 4, .Diffuse, true)
 
     prev_time := f32(glfw.GetTime())
 
@@ -280,20 +284,68 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
     gl.ActiveTexture(gl.TEXTURE0)
 
     gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-    gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
+    gl.UseProgram(texture_shader)
 
     projection := render.camera_get_projection(&camera)
     view := render.camera_get_view(&camera)
     pv := projection * view
 
-    model := linalg.identity(types.TransformMatrix)
-    mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-    transform := pv * model
+    {
+        // Draw floor
+        gl.BindTexture(gl.TEXTURE_2D, marble_texture.id)
+        model := linalg.matrix4_translate(types.Vec3{0, -1, 0})
+        model = model * linalg.matrix4_rotate(linalg.to_radians(f32(-90)), types.Vec3{1, 0, 0})
+        model = linalg.matrix4_scale_f32(types.Vec3{10, 1, 10}) * model
+        mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+        transform := pv * model
 
-    gl.UseProgram(texture_shader)
-    gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-    gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
-    gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
+        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
+        gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
 
-    primitives.cube_draw()
+        primitives.quad_draw()
+    }
+
+    cube_positions := [?]types.Vec3{{0, -0.5, 0}, {2, -0.5, -2}}
+    for position in cube_positions {
+        gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
+        model := linalg.matrix4_translate(position)
+        mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+        transform := pv * model
+
+        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
+        gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
+
+        primitives.cube_draw()
+    }
+
+    grass_positions := [?]types.Vec3 {
+        {0, -0.5, 0.55},
+        {-1.5, -0.5, -0.48},
+        {1.5, -0.5, 0.51},
+        {-0.3, -0.5, -2.3},
+        {0.5, -0.5, -0.6},
+    }
+    for position in grass_positions {
+        // Draw grass
+        gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
+
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+        model := linalg.matrix4_translate(position)
+        mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+        transform := pv * model
+
+        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
+        gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
+
+        primitives.quad_draw()
+
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    }
+
 }

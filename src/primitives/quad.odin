@@ -47,8 +47,10 @@ quad_send_to_gpu :: proc() {
 
     positions_offset := 0
     positions_size := size_of(types.Vec3) * len(QUAD_VERTEX_POSITIONS)
+    // colors_offset := positions_size
+    // colors_size := size_of(types.Vec3) * len(QUAD_VERTEX_NORMALS)
     colors_offset := positions_size
-    colors_size := size_of(types.Vec3) * len(QUAD_VERTEX_NORMALS)
+    colors_size := 0
     uvs_offset := colors_offset + colors_size
     uvs_size := size_of(types.Vec2) * len(QUAD_TEXTURE_COORDS)
     normals_offset := uvs_offset + uvs_size
@@ -63,17 +65,17 @@ quad_send_to_gpu :: proc() {
     gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), 0)
     gl.EnableVertexAttribArray(0)
 
-    gl.BufferSubData(gl.ARRAY_BUFFER, colors_offset, colors_size, raw_data(QUAD_VERTEX_COLORS[:]))
-    gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), uintptr(colors_offset))
-    gl.EnableVertexAttribArray(1)
+    // gl.BufferSubData(gl.ARRAY_BUFFER, colors_offset, colors_size, raw_data(QUAD_VERTEX_COLORS[:]))
+    // gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), uintptr(colors_offset))
+    // gl.EnableVertexAttribArray(1)
 
     gl.BufferSubData(gl.ARRAY_BUFFER, uvs_offset, uvs_size, raw_data(QUAD_TEXTURE_COORDS[:]))
-    gl.VertexAttribPointer(2, 2, gl.FLOAT, gl.FALSE, size_of(types.Vec2), uintptr(uvs_offset))
-    gl.EnableVertexAttribArray(2)
+    gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, size_of(types.Vec2), uintptr(uvs_offset))
+    gl.EnableVertexAttribArray(1)
 
     gl.BufferSubData(gl.ARRAY_BUFFER, colors_offset, colors_size, raw_data(QUAD_VERTEX_NORMALS[:]))
-    gl.VertexAttribPointer(1, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), uintptr(colors_offset))
-    gl.EnableVertexAttribArray(1)
+    gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), uintptr(colors_offset))
+    gl.EnableVertexAttribArray(2)
 
     gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, quad_ebo)
     gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(indices), &indices, gl.STATIC_DRAW)
