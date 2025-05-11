@@ -83,7 +83,7 @@ camera := render.Camera {
     speed        = 5,
 }
 
-marble_texture, metal_texture, grass_texture: render.Texture
+marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 
 main :: proc() {
     context.logger = log.create_console_logger()
@@ -177,6 +177,7 @@ main :: proc() {
     metal_texture = render.prepare_texture("textures/metal.png", 3, .Diffuse, true)
     marble_texture = render.prepare_texture("textures/marble.jpg", 3, .Diffuse, true)
     grass_texture = render.prepare_texture("textures/grass.png", 4, .Diffuse, true)
+    window_texture = render.prepare_texture("textures/blending_transparent_window.png", 4, .Diffuse, true)
 
     prev_time := f32(glfw.GetTime())
 
@@ -344,6 +345,38 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
 
         primitives.quad_draw()
 
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+    }
+
+    window_positions := [?]types.Vec3 {
+        {1, -0.5, 0.55},
+        {-1.75, -0.5, -0.58},
+        {1.25, -0.5, 0.71},
+        {-0.3, -0.5, -2.6},
+        {0.5, -0.5, -0.5},
+    }
+    for position in window_positions {
+        //Draw grass
+        gl.BindTexture(gl.TEXTURE_2D, window_texture.id)
+
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+        gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+        gl.Enable(gl.BLEND)
+        gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+        model := linalg.matrix4_translate(position)
+        mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+        transform := pv * model
+
+        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+        gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
+        gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
+
+        primitives.quad_draw()
+
+        gl.Disable(gl.BLEND)
         gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
         gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
     }

@@ -93,5 +93,5 @@ void main() {
 
     result += calculate_directional_light(directional_light);
 
-    FragColor = vec4(result, 1.0);
+    FragColor = vec4(result, tex_color.a);
 }
