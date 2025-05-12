@@ -13,8 +13,8 @@ uniform mat4 model;
 uniform mat3 mit;
 
 void main() {
-    gl_Position = transform * vec4(aPos, 1.0);
-    frag_position = vec3(model * vec4(aPos, 1.0));
-    tex_coords = aTexCoord;
-    normal = mit * aNormal;
+	gl_Position = transform * vec4(aPos, 1.0);
+	frag_position = vec3(model * vec4(aPos, 1.0));
+	tex_coords = aTexCoord;
+	normal = mit * aNormal;
 }
