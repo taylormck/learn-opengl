@@ -164,6 +164,9 @@ main :: proc() {
     primitives.quad_send_to_gpu()
     defer primitives.quad_clear_from_gpu()
 
+    primitives.cross_imposter_send_to_gpu()
+    defer primitives.cross_imposter_clear_from_gpu()
+
     gl.UseProgram(mesh_shader)
 
     render.directional_light_set_uniform(&directional_light, mesh_shader)
@@ -310,7 +313,7 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
         primitives.quad_draw()
     }
 
-    cube_positions := [?]types.Vec3{{0, -0.5, 0}, {2, -0.5, -2}}
+    cube_positions := [?]types.Vec3{{-2, -0.5, -2.5}, {2, -0.5, -2}}
     for position in cube_positions {
         gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
         model := linalg.matrix4_translate(position)
@@ -333,25 +336,25 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
 
     gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
     grass_positions := [?]types.Vec3 {
-        {0, -0.5, 0.55},
-        {-1.5, -0.5, -0.48},
-        {1.5, -0.5, 0.51},
-        {-0.3, -0.5, -2.3},
-        {0.5, -0.5, -0.6},
+        {0, -0.5, 1.05},
+        {-1.5, -0.5, 0.2},
+        {3.5, -0.5, 0.51},
+        {-0.3, -0.5, -4.3},
+        {0.5, -0.5, -1.5},
     }
     for position in grass_positions {
         model := linalg.matrix4_translate(position)
         transform := pv * model
         gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
 
-        primitives.quad_draw()
+        primitives.cross_imposter_draw()
     }
 
     gl.BindTexture(gl.TEXTURE_2D, window_texture.id)
     window_positions := [?]types.Vec3 {
         {1, -0.5, 0.55},
         {-1.75, -0.5, -0.58},
-        {1.25, -0.5, 0.71},
+        {1.5, -0.5, 1},
         {-0.3, -0.5, -2.6},
         {0.5, -0.5, -0.7},
     }

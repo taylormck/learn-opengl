@@ -71,5 +71,5 @@ cross_imposter_draw :: proc() {
     gl.BindVertexArray(cross_imposter_vao)
     defer gl.BindVertexArray(0)
 
-    gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+    gl.DrawElements(gl.TRIANGLES, 12, gl.UNSIGNED_INT, nil)
 }
