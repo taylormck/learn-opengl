@@ -346,7 +346,7 @@ parse_material :: proc(
 	ok: bool,
 ) {
 	mtl_data, loaded_ok := load_material_data(material_file_name)
-	// mtl_data, loaded_ok := os.read_entire_file(material_file_name)
+
 	if !loaded_ok {
 		log.error("Failed to load material data: {}", material_file_name)
 		return false
