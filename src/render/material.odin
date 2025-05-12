@@ -4,39 +4,39 @@ import "../types"
 import gl "vendor:OpenGL"
 
 MaterialCalculated :: struct {
-    ambient, diffuse, specular: types.Vec3,
-    shininess:                  f32,
+	ambient, diffuse, specular: types.Vec3,
+	shininess:                  f32,
 }
 
 MaterialSampled :: struct {
-    diffuse, specular: u32,
-    shininess:         f32,
+	diffuse, specular: u32,
+	shininess:         f32,
 }
 
 Material :: struct {
-    ambient, diffuse, specular, emissive:        types.Vec4,
-    shininess:                                   f32,
-    name, diffuse_map, normal_map, specular_map: string,
+	ambient, diffuse, specular, emissive:        types.Vec4,
+	shininess:                                   f32,
+	name, diffuse_map, normal_map, specular_map: string,
 }
 
 MaterialMap :: map[string]Material
 
 material_calculated_set_uniform :: proc(material: ^MaterialCalculated, shader_id: u32) {
-    gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.ambient"), 1, raw_data(&material.ambient))
-    gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.diffuse"), 1, raw_data(&material.diffuse))
-    gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.specular"), 1, raw_data(&material.specular))
-    gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), material.shininess)
+	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.ambient"), 1, raw_data(&material.ambient))
+	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.diffuse"), 1, raw_data(&material.diffuse))
+	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.specular"), 1, raw_data(&material.specular))
+	gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), material.shininess)
 }
 
 material_sampled_set_uniform :: proc(material: ^MaterialSampled, shader_id: u32) {
-    gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.diffuse"), 0)
-    gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.specular"), 1)
-    gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), material.shininess)
+	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.diffuse"), 0)
+	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.specular"), 1)
+	gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), material.shininess)
 }
 
 material_free :: proc(material: ^Material) {
-    delete(material.name)
-    delete(material.diffuse_map)
-    delete(material.specular_map)
-    delete(material.normal_map)
+	delete(material.name)
+	delete(material.diffuse_map)
+	delete(material.specular_map)
+	delete(material.normal_map)
 }
