@@ -190,6 +190,8 @@ main :: proc() {
 
 	prev_time := f32(glfw.GetTime())
 
+	gl.Enable(gl.CULL_FACE)
+
 	for !glfw.WindowShouldClose(window) {
 		new_time := f32(glfw.GetTime())
 		delta := new_time - prev_time
@@ -313,7 +315,8 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
 		primitives.quad_draw()
 	}
 
-	cube_positions := [?]types.Vec3{{-2, -0.5, -2.5}, {2, -0.5, -2}}
+	gl.CullFace(gl.FRONT)
+	cube_positions := [?]types.Vec3{{-2, -0.45, -2.5}, {2, -0.45, -2}}
 	for position in cube_positions {
 		gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
 		model := linalg.matrix4_translate(position)
@@ -323,6 +326,8 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
 
 		primitives.cube_draw()
 	}
+
+	gl.CullFace(gl.BACK)
 
 	gl.Enable(gl.BLEND)
 	defer gl.Disable(gl.BLEND)
