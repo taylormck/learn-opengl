@@ -188,9 +188,9 @@ main :: proc() {
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
-	prev_time := f32(glfw.GetTime())
+	gl.BindTexture(gl.TEXTURE_2D, 0)
 
-	gl.Enable(gl.CULL_FACE)
+	prev_time := f32(glfw.GetTime())
 
 	for !glfw.WindowShouldClose(window) {
 		new_time := f32(glfw.GetTime())
@@ -315,29 +315,29 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
 		primitives.quad_draw()
 	}
 
-	gl.CullFace(gl.FRONT)
-	cube_positions := [?]types.Vec3{{-2, -0.45, -2.5}, {2, -0.45, -2}}
-	for position in cube_positions {
-		gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
-		model := linalg.matrix4_translate(position)
-		transform := pv * model
+	{
+		gl.Enable(gl.CULL_FACE)
+		defer gl.Disable(gl.CULL_FACE)
 
-		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+		gl.CullFace(gl.FRONT)
+		defer gl.CullFace(gl.BACK)
 
-		primitives.cube_draw()
+		cube_positions := [?]types.Vec3{{-2, -0.45, -2.5}, {2, -0.45, -2}}
+		for position in cube_positions {
+			gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
+			model := linalg.matrix4_translate(position)
+			transform := pv * model
+
+			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+
+			primitives.cube_draw()
+		}
 	}
-
-	gl.CullFace(gl.BACK)
 
 	gl.Enable(gl.BLEND)
 	defer gl.Disable(gl.BLEND)
 
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	// defer gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-	// defer gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
 
 	gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
 	grass_positions := [?]types.Vec3 {
