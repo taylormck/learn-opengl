@@ -86,6 +86,8 @@ camera := render.Camera {
 
 marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 
+fbo, fb_texture, rbo: u32
+
 main :: proc() {
 	context.logger = log.create_console_logger()
 	defer log.destroy_console_logger(context.logger)
@@ -151,6 +153,12 @@ main :: proc() {
 		) or_else panic("Failed to load the light shader")
 	defer gl.DeleteProgram(light_shader)
 
+	full_screen_shader :=
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_tex.vert"),
+			#load("../shaders/frag/flat_tex.frag"),
+		) or_else panic("Failed to load the full screen shader")
+
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 	defer render.scene_destroy(&scene)
@@ -166,6 +174,9 @@ main :: proc() {
 
 	primitives.cross_imposter_send_to_gpu()
 	defer primitives.cross_imposter_clear_from_gpu()
+
+	primitives.full_screen_send_to_gpu()
+	defer primitives.full_screen_clear_from_gpu()
 
 	gl.UseProgram(mesh_shader)
 
@@ -188,7 +199,28 @@ main :: proc() {
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
+	gl.GenFramebuffers(1, &fbo)
+	defer gl.DeleteFramebuffers(1, &fbo)
+	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
+
+	gl.GenTextures(1, &fb_texture)
+	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, WIDTH, HEIGHT, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
+
+	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fb_texture, 0)
+
+	gl.GenRenderbuffers(1, &rbo)
+	gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
+	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, WIDTH, HEIGHT)
+	gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+
+	gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
+
+	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 	prev_time := f32(glfw.GetTime())
 
@@ -200,7 +232,8 @@ main :: proc() {
 		process_input(window, delta)
 
 		// draw_backpack_scene(scene, light_shader, mesh_shader, single_color_shader)
-		draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
+		// draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
+		draw_full_screen_scene(scene, full_screen_shader, light_shader, texture_shader, single_color_shader)
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -371,6 +404,24 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
 
 		primitives.quad_draw()
 	}
+}
+
+draw_full_screen_scene :: proc(
+	scene: render.Scene,
+	full_screen_shader, light_shader, texture_shader, single_color_shader: u32,
+) {
+	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
+	// NOTE: draw_block_scene clears the buffers for us
+	draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
+
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	gl.ClearColor(1, 1, 1, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.Disable(gl.DEPTH_TEST)
+	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+
+	gl.UseProgram(full_screen_shader)
+	primitives.full_screen_draw()
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
