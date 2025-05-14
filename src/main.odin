@@ -235,7 +235,8 @@ main :: proc() {
 
 		// draw_backpack_scene(scene, light_shader, mesh_shader, single_color_shader)
 		// draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
-		draw_full_screen_scene(scene, full_screen_shader, light_shader, texture_shader, single_color_shader)
+		// draw_full_screen_scene(scene, full_screen_shader, light_shader, texture_shader, single_color_shader)
+		draw_box_scene_rearview_mirror(scene, light_shader, texture_shader, single_color_shader)
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -424,6 +425,41 @@ draw_full_screen_scene :: proc(
 
 	gl.UseProgram(full_screen_shader)
 	primitives.full_screen_draw()
+}
+
+draw_box_scene_rearview_mirror :: proc(scene: render.Scene, light_shader, texture_shader, single_color_shader: u32) {
+	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
+	// NOTE: draw_block_scene clears the buffers for us
+
+	camera.direction = -camera.direction
+	draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+
+	camera.direction = -camera.direction
+	draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
+
+	gl.UseProgram(texture_shader)
+	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+
+	gl.Enable(gl.STENCIL_TEST)
+	gl.Disable(gl.DEPTH_TEST)
+	gl.Clear(gl.STENCIL_BUFFER_BIT)
+	gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
+	gl.StencilFunc(gl.ALWAYS, 1, 0xff)
+	gl.StencilMask(0xff)
+
+	transform := linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.75, 0.75, 0})
+	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
+	primitives.quad_draw()
+
+	gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
+	gl.StencilMask(0x00)
+
+	gl.UseProgram(single_color_shader)
+	transform = linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.8, 0.8, 0})
+	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
+	primitives.quad_draw()
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
