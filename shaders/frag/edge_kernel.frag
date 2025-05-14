@@ -7,10 +7,6 @@ uniform sampler2D screen_texture;
 
 const float offset = 1.0 / 300.0;
 
-const float one_over_sixteen = 1.0 / 16.0;
-const float two_over_sixteen = 2.0 / 16.0;
-const float four_over_sixteen = 4.0 / 16.0;
-
 void main() {
 	vec2 offsets[9] = vec2[](
 		vec2(-offset, offset),	// top left
@@ -26,9 +22,9 @@ void main() {
 
 	// clang-format off
     float kernel[9] = float[](
-		one_over_sixteen,  two_over_sixteen, one_over_sixteen,
-		two_over_sixteen, four_over_sixteen, two_over_sixteen,
-		one_over_sixteen,  two_over_sixteen, one_over_sixteen
+		1,  1, 1,
+		1, -8, 1,
+		1,  1, 1
     );
 	// clang-format on
 
