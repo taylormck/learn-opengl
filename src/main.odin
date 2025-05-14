@@ -156,7 +156,7 @@ main :: proc() {
 	full_screen_shader :=
 		gl.load_shaders_source(
 			#load("../shaders/vert/pos_tex.vert"),
-			#load("../shaders/frag/sharpen_kernal.frag"),
+			#load("../shaders/frag/blur_kernel.frag"),
 		) or_else panic("Failed to load the full screen shader")
 
 	scene :=

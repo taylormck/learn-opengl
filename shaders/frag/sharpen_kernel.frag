@@ -21,7 +21,7 @@ void main() {
 	);
 
 	// clang-format off
-    float kernal[9] = float[](
+    float kernel[9] = float[](
         -1, -1, -1,
         -1,  9, -1,
         -1, -1, -1
@@ -35,7 +35,7 @@ void main() {
 
 	vec3 col = vec3(0.0);
 	for (int i = 0; i < 9; i += 1) {
-		col += sample_tex[i] * kernal[i];
+		col += sample_tex[i] * kernel[i];
 	}
 
 	FragColor = vec4(col, 1.0);
