@@ -94,7 +94,7 @@ cubemap_load :: proc(path: string) -> (cubemap: Cubemap) {
 
 	gl.BindVertexArray(cubemap.vao)
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, cube_vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, cubemap.vbo)
 	gl.BufferData(gl.ARRAY_BUFFER, size_of(types.Vec3) * len(CUBEMAP_VERTICES), &CUBEMAP_VERTICES, gl.STATIC_DRAW)
 
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), 0)

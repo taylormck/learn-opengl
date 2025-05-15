@@ -248,7 +248,7 @@ main :: proc() {
 		// draw_block_scene(light_shader, texture_shader, single_color_shader)
 		// draw_full_screen_scene(full_screen_shader, light_shader, texture_shader, single_color_shader)
 		// draw_box_scene_rearview_mirror(light_shader, texture_shader, single_color_shader)
-		draw_skybox_scene(skybox_shader)
+		draw_skybox_scene(skybox_shader, light_shader, texture_shader, single_color_shader)
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -468,10 +468,15 @@ draw_box_scene_rearview_mirror :: proc(light_shader, texture_shader, single_colo
 	transform = linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.8, 0.8, 0})
 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
 	primitives.quad_draw()
+
+	gl.Disable(gl.STENCIL_TEST)
+	gl.Enable(gl.DEPTH_TEST)
 }
 
-draw_skybox_scene :: proc(skybox_shader: u32) {
-	gl.DepthMask(gl.FALSE)
+draw_skybox_scene :: proc(skybox_shader, light_shader, texture_shader, single_color_shader: u32) {
+	draw_block_scene(light_shader, texture_shader, single_color_shader)
+
+	gl.DepthFunc(gl.LEQUAL)
 	gl.UseProgram(skybox_shader)
 
 	projection := render.camera_get_projection(&camera)
@@ -482,7 +487,7 @@ draw_skybox_scene :: proc(skybox_shader: u32) {
 	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_shader, "projection_view"), 1, false, raw_data(&pv))
 	primitives.cubemap_draw(&cubemap)
 
-	gl.DepthMask(gl.FALSE)
+	gl.DepthFunc(gl.LESS)
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
