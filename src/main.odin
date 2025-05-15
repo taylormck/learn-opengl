@@ -87,6 +87,7 @@ camera := render.Camera {
 marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 
 fbo, fb_texture, rbo: u32
+cubemap: primitives.Cubemap
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -159,6 +160,12 @@ main :: proc() {
 			#load("../shaders/frag/edge_kernel.frag"),
 		) or_else panic("Failed to load the full screen shader")
 
+	skybox_shader :=
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_tex_pv.vert"),
+			#load("../shaders/frag/skybox.frag"),
+		) or_else panic("Failed to load the skybox shader")
+
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 	defer render.scene_destroy(&scene)
@@ -177,6 +184,9 @@ main :: proc() {
 
 	primitives.full_screen_send_to_gpu()
 	defer primitives.full_screen_clear_from_gpu()
+
+	cubemap = primitives.cubemap_load("textures/skybox")
+	defer primitives.cubemap_free(&cubemap)
 
 	gl.UseProgram(mesh_shader)
 
@@ -224,6 +234,7 @@ main :: proc() {
 	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
+
 	prev_time := f32(glfw.GetTime())
 
 	for !glfw.WindowShouldClose(window) {
@@ -234,9 +245,10 @@ main :: proc() {
 		process_input(window, delta)
 
 		// draw_backpack_scene(scene, light_shader, mesh_shader, single_color_shader)
-		// draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
-		// draw_full_screen_scene(scene, full_screen_shader, light_shader, texture_shader, single_color_shader)
-		draw_box_scene_rearview_mirror(scene, light_shader, texture_shader, single_color_shader)
+		// draw_block_scene(light_shader, texture_shader, single_color_shader)
+		// draw_full_screen_scene(full_screen_shader, light_shader, texture_shader, single_color_shader)
+		// draw_box_scene_rearview_mirror(light_shader, texture_shader, single_color_shader)
+		draw_skybox_scene(skybox_shader)
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -324,7 +336,7 @@ draw_backpack_scene :: proc(scene: render.Scene, light_shader, mesh_shader, sing
 }
 
 
-draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, single_color_shader: u32) {
+draw_block_scene :: proc(light_shader, texture_shader, single_color_shader: u32) {
 	gl.ClearColor(0.1, 0.2, 0.3, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.Enable(gl.DEPTH_TEST)
@@ -409,13 +421,10 @@ draw_block_scene :: proc(scene: render.Scene, light_shader, texture_shader, sing
 	}
 }
 
-draw_full_screen_scene :: proc(
-	scene: render.Scene,
-	full_screen_shader, light_shader, texture_shader, single_color_shader: u32,
-) {
+draw_full_screen_scene :: proc(full_screen_shader, light_shader, texture_shader, single_color_shader: u32) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 	// NOTE: draw_block_scene clears the buffers for us
-	draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
+	draw_block_scene(light_shader, texture_shader, single_color_shader)
 
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	gl.ClearColor(1, 1, 1, 1)
@@ -427,17 +436,16 @@ draw_full_screen_scene :: proc(
 	primitives.full_screen_draw()
 }
 
-draw_box_scene_rearview_mirror :: proc(scene: render.Scene, light_shader, texture_shader, single_color_shader: u32) {
+draw_box_scene_rearview_mirror :: proc(light_shader, texture_shader, single_color_shader: u32) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 	// NOTE: draw_block_scene clears the buffers for us
 
 	camera.direction = -camera.direction
-	draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
+	draw_block_scene(light_shader, texture_shader, single_color_shader)
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
-
 	camera.direction = -camera.direction
-	draw_block_scene(scene, light_shader, texture_shader, single_color_shader)
+	draw_block_scene(light_shader, texture_shader, single_color_shader)
 
 	gl.UseProgram(texture_shader)
 	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
@@ -460,6 +468,21 @@ draw_box_scene_rearview_mirror :: proc(scene: render.Scene, light_shader, textur
 	transform = linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.8, 0.8, 0})
 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
 	primitives.quad_draw()
+}
+
+draw_skybox_scene :: proc(skybox_shader: u32) {
+	gl.DepthMask(gl.FALSE)
+	gl.UseProgram(skybox_shader)
+
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	view_without_translate := types.TransformMatrix(types.SubTransformMatrix(view))
+	pv := projection * view_without_translate
+
+	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_shader, "projection_view"), 1, false, raw_data(&pv))
+	primitives.cubemap_draw(&cubemap)
+
+	gl.DepthMask(gl.FALSE)
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {

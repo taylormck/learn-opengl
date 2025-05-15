@@ -1,4 +1,4 @@
-package mesh
+package primitives
 
 import "../render"
 import "../types"
