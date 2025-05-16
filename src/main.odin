@@ -89,7 +89,7 @@ marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 fbo, fb_texture, rbo: u32
 cubemap: primitives.Cubemap
 
-skybox_reflect_shader: u32
+skybox_reflect_shader, skybox_refract_shader: u32
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -173,6 +173,12 @@ main :: proc() {
 			#load("../shaders/vert/pos_normal_transform.vert"),
 			#load("../shaders/frag/skybox_reflection.frag"),
 		) or_else panic("Failed to load the skybox reflection shader")
+
+	skybox_refract_shader =
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_normal_transform.vert"),
+			#load("../shaders/frag/skybox_refraction.frag"),
+		) or_else panic("Failed to load the skybox refraction shader")
 
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
@@ -490,7 +496,8 @@ draw_skybox_scene :: proc(scene: render.Scene, skybox_shader, light_shader, text
 	view_without_translate := types.TransformMatrix(types.SubTransformMatrix(view))
 	pv := projection * view_without_translate
 
-	gl.UseProgram(skybox_reflect_shader)
+	// gl.UseProgram(skybox_reflect_shader)
+	gl.UseProgram(skybox_refract_shader)
 
 	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_reflect_shader, "transform"), 1, false, raw_data(&transform))
 	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_reflect_shader, "model"), 1, false, raw_data(&model))
