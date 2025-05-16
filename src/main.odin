@@ -89,6 +89,8 @@ marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 fbo, fb_texture, rbo: u32
 cubemap: primitives.Cubemap
 
+skybox_reflect_shader: u32
+
 main :: proc() {
 	context.logger = log.create_console_logger()
 	defer log.destroy_console_logger(context.logger)
@@ -166,6 +168,12 @@ main :: proc() {
 			#load("../shaders/frag/skybox.frag"),
 		) or_else panic("Failed to load the skybox shader")
 
+	skybox_reflect_shader =
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_normal_transform.vert"),
+			#load("../shaders/frag/skybox_reflection.frag"),
+		) or_else panic("Failed to load the skybox reflection shader")
+
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 	defer render.scene_destroy(&scene)
@@ -234,7 +242,6 @@ main :: proc() {
 	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
-
 	prev_time := f32(glfw.GetTime())
 
 	for !glfw.WindowShouldClose(window) {
@@ -248,7 +255,7 @@ main :: proc() {
 		// draw_block_scene(light_shader, texture_shader, single_color_shader)
 		// draw_full_screen_scene(full_screen_shader, light_shader, texture_shader, single_color_shader)
 		// draw_box_scene_rearview_mirror(light_shader, texture_shader, single_color_shader)
-		draw_skybox_scene(skybox_shader, light_shader, texture_shader, single_color_shader)
+		draw_skybox_scene(scene, skybox_shader, light_shader, texture_shader, single_color_shader)
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -473,16 +480,34 @@ draw_box_scene_rearview_mirror :: proc(light_shader, texture_shader, single_colo
 	gl.Enable(gl.DEPTH_TEST)
 }
 
-draw_skybox_scene :: proc(skybox_shader, light_shader, texture_shader, single_color_shader: u32) {
-	draw_block_scene(light_shader, texture_shader, single_color_shader)
+draw_skybox_scene :: proc(scene: render.Scene, skybox_shader, light_shader, texture_shader, single_color_shader: u32) {
+	model := linalg.identity(types.TransformMatrix)
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	transform := projection * view * model
+	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+
+	view_without_translate := types.TransformMatrix(types.SubTransformMatrix(view))
+	pv := projection * view_without_translate
+
+	gl.UseProgram(skybox_reflect_shader)
+
+	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_reflect_shader, "transform"), 1, false, raw_data(&transform))
+	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_reflect_shader, "model"), 1, false, raw_data(&model))
+	gl.UniformMatrix3fv(gl.GetUniformLocation(skybox_reflect_shader, "mit"), 1, false, raw_data(&mit))
+	gl.Uniform3fv(gl.GetUniformLocation(skybox_reflect_shader, "camera_position"), 1, raw_data(&camera.position))
+
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Enable(gl.DEPTH_TEST)
+	gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap.texture_id)
+
+	// primitives.cube_draw()
+	for _, &mesh in scene.meshes {
+		render.mesh_draw(&mesh, single_color_shader)
+	}
 
 	gl.DepthFunc(gl.LEQUAL)
 	gl.UseProgram(skybox_shader)
-
-	projection := render.camera_get_projection(&camera)
-	view := render.camera_get_view(&camera)
-	view_without_translate := types.TransformMatrix(types.SubTransformMatrix(view))
-	pv := projection * view_without_translate
 
 	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_shader, "projection_view"), 1, false, raw_data(&pv))
 	primitives.cubemap_draw(&cubemap)
