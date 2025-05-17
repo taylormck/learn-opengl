@@ -90,7 +90,7 @@ marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 fbo, fb_texture, rbo: u32
 cubemap: primitives.Cubemap
 
-skybox_reflect_shader, skybox_refract_shader, house_shader: u32
+skybox_reflect_shader, skybox_refract_shader, house_shader, explode_shader: u32
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -197,6 +197,30 @@ main :: proc() {
 
 	house_shader = gl.create_and_link_program(house_shaders[:]) or_else panic("Failed to compile and link house shader")
 
+	for shader in house_shaders {
+		gl.DeleteShader(shader)
+	}
+
+	explode_shaders: [3]u32 = {
+		gl.compile_shader_from_source(#load("../shaders/vert/explode.vert"), gl.Shader_Type.VERTEX_SHADER) or_else panic(
+			"Failed to load the explode vertex shader",
+		),
+		gl.compile_shader_from_source(#load("../shaders/geom/explode.geom"), gl.Shader_Type.GEOMETRY_SHADER) or_else panic(
+			"Failed to load the explode geometry shader",
+		),
+		gl.compile_shader_from_source(
+			#load("../shaders/frag/single_tex.frag"),
+			gl.Shader_Type.FRAGMENT_SHADER,
+		) or_else panic("Failed to load the explode fragment shader"),
+	}
+
+	explode_shader =
+		gl.create_and_link_program(explode_shaders[:]) or_else panic("Failed to compile and link explode shader")
+
+	for shader in explode_shaders {
+		gl.DeleteShader(shader)
+	}
+
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 	defer render.scene_destroy(&scene)
@@ -282,7 +306,8 @@ main :: proc() {
 		// draw_full_screen_scene(full_screen_shader, light_shader, texture_shader, single_color_shader)
 		// draw_box_scene_rearview_mirror(light_shader, texture_shader, single_color_shader)
 		// draw_skybox_scene(scene, skybox_shader, light_shader, texture_shader, single_color_shader)
-		draw_houses()
+		// draw_houses()
+		draw_exploded_model(scene, new_time)
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -356,6 +381,7 @@ draw_backpack_scene :: proc(scene: render.Scene, light_shader, mesh_shader, sing
 	model = linalg.matrix4_scale_f32({1.1, 1.1, 1.1})
 	mit = types.SubTransformMatrix(linalg.inverse_transpose(model))
 	transform = pv * model
+
 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "model"), 1, false, raw_data(&model))
 	gl.UniformMatrix3fv(gl.GetUniformLocation(single_color_shader, "mit"), 1, false, raw_data(&mit))
@@ -549,6 +575,32 @@ draw_houses :: proc() {
 
 	gl.UseProgram(house_shader)
 	primitives.points_draw()
+}
+
+draw_exploded_model :: proc(scene: render.Scene, time: f32) {
+	gl.ClearColor(0, 0, 0, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Enable(gl.DEPTH_TEST)
+
+	gl.UseProgram(explode_shader)
+
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	pv := projection * view
+	model := linalg.identity(types.TransformMatrix)
+	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+	transform := pv * model
+
+	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "transform"), 1, false, raw_data(&transform))
+	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "model"), 1, false, raw_data(&model))
+	gl.UniformMatrix3fv(gl.GetUniformLocation(explode_shader, "mit"), 1, false, raw_data(&mit))
+	// gl.Uniform3fv(gl.GetUniformLocation(explode_shader, "camera_position"), 1, raw_data(&camera.position))
+
+	gl.Uniform1f(gl.GetUniformLocation(explode_shader, "time"), time)
+
+	for _, &mesh in scene.meshes {
+		render.mesh_draw(&mesh, explode_shader)
+	}
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
