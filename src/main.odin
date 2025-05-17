@@ -4,6 +4,7 @@ import "base:runtime"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
+import "core:os"
 import "core:slice"
 import "parse/obj"
 import "primitives"
@@ -89,7 +90,7 @@ marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 fbo, fb_texture, rbo: u32
 cubemap: primitives.Cubemap
 
-skybox_reflect_shader, skybox_refract_shader: u32
+skybox_reflect_shader, skybox_refract_shader, house_shader: u32
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -180,6 +181,19 @@ main :: proc() {
 			#load("../shaders/frag/skybox_refraction.frag"),
 		) or_else panic("Failed to load the skybox refraction shader")
 
+	house_shader =
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_and_color.vert"),
+			#load("../shaders/frag/vert_color.frag"),
+		) or_else panic("Failed to load the house shader")
+
+	house_geometry_shader_code: [1]cstring = {cstring(raw_data(#load("../shaders/geom/house.geom")))}
+	house_geometry_shader := gl.CreateShader(gl.GEOMETRY_SHADER)
+	gl.ShaderSource(house_geometry_shader, 1, raw_data(house_geometry_shader_code[:]), nil)
+	gl.CompileShader(house_geometry_shader)
+	gl.AttachShader(house_shader, house_geometry_shader)
+	gl.LinkProgram(house_shader)
+
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 	defer render.scene_destroy(&scene)
@@ -201,6 +215,9 @@ main :: proc() {
 
 	cubemap = primitives.cubemap_load("textures/skybox")
 	defer primitives.cubemap_free(&cubemap)
+
+	primitives.points_send_to_gpu()
+	defer primitives.points_clear_from_gpu()
 
 	gl.UseProgram(mesh_shader)
 
@@ -261,7 +278,8 @@ main :: proc() {
 		// draw_block_scene(light_shader, texture_shader, single_color_shader)
 		// draw_full_screen_scene(full_screen_shader, light_shader, texture_shader, single_color_shader)
 		// draw_box_scene_rearview_mirror(light_shader, texture_shader, single_color_shader)
-		draw_skybox_scene(scene, skybox_shader, light_shader, texture_shader, single_color_shader)
+		// draw_skybox_scene(scene, skybox_shader, light_shader, texture_shader, single_color_shader)
+		draw_houses()
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -520,6 +538,14 @@ draw_skybox_scene :: proc(scene: render.Scene, skybox_shader, light_shader, text
 	primitives.cubemap_draw(&cubemap)
 
 	gl.DepthFunc(gl.LESS)
+}
+
+draw_houses :: proc() {
+	gl.ClearColor(0, 0, 0, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+
+	gl.UseProgram(house_shader)
+	primitives.points_draw()
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
