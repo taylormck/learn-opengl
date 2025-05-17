@@ -16,7 +16,7 @@ POINT_POSITIONS := [NUM_POINTS]types.Vec3 {
 POINT_COLORS := [NUM_POINTS]types.Vec3 {
 	{1, 0, 0}, // top left
 	{0, 1, 0}, // top right
-	{0, 0, 0}, // bottom right
+	{0, 0, 1}, // bottom right
 	{1, 1, 0}, // bottom left
 }
 
@@ -31,7 +31,7 @@ points_send_to_gpu :: proc() {
 	positions_offset := 0
 	positions_size := size_of(types.Vec3) * len(POINT_POSITIONS)
 	colors_offset := positions_offset + positions_size
-	colors_size := size_of(types.Vec2) * len(POINT_COLORS)
+	colors_size := size_of(types.Vec3) * len(POINT_COLORS)
 	total_size := positions_size + colors_size
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, points_vbo)

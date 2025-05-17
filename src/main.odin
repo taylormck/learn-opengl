@@ -181,18 +181,21 @@ main :: proc() {
 			#load("../shaders/frag/skybox_refraction.frag"),
 		) or_else panic("Failed to load the skybox refraction shader")
 
-	house_shader =
-		gl.load_shaders_source(
+	house_shaders: [3]u32 = {
+		gl.compile_shader_from_source(
 			#load("../shaders/vert/pos_and_color.vert"),
+			gl.Shader_Type.VERTEX_SHADER,
+		) or_else panic("Failed to load the house vertex shader"),
+		gl.compile_shader_from_source(#load("../shaders/geom/house.geom"), gl.Shader_Type.GEOMETRY_SHADER) or_else panic(
+			"Failed to load the house geometry shader",
+		),
+		gl.compile_shader_from_source(
 			#load("../shaders/frag/vert_color.frag"),
-		) or_else panic("Failed to load the house shader")
+			gl.Shader_Type.FRAGMENT_SHADER,
+		) or_else panic("Failed to load the house fragment shader"),
+	}
 
-	house_geometry_shader_code: [1]cstring = {cstring(raw_data(#load("../shaders/geom/house.geom")))}
-	house_geometry_shader := gl.CreateShader(gl.GEOMETRY_SHADER)
-	gl.ShaderSource(house_geometry_shader, 1, raw_data(house_geometry_shader_code[:]), nil)
-	gl.CompileShader(house_geometry_shader)
-	gl.AttachShader(house_shader, house_geometry_shader)
-	gl.LinkProgram(house_shader)
+	house_shader = gl.create_and_link_program(house_shaders[:]) or_else panic("Failed to compile and link house shader")
 
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
