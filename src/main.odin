@@ -90,7 +90,8 @@ marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 fbo, fb_texture, rbo: u32
 cubemap: primitives.Cubemap
 
-skybox_reflect_shader, skybox_refract_shader, house_shader, explode_shader: u32
+skybox_shader, mesh_shader, texture_shader, light_shader, skybox_reflect_shader, skybox_refract_shader: u32
+full_screen_shader, depth_shader, single_color_shader, house_shader, explode_shader, normal_shader: u32
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -122,48 +123,48 @@ main :: proc() {
 	glfw.SetCursorPosCallback(window, mouse_callback)
 	glfw.SetScrollCallback(window, scroll_callback)
 
-	mesh_shader :=
+	mesh_shader =
 		gl.load_shaders_source(
 			#load("../shaders/vert/pos_tex_normal_transform.vert"),
 			#load("../shaders/frag/phong_material_sampled_multilights.frag"),
 		) or_else panic("Failed to load the shader")
 	defer gl.DeleteProgram(mesh_shader)
 
-	texture_shader :=
+	texture_shader =
 		gl.load_shaders_source(
 			#load("../shaders/vert/pos_tex_transform.vert"),
 			#load("../shaders/frag/single_tex.frag"),
 		) or_else panic("Failed to load the shader")
 	defer gl.DeleteProgram(texture_shader)
 
-	// depth_shader :=
-	//     gl.load_shaders_source(
-	//         #load("../shaders/vert/pos_tex_normal_transform.vert"),
-	//         #load("../shaders/frag/depth.frag"),
-	//     ) or_else panic("Failed to load the shader")
-	// defer gl.DeleteProgram(depth_shader)
+	depth_shader =
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_tex_normal_transform.vert"),
+			#load("../shaders/frag/depth.frag"),
+		) or_else panic("Failed to load the shader")
+	defer gl.DeleteProgram(depth_shader)
 
-	single_color_shader :=
+	single_color_shader =
 		gl.load_shaders_source(
 			#load("../shaders/vert/pos_tex_normal_transform.vert"),
 			#load("../shaders/frag/single_color.frag"),
 		) or_else panic("Failed to load the shader")
 	defer gl.DeleteProgram(single_color_shader)
 
-	light_shader :=
+	light_shader =
 		gl.load_shaders_source(
 			#load("../shaders/vert/pos_transform.vert"),
 			#load("../shaders/frag/light_color.frag"),
 		) or_else panic("Failed to load the light shader")
 	defer gl.DeleteProgram(light_shader)
 
-	full_screen_shader :=
+	full_screen_shader =
 		gl.load_shaders_source(
 			#load("../shaders/vert/pos_tex.vert"),
 			#load("../shaders/frag/edge_kernel.frag"),
 		) or_else panic("Failed to load the full screen shader")
 
-	skybox_shader :=
+	skybox_shader =
 		gl.load_shaders_source(
 			#load("../shaders/vert/pos_tex_pv.vert"),
 			#load("../shaders/frag/skybox.frag"),
@@ -220,6 +221,28 @@ main :: proc() {
 	for shader in explode_shaders {
 		gl.DeleteShader(shader)
 	}
+
+	normal_shaders: [3]u32 = {
+		gl.compile_shader_from_source(
+			#load("../shaders/vert/draw_normal.vert"),
+			gl.Shader_Type.VERTEX_SHADER,
+		) or_else panic("Failed to load the explode vertex shader"),
+		gl.compile_shader_from_source(
+			#load("../shaders/geom/draw_normal.geom"),
+			gl.Shader_Type.GEOMETRY_SHADER,
+		) or_else panic("Failed to load the explode geometry shader"),
+		gl.compile_shader_from_source(#load("../shaders/frag/yellow.frag"), gl.Shader_Type.FRAGMENT_SHADER) or_else panic(
+			"Failed to load the explode fragment shader",
+		),
+	}
+
+	normal_shader =
+		gl.create_and_link_program(normal_shaders[:]) or_else panic("Failed to compile and link normal shader")
+
+	for shader in normal_shaders {
+		gl.DeleteShader(shader)
+	}
+
 
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
@@ -301,13 +324,14 @@ main :: proc() {
 		glfw.PollEvents()
 		process_input(window, delta)
 
-		// draw_backpack_scene(scene, light_shader, mesh_shader, single_color_shader)
-		// draw_block_scene(light_shader, texture_shader, single_color_shader)
-		// draw_full_screen_scene(full_screen_shader, light_shader, texture_shader, single_color_shader)
-		// draw_box_scene_rearview_mirror(light_shader, texture_shader, single_color_shader)
-		// draw_skybox_scene(scene, skybox_shader, light_shader, texture_shader, single_color_shader)
+		// draw_scene(scene)
+		// draw_block_scene()
+		// draw_full_screen_scene()
+		// draw_box_scene_rearview_mirror()
+		// draw_skybox_scene(scene)
 		// draw_houses()
-		draw_exploded_model(scene, new_time)
+		// draw_exploded_model(scene, new_time)
+		draw_normals(scene)
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -322,16 +346,21 @@ framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, hei
 	camera.aspect_ratio = f32(width) / f32(height)
 }
 
-draw_backpack_scene :: proc(scene: render.Scene, light_shader, mesh_shader, single_color_shader: u32) {
+draw_scene :: proc(scene: render.Scene, draw_outline: bool = false) {
 	gl.Enable(gl.STENCIL_TEST)
 	gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
 
 	gl.ClearColor(0.1, 0.2, 0.3, 1)
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
-	gl.StencilMask(0x00)
 	gl.Enable(gl.DEPTH_TEST)
-	gl.StencilFunc(gl.ALWAYS, 1, 0xff)
-	gl.StencilMask(0xff)
+
+	if draw_outline {
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
+		gl.StencilMask(0x00)
+		gl.StencilFunc(gl.ALWAYS, 1, 0xff)
+		gl.StencilMask(0xff)
+	} else {
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	}
 
 	projection := render.camera_get_projection(&camera)
 	view := render.camera_get_view(&camera)
@@ -369,6 +398,8 @@ draw_backpack_scene :: proc(scene: render.Scene, light_shader, mesh_shader, sing
 	for _, &mesh in scene.meshes {
 		render.mesh_draw(&mesh, mesh_shader)
 	}
+
+	if !draw_outline do return
 
 	// Draw the outline
 	gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
@@ -600,6 +631,25 @@ draw_exploded_model :: proc(scene: render.Scene, time: f32) {
 
 	for _, &mesh in scene.meshes {
 		render.mesh_draw(&mesh, explode_shader)
+	}
+}
+
+draw_normals :: proc(scene: render.Scene) {
+	draw_scene(scene)
+
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	model := linalg.identity(types.TransformMatrix)
+	view_model := view * model
+	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+
+	gl.UseProgram(normal_shader)
+	gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "view_model"), 1, false, raw_data(&view_model))
+	gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "projection"), 1, false, raw_data(&projection))
+	gl.UniformMatrix3fv(gl.GetUniformLocation(normal_shader, "mit"), 1, false, raw_data(&mit))
+
+	for _, &mesh in scene.meshes {
+		render.mesh_draw(&mesh, normal_shader)
 	}
 }
 
