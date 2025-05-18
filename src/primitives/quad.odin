@@ -65,9 +65,16 @@ quad_draw :: proc() {
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 }
 
-quad_draw_instanced :: proc(num_instances: i32) {
+quad_draw_instanced :: proc(num_instances: i32, instance_data_vbo: u32) {
 	gl.BindVertexArray(quad_vao)
 	defer gl.BindVertexArray(0)
+
+	// TODO: factor this out into some kind of setup function
+	gl.EnableVertexAttribArray(4)
+	gl.BindBuffer(gl.ARRAY_BUFFER, instance_data_vbo)
+	gl.VertexAttribPointer(4, 2, gl.FLOAT, gl.FALSE, size_of(types.Vec2), 0)
+	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+	gl.VertexAttribDivisor(4, 1)
 
 	gl.DrawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil, num_instances)
 }

@@ -93,7 +93,8 @@ cubemap: primitives.Cubemap
 
 skybox_shader, mesh_shader, texture_shader, light_shader, skybox_reflect_shader, skybox_refract_shader: u32
 full_screen_shader, depth_shader, single_color_shader, house_shader, explode_shader, normal_shader: u32
-instanced_rect_shader: u32
+
+instanced_rect_shader, instanced_rect_offset_vbo: u32
 
 instanced_rect_translations: [100]types.Vec2
 
@@ -265,6 +266,10 @@ main :: proc() {
 			index += 1
 		}
 	}
+
+	gl.GenBuffers(1, &instanced_rect_offset_vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, instanced_rect_offset_vbo)
+	gl.BufferData(gl.ARRAY_BUFFER, size_of(instanced_rect_translations), &instanced_rect_translations, gl.STATIC_DRAW)
 
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
@@ -678,16 +683,7 @@ draw_normals :: proc(scene: render.Scene) {
 
 draw_instanced_rects :: proc() {
 	gl.UseProgram(instanced_rect_shader)
-	for i in 0 ..< 100 {
-		uniform_name := fmt.ctprintf("offsets[{}]", i)
-		gl.Uniform2fv(
-			gl.GetUniformLocation(instanced_rect_shader, uniform_name),
-			1,
-			raw_data(instanced_rect_translations[i][:]),
-		)
-	}
-
-	primitives.quad_draw_instanced(100)
+	primitives.quad_draw_instanced(100, instanced_rect_offset_vbo)
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
