@@ -1,6 +1,7 @@
 package main
 
 import "base:runtime"
+import "core:fmt"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
@@ -92,6 +93,9 @@ cubemap: primitives.Cubemap
 
 skybox_shader, mesh_shader, texture_shader, light_shader, skybox_reflect_shader, skybox_refract_shader: u32
 full_screen_shader, depth_shader, single_color_shader, house_shader, explode_shader, normal_shader: u32
+instanced_rect_shader: u32
+
+instanced_rect_translations: [100]types.Vec2
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -243,6 +247,24 @@ main :: proc() {
 		gl.DeleteShader(shader)
 	}
 
+	instanced_rect_shader =
+		gl.load_shaders_source(
+			#load("../shaders/vert/instanced_color.vert"),
+			#load("../shaders/frag/vert_color.frag"),
+		) or_else panic("Failed to load the instanced rect shader")
+	defer gl.DeleteProgram(instanced_rect_shader)
+
+	index := 0
+	offset: f32 = 0.1
+
+	for y := -10; y < 10; y += 2 {
+		for x := -10; x < 10; x += 2 {
+			translation := &instanced_rect_translations[index]
+			translation.x = f32(x) / 10.0 + offset
+			translation.y = f32(y) / 10.0 + offset
+			index += 1
+		}
+	}
 
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
@@ -325,14 +347,14 @@ main :: proc() {
 		process_input(window, delta)
 
 		// draw_scene(scene)
-		draw_block_scene()
+		// draw_block_scene()
 		// draw_full_screen_scene()
 		// draw_box_scene_rearview_mirror()
 		// draw_skybox_scene(scene)
 		// draw_houses()
 		// draw_exploded_model(scene, new_time)
 		// draw_normals(scene)
-		// draw_instanced_rects()
+		draw_instanced_rects()
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -655,7 +677,17 @@ draw_normals :: proc(scene: render.Scene) {
 }
 
 draw_instanced_rects :: proc() {
+	gl.UseProgram(instanced_rect_shader)
+	for i in 0 ..< 100 {
+		uniform_name := fmt.ctprintf("offsets[{}]", i)
+		gl.Uniform2fv(
+			gl.GetUniformLocation(instanced_rect_shader, uniform_name),
+			1,
+			raw_data(instanced_rect_translations[i][:]),
+		)
+	}
 
+	primitives.quad_draw_instanced(100)
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {

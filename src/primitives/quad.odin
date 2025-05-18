@@ -43,7 +43,7 @@ quad_send_to_gpu :: proc() {
 	gl.EnableVertexAttribArray(1)
 
 	gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, normal))
-	gl.EnableVertexAttribArray(3)
+	gl.EnableVertexAttribArray(2)
 
 	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, color))
 	gl.EnableVertexAttribArray(3)
@@ -63,4 +63,11 @@ quad_draw :: proc() {
 	defer gl.BindVertexArray(0)
 
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
+}
+
+quad_draw_instanced :: proc(num_instances: i32) {
+	gl.BindVertexArray(quad_vao)
+	defer gl.BindVertexArray(0)
+
+	gl.DrawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil, num_instances)
 }
