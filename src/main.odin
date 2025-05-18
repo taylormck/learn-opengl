@@ -325,13 +325,14 @@ main :: proc() {
 		process_input(window, delta)
 
 		// draw_scene(scene)
-		// draw_block_scene()
+		draw_block_scene()
 		// draw_full_screen_scene()
 		// draw_box_scene_rearview_mirror()
 		// draw_skybox_scene(scene)
 		// draw_houses()
 		// draw_exploded_model(scene, new_time)
-		draw_normals(scene)
+		// draw_normals(scene)
+		// draw_instanced_rects()
 
 		glfw.SwapBuffers(window)
 		gl.BindVertexArray(0)
@@ -427,7 +428,7 @@ draw_scene :: proc(scene: render.Scene, draw_outline: bool = false) {
 }
 
 
-draw_block_scene :: proc(light_shader, texture_shader, single_color_shader: u32) {
+draw_block_scene :: proc() {
 	gl.ClearColor(0.1, 0.2, 0.3, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.Enable(gl.DEPTH_TEST)
@@ -515,7 +516,7 @@ draw_block_scene :: proc(light_shader, texture_shader, single_color_shader: u32)
 draw_full_screen_scene :: proc(full_screen_shader, light_shader, texture_shader, single_color_shader: u32) {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 	// NOTE: draw_block_scene clears the buffers for us
-	draw_block_scene(light_shader, texture_shader, single_color_shader)
+	draw_block_scene()
 
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	gl.ClearColor(1, 1, 1, 1)
@@ -532,11 +533,11 @@ draw_box_scene_rearview_mirror :: proc(light_shader, texture_shader, single_colo
 	// NOTE: draw_block_scene clears the buffers for us
 
 	camera.direction = -camera.direction
-	draw_block_scene(light_shader, texture_shader, single_color_shader)
+	draw_block_scene()
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 	camera.direction = -camera.direction
-	draw_block_scene(light_shader, texture_shader, single_color_shader)
+	draw_block_scene()
 
 	gl.UseProgram(texture_shader)
 	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
@@ -651,6 +652,10 @@ draw_normals :: proc(scene: render.Scene) {
 	for _, &mesh in scene.meshes {
 		render.mesh_draw(&mesh, normal_shader)
 	}
+}
+
+draw_instanced_rects :: proc() {
+
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {

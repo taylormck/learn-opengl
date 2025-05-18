@@ -6,18 +6,15 @@ import gl "vendor:OpenGL"
 
 NUM_QUAD_VERTICES :: 4
 
-QUAD_VERTEX_POSITIONS := [NUM_QUAD_VERTICES]types.Vec3 {
-	{0.5, 0.5, 0.0}, // top right
-	{-0.5, 0.5, 0.0}, // top left
-	{0.5, -0.5, 0.0}, // bottom right
-	{-0.5, -0.5, 0.0}, // bottom left
-}
-
-QUAD_TEXTURE_COORDS := [NUM_QUAD_VERTICES]types.Vec2 {
-	{1, 1}, // top right
-	{0, 1}, // top left
-	{1, 0}, // bottom right
-	{0, 0}, // bottom left
+QUAD_VERTICES := [NUM_QUAD_VERTICES]render.Vertex {
+	// top right
+	{position = {0.5, 0.5, 0.0}, texture_coords = {1, 1}, color = {0, 1, 1}, normal = {0, 0, 1}},
+	// top left
+	{position = {-0.5, 0.5, 0.0}, texture_coords = {0, 1}, color = {1, 0, 0}, normal = {0, 0, 1}},
+	// bottom right
+	{position = {0.5, -0.5, 0.0}, texture_coords = {1, 0}, color = {0, 1, 0}, normal = {0, 0, 1}},
+	// bottom left
+	{position = {-0.5, -0.5, 0.0}, texture_coords = {0, 0}, color = {0, 0, 1}, normal = {0, 0, 1}},
 }
 
 QUAD_INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
@@ -31,26 +28,28 @@ quad_send_to_gpu :: proc() {
 
 	gl.BindVertexArray(quad_vao)
 
-	positions_offset := 0
-	positions_size := size_of(types.Vec3) * len(QUAD_VERTEX_POSITIONS)
-	uvs_offset := positions_offset + positions_size
-	uvs_size := size_of(types.Vec2) * len(QUAD_TEXTURE_COORDS)
-	total_size := positions_size + uvs_size
-	indices := QUAD_INDICES
-
 	gl.BindBuffer(gl.ARRAY_BUFFER, quad_vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, total_size, nil, gl.STATIC_DRAW)
+	gl.BufferData(
+		gl.ARRAY_BUFFER,
+		size_of(render.Vertex) * NUM_QUAD_VERTICES,
+		raw_data(QUAD_VERTICES[:]),
+		gl.STATIC_DRAW,
+	)
 
-	gl.BufferSubData(gl.ARRAY_BUFFER, positions_offset, positions_size, raw_data(QUAD_VERTEX_POSITIONS[:]))
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), 0)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, position))
 	gl.EnableVertexAttribArray(0)
 
-	gl.BufferSubData(gl.ARRAY_BUFFER, uvs_offset, uvs_size, raw_data(QUAD_TEXTURE_COORDS[:]))
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, size_of(types.Vec2), uintptr(uvs_offset))
+	gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, texture_coords))
 	gl.EnableVertexAttribArray(1)
 
+	gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, normal))
+	gl.EnableVertexAttribArray(3)
+
+	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, color))
+	gl.EnableVertexAttribArray(3)
+
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, quad_ebo)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(indices), &indices, gl.STATIC_DRAW)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(QUAD_INDICES), &QUAD_INDICES, gl.STATIC_DRAW)
 }
 
 quad_clear_from_gpu :: proc() {
