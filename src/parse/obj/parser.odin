@@ -37,7 +37,7 @@ load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.
 				full_texture_path := fmt.caprintf("{}/{}", dir_path, material.diffuse_map)
 				defer delete(full_texture_path)
 
-				texture = render.prepare_texture(full_texture_path, 3, .Diffuse)
+				texture = render.prepare_texture(full_texture_path, .Diffuse)
 				scene.textures[material.diffuse_map] = texture
 			}
 
@@ -51,7 +51,7 @@ load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.
 				full_texture_path := fmt.caprintf("{}/{}", dir_path, material.specular_map)
 				defer delete(full_texture_path)
 
-				texture = render.prepare_texture(full_texture_path, 3, .Specular)
+				texture = render.prepare_texture(full_texture_path, .Specular)
 				scene.textures[material.specular_map] = texture
 			}
 
@@ -65,7 +65,7 @@ load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.
 				full_texture_path := fmt.caprintf("{}/{}", dir_path, material.normal_map)
 				defer delete(full_texture_path)
 
-				texture = render.prepare_texture(full_texture_path, 3, .Normal)
+				texture = render.prepare_texture(full_texture_path, .Normal)
 				scene.textures[material.normal_map] = texture
 			}
 

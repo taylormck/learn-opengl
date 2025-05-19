@@ -2,6 +2,7 @@ package render
 
 import "../types"
 import "core:fmt"
+import "core:log"
 import gl "vendor:OpenGL"
 import stbi "vendor:stb/image"
 
@@ -21,33 +22,20 @@ Image :: struct {
 	buffer:                  [^]u8,
 }
 
-load_texture_2d :: proc(path: cstring, channels: i32, flip_vertically: bool = false) -> (img: Image, ok: bool) {
+load_texture_2d :: proc(path: cstring, flip_vertically: bool = false) -> (img: Image, ok: bool) {
 	if flip_vertically do stbi.set_flip_vertically_on_load(1)
-	img.buffer = stbi.load(path, &img.width, &img.height, &img.channels, channels)
+	img.buffer = stbi.load(path, &img.width, &img.height, &img.channels, 0)
 
-	ok = img.buffer != nil && img.channels == channels
-	if !ok {
-		stbi.image_free(img.buffer)
-	}
-
+	ok = img.buffer != nil
 	return
 }
 
-prepare_texture :: proc(
-	path: cstring,
-	channels: i32,
-	texture_type: TextureType,
-	flip_vertically: bool = false,
-) -> (
-	t: Texture,
-) {
-	img, img_ok := load_texture_2d(path, channels, flip_vertically)
+prepare_texture :: proc(path: cstring, texture_type: TextureType, flip_vertically: bool = false) -> (t: Texture) {
+	img, img_ok := load_texture_2d(path, flip_vertically)
 	if !img_ok {
 		panic(fmt.aprintf("Failed to load texture: {}", path))
 	}
 	defer stbi.image_free(img.buffer)
-
-	assert(img.channels == channels)
 
 	t.type = texture_type
 	gl.GenTextures(1, &t.id)
@@ -59,7 +47,7 @@ prepare_texture :: proc(
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
 	format: i32 = ---
-	switch channels {
+	switch img.channels {
 	case 1:
 		format = gl.RED
 	case 2:
@@ -69,7 +57,7 @@ prepare_texture :: proc(
 	case 4:
 		format = gl.RGBA
 	case:
-		panic(fmt.aprintf("Unsupported number of channels: {}", channels))
+		panic(fmt.aprintf("Unsupported number of channels: {}", img.channels))
 	}
 
 	gl.TexImage2D(gl.TEXTURE_2D, 0, format, img.width, img.height, 0, transmute(u32)format, gl.UNSIGNED_BYTE, img.buffer)

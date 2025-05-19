@@ -67,7 +67,7 @@ cubemap_load :: proc(path: string) -> (cubemap: Cubemap) {
 
 	for i in 0 ..< NUM_SIDES {
 		image_path := fmt.caprintf("{}/{}", path, FACE_NAMES[i])
-		img := render.load_texture_2d(image_path, 3) or_else panic("Failed to load cubemap!")
+		img := render.load_texture_2d(image_path) or_else panic("Failed to load cubemap!")
 		defer stbi.image_free(img.buffer)
 
 		gl.TexImage2D(

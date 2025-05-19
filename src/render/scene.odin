@@ -17,4 +17,6 @@ scene_destroy :: proc(scene: ^Scene) {
 
 	for key, &material in scene.materials do material_free(&material)
 	delete(scene.materials)
+
+	delete(scene.textures)
 }

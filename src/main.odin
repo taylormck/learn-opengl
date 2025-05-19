@@ -93,6 +93,7 @@ cubemap: primitives.Cubemap
 
 skybox_shader, mesh_shader, texture_shader, light_shader, skybox_reflect_shader, skybox_refract_shader: u32
 full_screen_shader, depth_shader, single_color_shader, house_shader, explode_shader, normal_shader: u32
+planet_shader: u32
 
 instanced_rect_shader, instanced_rect_offset_vbo: u32
 
@@ -271,12 +272,31 @@ main :: proc() {
 	gl.BindBuffer(gl.ARRAY_BUFFER, instanced_rect_offset_vbo)
 	gl.BufferData(gl.ARRAY_BUFFER, size_of(instanced_rect_translations), &instanced_rect_translations, gl.STATIC_DRAW)
 
+	planet_shader =
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_tex_normal_transform.vert"),
+			#load("../shaders/frag/phong_material_sampled_directional_light.frag"),
+		) or_else panic("Failed to load the planet shader")
+
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 	defer render.scene_destroy(&scene)
 
 	for _, &mesh in scene.meshes do render.mesh_send_to_gpu(&mesh)
 	defer for _, &mesh in scene.meshes do render.mesh_gpu_free(&mesh)
+
+	planet_scene :=
+		obj.load_scene_from_file_obj("models/planet", "planet.obj") or_else panic("Failed to load planet model.")
+	defer render.scene_destroy(&planet_scene)
+
+	for _, &mesh in planet_scene.meshes do render.mesh_send_to_gpu(&mesh)
+	defer for _, &mesh in planet_scene.meshes do render.mesh_gpu_free(&mesh)
+
+	rock_scene := obj.load_scene_from_file_obj("models/rock", "rock.obj") or_else panic("Failed to load rock model.")
+	defer render.scene_destroy(&rock_scene)
+
+	for _, &mesh in rock_scene.meshes do render.mesh_send_to_gpu(&mesh)
+	defer for _, &mesh in rock_scene.meshes do render.mesh_gpu_free(&mesh)
 
 	primitives.cube_send_to_gpu()
 	defer primitives.cube_clear_from_gpu()
@@ -304,10 +324,13 @@ main :: proc() {
 		render.point_light_array_set_uniform(&point_light, mesh_shader, u32(i))
 	}
 
-	metal_texture = render.prepare_texture("textures/metal.png", 3, .Diffuse, true)
-	marble_texture = render.prepare_texture("textures/marble.jpg", 3, .Diffuse, true)
-	grass_texture = render.prepare_texture("textures/grass.png", 4, .Diffuse, true)
-	window_texture = render.prepare_texture("textures/blending_transparent_window.png", 4, .Diffuse, true)
+	gl.UseProgram(planet_shader)
+	render.directional_light_set_uniform(&directional_light, planet_shader)
+
+	metal_texture = render.prepare_texture("textures/metal.png", .Diffuse, true)
+	marble_texture = render.prepare_texture("textures/marble.jpg", .Diffuse, true)
+	grass_texture = render.prepare_texture("textures/grass.png", .Diffuse, true)
+	window_texture = render.prepare_texture("textures/blending_transparent_window.png", .Diffuse, true)
 
 	gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -359,10 +382,10 @@ main :: proc() {
 		// draw_houses()
 		// draw_exploded_model(scene, new_time)
 		// draw_normals(scene)
-		draw_instanced_rects()
+		// draw_instanced_rects()
+		draw_asteroid_scene(planet_scene, rock_scene)
 
 		glfw.SwapBuffers(window)
-		gl.BindVertexArray(0)
 		prev_time = new_time
 	}
 }
@@ -653,7 +676,6 @@ draw_exploded_model :: proc(scene: render.Scene, time: f32) {
 	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "transform"), 1, false, raw_data(&transform))
 	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "model"), 1, false, raw_data(&model))
 	gl.UniformMatrix3fv(gl.GetUniformLocation(explode_shader, "mit"), 1, false, raw_data(&mit))
-	// gl.Uniform3fv(gl.GetUniformLocation(explode_shader, "camera_position"), 1, raw_data(&camera.position))
 
 	gl.Uniform1f(gl.GetUniformLocation(explode_shader, "time"), time)
 
@@ -679,6 +701,47 @@ draw_normals :: proc(scene: render.Scene) {
 	for _, &mesh in scene.meshes {
 		render.mesh_draw(&mesh, normal_shader)
 	}
+}
+
+draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
+	ensure(planet_shader != 0, "planet shader not initialized")
+
+	gl.ClearColor(0.1, 0.1, 0.1, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Enable(gl.DEPTH_TEST)
+
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	pv := projection * view
+	model := linalg.matrix4_translate(types.Vec3{0, -3, -55})
+	model = model * linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
+	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+	transform := pv * model
+
+	gl.UseProgram(planet_shader)
+	gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
+	gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
+	gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+
+	for _, &mesh in planet_scene.meshes {
+		render.mesh_draw(&mesh, planet_shader)
+	}
+
+	model = linalg.matrix4_translate(types.Vec3{2, 0, 0})
+	model = linalg.matrix4_scale_f32(types.Vec3{0.25, 0.25, 0.25}) * model
+	mit = types.SubTransformMatrix(linalg.inverse_transpose(model))
+	transform = pv * model
+
+	gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
+	gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
+	gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+
+	// for _, &mesh in rock_scene.meshes {
+	// 	render.mesh_draw(&mesh, planet_shader)
+	// }
+
+	// TODO: draw the asteroids
+
 }
 
 draw_instanced_rects :: proc() {
