@@ -91,10 +91,12 @@ camera := render.Camera {
 marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 
 fbo, fb_texture, rbo: u32
+ms_fbo, ms_fb_texture, ms_rbo: u32
 cubemap: primitives.Cubemap
 
 skybox_shader, mesh_shader, texture_shader, light_shader, skybox_reflect_shader, skybox_refract_shader: u32
 full_screen_shader, depth_shader, single_color_shader, house_shader, explode_shader, normal_shader: u32
+greyscale_shader, invert_shader: u32
 planet_shader, asteroid_shader: u32
 NUM_ASTEROIDS :: 1000000
 PLANET_CENTER :: types.Vec3{0, -3, -55}
@@ -175,6 +177,18 @@ main :: proc() {
 		gl.load_shaders_source(
 			#load("../shaders/vert/pos_tex.vert"),
 			#load("../shaders/frag/edge_kernel.frag"),
+		) or_else panic("Failed to load the full screen shader")
+
+	greyscale_shader =
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_tex.vert"),
+			#load("../shaders/frag/flat_tex_greyscale.frag"),
+		) or_else panic("Failed to load the full screen shader")
+
+	invert_shader =
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_tex.vert"),
+			#load("../shaders/frag/flat_tex_invert.frag"),
 		) or_else panic("Failed to load the full screen shader")
 
 	skybox_shader =
@@ -379,14 +393,37 @@ main :: proc() {
 
 	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fb_texture, 0)
 
+	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
 	gl.GenRenderbuffers(1, &rbo)
 	gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
 	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, WIDTH, HEIGHT)
 	gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 
-	gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
+	gl.GenFramebuffers(1, &ms_fbo)
+	defer gl.DeleteFramebuffers(1, &ms_fbo)
+	gl.BindFramebuffer(gl.FRAMEBUFFER, ms_fbo)
 
-	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
+	gl.GenTextures(1, &ms_fb_texture)
+	gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture)
+	gl.TexImage2DMultisample(gl.TEXTURE_2D_MULTISAMPLE, NUM_SAMPLES, gl.RGB, WIDTH, HEIGHT, gl.TRUE)
+	// gl.TexParameteri(gl.TEXTURE_2D_MULTISAMPLE, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	// gl.TexParameteri(gl.TEXTURE_2D_MULTISAMPLE, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	// gl.TexParameteri(gl.TEXTURE_2D_MULTISAMPLE, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	// gl.TexParameteri(gl.TEXTURE_2D_MULTISAMPLE, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+	gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, 0)
+
+	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture, 0)
+
+	gl.GenRenderbuffers(1, &ms_rbo)
+	gl.BindRenderbuffer(gl.RENDERBUFFER, ms_rbo)
+	gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, WIDTH, HEIGHT)
+	gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+
+	gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, ms_rbo)
+
+	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Multisample Framebuffer incomplete!")
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 	gl.Enable(gl.MULTISAMPLE)
@@ -409,8 +446,8 @@ main :: proc() {
 		// draw_exploded_model(scene, new_time)
 		// draw_normals(scene)
 		// draw_instanced_rects()
-		draw_asteroid_scene(planet_scene, rock_scene)
-		// draw_green_box()
+		// draw_asteroid_scene(planet_scene, rock_scene)
+		draw_green_box()
 
 		glfw.SwapBuffers(window)
 		prev_time = new_time
@@ -772,6 +809,8 @@ draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
 }
 
 draw_green_box :: proc() {
+	gl.BindFramebuffer(gl.FRAMEBUFFER, ms_fbo)
+
 	gl.ClearColor(0.1, 0.2, 0.3, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.Enable(gl.DEPTH_TEST)
@@ -784,7 +823,21 @@ draw_green_box :: proc() {
 	gl.UseProgram(single_color_shader)
 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
 	primitives.cube_draw()
+
+	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, ms_fbo)
+	gl.BindFramebuffer(gl.DRAW_FRAMEBUFFER, fbo)
+	gl.BlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, gl.COLOR_BUFFER_BIT, gl.NEAREST)
+
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	gl.ClearColor(0.1, 0.2, 0.3, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.Disable(gl.DEPTH_TEST)
+	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+
+	gl.UseProgram(invert_shader)
+	primitives.full_screen_draw()
 }
+
 
 draw_instanced_rects :: proc() {
 	gl.UseProgram(instanced_rect_shader)
