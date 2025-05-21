@@ -786,7 +786,7 @@ set_asteroid_transforms :: proc() {
 	scale_multiple: f32 : 1.0 / 10
 
 	for i in 0 ..< NUM_ASTEROIDS {
-		angle := f32(i) / f32(NUM_ASTEROIDS) * 360
+		angle := f32(i) / f32(NUM_ASTEROIDS) * math.TAU
 
 		translation :=
 			types.Vec3 {
@@ -797,7 +797,7 @@ set_asteroid_transforms :: proc() {
 			PLANET_CENTER
 
 		scale := rand.float32_exponential(10) * scale_multiple + 0.005
-		rotation := f32(rand.int31() % 360)
+		rotation := rand.float32() * math.TAU
 
 		asteroid_model_transforms[i] =
 			linalg.matrix4_translate(translation) *
