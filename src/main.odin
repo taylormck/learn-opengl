@@ -117,6 +117,7 @@ main :: proc() {
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MINOR, GL_MINOR_VERSION)
 	glfw.WindowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
 	glfw.WindowHint(glfw.OPENGL_FORWARD_COMPAT, gl.TRUE)
+	glfw.WindowHint(glfw.SAMPLES, 4)
 
 	window := glfw.CreateWindow(WIDTH, HEIGHT, "Renderer", nil, nil)
 	defer glfw.DestroyWindow(window)
@@ -157,7 +158,7 @@ main :: proc() {
 
 	single_color_shader =
 		gl.load_shaders_source(
-			#load("../shaders/vert/pos_tex_normal_transform.vert"),
+			#load("../shaders/vert/pos_transform.vert"),
 			#load("../shaders/frag/single_color.frag"),
 		) or_else panic("Failed to load the shader")
 	defer gl.DeleteProgram(single_color_shader)
@@ -387,6 +388,8 @@ main :: proc() {
 	if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
+	gl.Enable(gl.MULTISAMPLE)
+
 	prev_time := f32(glfw.GetTime())
 
 	for !glfw.WindowShouldClose(window) {
@@ -405,7 +408,8 @@ main :: proc() {
 		// draw_exploded_model(scene, new_time)
 		// draw_normals(scene)
 		// draw_instanced_rects()
-		draw_asteroid_scene(planet_scene, rock_scene)
+		// draw_asteroid_scene(planet_scene, rock_scene)
+		draw_green_box()
 
 		glfw.SwapBuffers(window)
 		prev_time = new_time
@@ -585,7 +589,7 @@ draw_block_scene :: proc() {
 	}
 }
 
-draw_full_screen_scene :: proc(full_screen_shader, light_shader, texture_shader, single_color_shader: u32) {
+draw_full_screen_scene :: proc() {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 	// NOTE: draw_block_scene clears the buffers for us
 	draw_block_scene()
@@ -600,7 +604,7 @@ draw_full_screen_scene :: proc(full_screen_shader, light_shader, texture_shader,
 	primitives.full_screen_draw()
 }
 
-draw_box_scene_rearview_mirror :: proc(light_shader, texture_shader, single_color_shader: u32) {
+draw_box_scene_rearview_mirror :: proc() {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 	// NOTE: draw_block_scene clears the buffers for us
 
@@ -637,7 +641,7 @@ draw_box_scene_rearview_mirror :: proc(light_shader, texture_shader, single_colo
 	gl.Enable(gl.DEPTH_TEST)
 }
 
-draw_skybox_scene :: proc(scene: render.Scene, skybox_shader, light_shader, texture_shader, single_color_shader: u32) {
+draw_skybox_scene :: proc(scene: render.Scene) {
 	model := linalg.identity(types.TransformMatrix)
 	projection := render.camera_get_projection(&camera)
 	view := render.camera_get_view(&camera)
@@ -764,6 +768,21 @@ draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
 
 		gl.BindVertexArray(0)
 	}
+}
+
+draw_green_box :: proc() {
+	gl.ClearColor(0.1, 0.2, 0.3, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Enable(gl.DEPTH_TEST)
+
+	model := linalg.matrix4_rotate_f32(math.PI / 4, types.Vec3{1, 1, 1})
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	transform := projection * view * model
+
+	gl.UseProgram(single_color_shader)
+	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
+	primitives.cube_draw()
 }
 
 draw_instanced_rects :: proc() {
