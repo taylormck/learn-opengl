@@ -95,7 +95,7 @@ cubemap: primitives.Cubemap
 skybox_shader, mesh_shader, texture_shader, light_shader, skybox_reflect_shader, skybox_refract_shader: u32
 full_screen_shader, depth_shader, single_color_shader, house_shader, explode_shader, normal_shader: u32
 planet_shader: u32
-NUM_ASTEROIDS :: 1000
+NUM_ASTEROIDS :: 200000
 
 asteroid_model_transforms: [dynamic]types.TransformMatrix
 
@@ -772,6 +772,7 @@ distance_order :: proc(lhs, rhs: types.Vec3) -> bool {
 set_asteroid_transforms :: proc() {
 	radius :: 50
 	rotation_axis :: types.Vec3{0.4, 0.6, 0.8}
+	scale_multiple: f32 : 1 / 100
 
 	for i in 0 ..< NUM_ASTEROIDS {
 		angle := f32(i) / f32(NUM_ASTEROIDS) * 360
@@ -782,7 +783,7 @@ set_asteroid_transforms :: proc() {
 			math.cos(angle) * radius + generate_random_displacement(),
 		}
 
-		scale := f32(rand.int31() % 20) / 100 + 0.05
+		scale := rand.float32() * scale_multiple + 0.05
 		rotation := f32(rand.int31() % 360)
 
 		asteroid_model_transforms[i] =
@@ -796,5 +797,5 @@ generate_random_displacement :: proc() -> f32 {
 	offset :: 2.5
 
 	// TODO: rewrite using rand.float32
-	return f32(rand.int31() % i32(200 * offset)) / 100 - offset
+	return rand.float32() * 2 * offset - offset
 }
