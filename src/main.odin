@@ -791,7 +791,7 @@ set_asteroid_transforms :: proc() {
 		translation :=
 			types.Vec3 {
 				math.sin(angle) * radius + generate_random_displacement(),
-				generate_random_displacement() * 0.4,
+				generate_random_displacement() * 0.1,
 				math.cos(angle) * radius + generate_random_displacement(),
 			} +
 			PLANET_CENTER
@@ -807,8 +807,7 @@ set_asteroid_transforms :: proc() {
 }
 
 generate_random_displacement :: proc() -> f32 {
-	offset :: 2.5
+	offset :: 10.0
 
-	// TODO: rewrite using rand.float32
-	return rand.float32() * 2 * offset - offset
+	return rand.float32_normal(offset, 5.0) - offset
 }
