@@ -94,8 +94,9 @@ cubemap: primitives.Cubemap
 
 skybox_shader, mesh_shader, texture_shader, light_shader, skybox_reflect_shader, skybox_refract_shader: u32
 full_screen_shader, depth_shader, single_color_shader, house_shader, explode_shader, normal_shader: u32
-planet_shader: u32
-NUM_ASTEROIDS :: 200000
+planet_shader, asteroid_shader: u32
+NUM_ASTEROIDS :: 1000000
+PLANET_CENTER :: types.Vec3{0, -3, -55}
 
 asteroid_model_transforms: [dynamic]types.TransformMatrix
 
@@ -282,6 +283,13 @@ main :: proc() {
 			#load("../shaders/frag/phong_material_sampled_directional_light.frag"),
 		) or_else panic("Failed to load the planet shader")
 
+	asteroid_shader =
+		gl.load_shaders_source(
+			#load("../shaders/vert/pos_tex_normal_transform_instanced.vert"),
+			#load("../shaders/frag/phong_material_sampled_directional_light.frag"),
+		) or_else panic("Failed to load the asteroid shader")
+
+
 	scene :=
 		obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 	defer render.scene_destroy(&scene)
@@ -299,12 +307,15 @@ main :: proc() {
 	rock_scene := obj.load_scene_from_file_obj("models/rock", "rock.obj") or_else panic("Failed to load rock model.")
 	defer render.scene_destroy(&rock_scene)
 
-	for _, &mesh in rock_scene.meshes do render.mesh_send_to_gpu(&mesh)
-	defer for _, &mesh in rock_scene.meshes do render.mesh_gpu_free(&mesh)
-
 	asteroid_model_transforms = make([dynamic]types.TransformMatrix, NUM_ASTEROIDS)
 	defer delete(asteroid_model_transforms)
 	set_asteroid_transforms()
+
+	for _, &mesh in rock_scene.meshes {
+		render.mesh_send_to_gpu(&mesh)
+		render.mesh_send_transforms_to_gpu(&mesh, asteroid_model_transforms[:])
+	}
+	defer for _, &mesh in rock_scene.meshes do render.mesh_gpu_free(&mesh)
 
 	primitives.cube_send_to_gpu()
 	defer primitives.cube_clear_from_gpu()
@@ -334,6 +345,9 @@ main :: proc() {
 
 	gl.UseProgram(planet_shader)
 	render.directional_light_set_uniform(&directional_light, planet_shader)
+
+	gl.UseProgram(asteroid_shader)
+	render.directional_light_set_uniform(&directional_light, asteroid_shader)
 
 	metal_texture = render.prepare_texture("textures/metal.png", .Diffuse, true)
 	marble_texture = render.prepare_texture("textures/marble.jpg", .Diffuse, true)
@@ -713,8 +727,8 @@ draw_normals :: proc(scene: render.Scene) {
 
 draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
 	ensure(planet_shader != 0, "planet shader not initialized")
+	ensure(asteroid_shader != 0, "asteroid_shader shader not initialized")
 
-	planet_center := types.Vec3{0, -3, -55}
 
 	gl.ClearColor(0.1, 0.1, 0.1, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -725,7 +739,7 @@ draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
 	pv := projection * view
 
 	{
-		model := linalg.matrix4_translate(planet_center)
+		model := linalg.matrix4_translate(PLANET_CENTER)
 		model = model * linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 		transform := pv * model
@@ -740,18 +754,15 @@ draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
 		}
 	}
 
-	for model in asteroid_model_transforms {
-		model := linalg.matrix4_translate(planet_center) * model
-		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-		transform := pv * model
-
-		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+	{
+		gl.UseProgram(asteroid_shader)
+		gl.UniformMatrix4fv(gl.GetUniformLocation(asteroid_shader, "pv"), 1, false, raw_data(&pv))
 
 		for _, &mesh in rock_scene.meshes {
-			render.mesh_draw(&mesh, planet_shader)
+			render.mesh_draw_instanced(&mesh, asteroid_shader, NUM_ASTEROIDS)
 		}
+
+		gl.BindVertexArray(0)
 	}
 }
 
@@ -772,18 +783,20 @@ distance_order :: proc(lhs, rhs: types.Vec3) -> bool {
 set_asteroid_transforms :: proc() {
 	radius :: 50
 	rotation_axis :: types.Vec3{0.4, 0.6, 0.8}
-	scale_multiple: f32 : 1 / 100
+	scale_multiple: f32 : 1.0 / 10
 
 	for i in 0 ..< NUM_ASTEROIDS {
 		angle := f32(i) / f32(NUM_ASTEROIDS) * 360
 
-		translation := types.Vec3 {
-			math.sin(angle) * radius + generate_random_displacement(),
-			generate_random_displacement() * 0.4,
-			math.cos(angle) * radius + generate_random_displacement(),
-		}
+		translation :=
+			types.Vec3 {
+				math.sin(angle) * radius + generate_random_displacement(),
+				generate_random_displacement() * 0.4,
+				math.cos(angle) * radius + generate_random_displacement(),
+			} +
+			PLANET_CENTER
 
-		scale := rand.float32() * scale_multiple + 0.05
+		scale := rand.float32_exponential(10) * scale_multiple + 0.005
 		rotation := f32(rand.int31() % 360)
 
 		asteroid_model_transforms[i] =

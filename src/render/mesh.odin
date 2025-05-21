@@ -12,6 +12,7 @@ Mesh :: struct {
 	material_name: string,
 	material:      Material,
 	vao, vbo, ebo: u32,
+	transform_vbo: u32,
 	textures:      [dynamic]Texture,
 }
 
@@ -55,6 +56,37 @@ mesh_send_to_gpu :: proc(mesh: ^Mesh) {
 
 	gl.EnableVertexAttribArray(2)
 	gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(MeshVertex), offset_of(MeshVertex, normal))
+}
+
+mesh_send_transforms_to_gpu :: proc(mesh: ^Mesh, transforms: []types.TransformMatrix) {
+	gl.BindVertexArray(mesh.vao)
+	defer gl.BindVertexArray(0)
+
+	gl.GenBuffers(1, &mesh.transform_vbo)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, mesh.transform_vbo)
+	gl.BufferData(
+		gl.ARRAY_BUFFER,
+		len(transforms) * size_of(types.TransformMatrix),
+		raw_data(transforms),
+		gl.STATIC_DRAW,
+	)
+
+	for i in 0 ..< 4 {
+		index := u32(i) + 3
+		gl.EnableVertexAttribArray(index)
+
+		gl.VertexAttribPointer(
+			index,
+			4,
+			gl.FLOAT,
+			gl.FALSE,
+			size_of(types.TransformMatrix),
+			uintptr(i * size_of(types.Vec4)),
+		)
+
+		gl.VertexAttribDivisor(index, 1)
+	}
 }
 
 mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
@@ -101,10 +133,23 @@ mesh_draw :: proc(mesh: ^Mesh, shader_id: u32) {
 	gl.DrawElements(gl.TRIANGLES, i32(len(mesh.indices)) * 3, gl.UNSIGNED_INT, nil)
 }
 
+mesh_draw_instanced :: proc(mesh: ^Mesh, shader_id: u32, num_instances: i32) {
+	mesh_set_textures(mesh, shader_id)
+	gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), mesh.material.shininess)
+
+	gl.BindVertexArray(mesh.vao)
+	defer gl.BindVertexArray(0)
+
+	gl.DrawElementsInstanced(gl.TRIANGLES, i32(len(mesh.indices)) * 3, gl.UNSIGNED_INT, nil, num_instances)
+}
+
+
 mesh_gpu_free :: proc(mesh: ^Mesh) {
 	gl.DeleteVertexArrays(1, &mesh.vao)
 	gl.DeleteBuffers(1, &mesh.vbo)
 	gl.DeleteBuffers(1, &mesh.ebo)
+
+	if mesh.transform_vbo != 0 do gl.DeleteBuffers(1, &mesh.transform_vbo)
 }
 
 mesh_free :: proc(mesh: ^Mesh) {
