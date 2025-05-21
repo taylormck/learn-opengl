@@ -5,6 +5,7 @@ import "core:fmt"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
+import "core:math/rand"
 import "core:os"
 import "core:slice"
 import "parse/obj"
@@ -82,7 +83,7 @@ camera := render.Camera {
 	fov          = linalg.to_radians(f32(45)),
 	aspect_ratio = f32(WIDTH) / HEIGHT,
 	near         = 0.1,
-	far          = 100,
+	far          = 1000,
 	speed        = 5,
 }
 
@@ -94,6 +95,9 @@ cubemap: primitives.Cubemap
 skybox_shader, mesh_shader, texture_shader, light_shader, skybox_reflect_shader, skybox_refract_shader: u32
 full_screen_shader, depth_shader, single_color_shader, house_shader, explode_shader, normal_shader: u32
 planet_shader: u32
+NUM_ASTEROIDS :: 1000
+
+asteroid_model_transforms: [dynamic]types.TransformMatrix
 
 instanced_rect_shader, instanced_rect_offset_vbo: u32
 
@@ -297,6 +301,10 @@ main :: proc() {
 
 	for _, &mesh in rock_scene.meshes do render.mesh_send_to_gpu(&mesh)
 	defer for _, &mesh in rock_scene.meshes do render.mesh_gpu_free(&mesh)
+
+	asteroid_model_transforms = make([dynamic]types.TransformMatrix, NUM_ASTEROIDS)
+	defer delete(asteroid_model_transforms)
+	set_asteroid_transforms()
 
 	primitives.cube_send_to_gpu()
 	defer primitives.cube_clear_from_gpu()
@@ -706,6 +714,8 @@ draw_normals :: proc(scene: render.Scene) {
 draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
 	ensure(planet_shader != 0, "planet shader not initialized")
 
+	planet_center := types.Vec3{0, -3, -55}
+
 	gl.ClearColor(0.1, 0.1, 0.1, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.Enable(gl.DEPTH_TEST)
@@ -713,35 +723,36 @@ draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
 	projection := render.camera_get_projection(&camera)
 	view := render.camera_get_view(&camera)
 	pv := projection * view
-	model := linalg.matrix4_translate(types.Vec3{0, -3, -55})
-	model = model * linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
-	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-	transform := pv * model
 
-	gl.UseProgram(planet_shader)
-	gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-	gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-	gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+	{
+		model := linalg.matrix4_translate(planet_center)
+		model = model * linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
+		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+		transform := pv * model
 
-	for _, &mesh in planet_scene.meshes {
-		render.mesh_draw(&mesh, planet_shader)
+		gl.UseProgram(planet_shader)
+		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
+		gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+
+		for _, &mesh in planet_scene.meshes {
+			render.mesh_draw(&mesh, planet_shader)
+		}
 	}
 
-	model = linalg.matrix4_translate(types.Vec3{2, 0, 0})
-	model = linalg.matrix4_scale_f32(types.Vec3{0.25, 0.25, 0.25}) * model
-	mit = types.SubTransformMatrix(linalg.inverse_transpose(model))
-	transform = pv * model
+	for model in asteroid_model_transforms {
+		model := linalg.matrix4_translate(planet_center) * model
+		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+		transform := pv * model
 
-	gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-	gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-	gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
+		gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
 
-	// for _, &mesh in rock_scene.meshes {
-	// 	render.mesh_draw(&mesh, planet_shader)
-	// }
-
-	// TODO: draw the asteroids
-
+		for _, &mesh in rock_scene.meshes {
+			render.mesh_draw(&mesh, planet_shader)
+		}
+	}
 }
 
 draw_instanced_rects :: proc() {
@@ -756,4 +767,34 @@ distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
 
 distance_order :: proc(lhs, rhs: types.Vec3) -> bool {
 	return distance_squared_from_camera(lhs) > distance_squared_from_camera(rhs)
+}
+
+set_asteroid_transforms :: proc() {
+	radius :: 50
+	rotation_axis :: types.Vec3{0.4, 0.6, 0.8}
+
+	for i in 0 ..< NUM_ASTEROIDS {
+		angle := f32(i) / f32(NUM_ASTEROIDS) * 360
+
+		translation := types.Vec3 {
+			math.sin(angle) * radius + generate_random_displacement(),
+			generate_random_displacement() * 0.4,
+			math.cos(angle) * radius + generate_random_displacement(),
+		}
+
+		scale := f32(rand.int31() % 20) / 100 + 0.05
+		rotation := f32(rand.int31() % 360)
+
+		asteroid_model_transforms[i] =
+			linalg.matrix4_translate(translation) *
+			linalg.matrix4_rotate(rotation, rotation_axis) *
+			linalg.matrix4_scale_f32(scale)
+	}
+}
+
+generate_random_displacement :: proc() -> f32 {
+	offset :: 2.5
+
+	// TODO: rewrite using rand.float32
+	return f32(rand.int31() % i32(200 * offset)) / 100 - offset
 }
