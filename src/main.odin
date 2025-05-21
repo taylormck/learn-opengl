@@ -20,6 +20,7 @@ HEIGHT :: 600
 
 GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
+NUM_SAMPLES :: 4
 
 point_lights := [?]render.PointLight {
 	{
@@ -117,7 +118,7 @@ main :: proc() {
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MINOR, GL_MINOR_VERSION)
 	glfw.WindowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
 	glfw.WindowHint(glfw.OPENGL_FORWARD_COMPAT, gl.TRUE)
-	glfw.WindowHint(glfw.SAMPLES, 4)
+	glfw.WindowHint(glfw.SAMPLES, NUM_SAMPLES)
 
 	window := glfw.CreateWindow(WIDTH, HEIGHT, "Renderer", nil, nil)
 	defer glfw.DestroyWindow(window)
@@ -408,8 +409,8 @@ main :: proc() {
 		// draw_exploded_model(scene, new_time)
 		// draw_normals(scene)
 		// draw_instanced_rects()
-		// draw_asteroid_scene(planet_scene, rock_scene)
-		draw_green_box()
+		draw_asteroid_scene(planet_scene, rock_scene)
+		// draw_green_box()
 
 		glfw.SwapBuffers(window)
 		prev_time = new_time
