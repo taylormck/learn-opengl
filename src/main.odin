@@ -297,7 +297,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableau.orange_quad_wireframe_tableau
+	current_tableau := tableau.two_triangles_different_colors_tableau
 
 	current_tableau.init()
 	defer current_tableau.teardown()

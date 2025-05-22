@@ -7,6 +7,7 @@ import gl "vendor:OpenGL"
 // planet_shader, asteroid_shader: u32
 Shader :: enum {
 	Orange,
+	Yellow,
 	VertexColor,
 	Mesh,
 	Texture,
@@ -45,7 +46,14 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos.vert"),
 				#load("../../shaders/frag/orange.frag"),
-			) or_else panic("Failed to load the shader")
+			) or_else panic("Failed to load the orange shader")
+
+	case .Yellow:
+		shaders[.Yellow] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos.vert"),
+				#load("../../shaders/frag/yellow.frag"),
+			) or_else panic("Failed to load the yellow shader")
 
 	case .VertexColor:
 		shaders[.VertexColor] =
