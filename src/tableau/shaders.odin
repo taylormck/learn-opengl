@@ -196,7 +196,6 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/phong_material_sampled_directional_light.frag"),
 			) or_else panic("Failed to load the asteroid shader")
 
-
 	case .InstancedRect:
 		shaders[.InstancedRect] =
 			gl.load_shaders_source(

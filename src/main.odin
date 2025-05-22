@@ -152,12 +152,17 @@ main :: proc() {
 	gl.BufferData(gl.ARRAY_BUFFER, size_of(instanced_rect_translations), &instanced_rect_translations, gl.STATIC_DRAW)
 
 	// TODO: factor this out into tableau logic
-	// tableau.init_shaders(.SingleColor, .Invert)
 	// tableau.init_shaders(.SingleColor, .Light, .Mesh)
 	// tableau.init_shaders(.Texture)
 	// tableau.init_shaders(.Texture, .Fullscreen)
 	// tableau.init_shaders(.Texture, .Fullscreen, .SingleColor)
-	tableau.init_shaders(.Skybox, .SkyboxReflect, .SkyboxRefract)
+	// tableau.init_shaders(.Skybox, .SkyboxReflect, .SkyboxRefract)
+	// tableau.init_shaders(.House)
+	// tableau.init_shaders(.Explode)
+	// tableau.init_shaders(.Normal)
+	// tableau.init_shaders(.InstancedRect)
+	// tableau.init_shaders(.Planet, .Asteroid)
+	tableau.init_shaders(.SingleColor, .Invert)
 	defer tableau.delete_shaders()
 
 	backpack_scene :=
@@ -226,6 +231,8 @@ main :: proc() {
 		gl.UseProgram(asteroid_shader)
 		render.directional_light_set_uniform(&directional_light, asteroid_shader)
 	}
+
+	gl.UseProgram(0)
 
 	metal_texture = render.prepare_texture("textures/metal.png", .Diffuse, true)
 	marble_texture = render.prepare_texture("textures/marble.jpg", .Diffuse, true)
@@ -299,13 +306,13 @@ main :: proc() {
 		// draw_block_scene()
 		// draw_full_screen_scene()
 		// draw_box_scene_rearview_mirror()
-		draw_skybox_scene(backpack_scene)
+		// draw_skybox_scene(backpack_scene)
 		// draw_houses()
-		// draw_exploded_model(scene, new_time)
-		// draw_normals(scene)
+		// draw_exploded_model(backpack_scene, new_time)
+		// draw_normals(backpack_scene)
 		// draw_instanced_rects()
 		// draw_asteroid_scene(planet_scene, rock_scene)
-		// draw_green_box()
+		draw_green_box()
 
 		glfw.SwapBuffers(window)
 		prev_time = new_time
@@ -577,98 +584,108 @@ draw_skybox_scene :: proc(scene: render.Scene) {
 	gl.DepthFunc(gl.LESS)
 }
 
-// draw_houses :: proc() {
-// 	gl.ClearColor(0, 0, 0, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT)
-//
-// 	gl.UseProgram(house_shader)
-// 	primitives.points_draw()
-// }
-//
-// draw_exploded_model :: proc(scene: render.Scene, time: f32) {
-// 	gl.ClearColor(0, 0, 0, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.Enable(gl.DEPTH_TEST)
-//
-// 	gl.UseProgram(explode_shader)
-//
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	pv := projection * view
-// 	model := linalg.identity(types.TransformMatrix)
-// 	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-// 	transform := pv * model
-//
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "transform"), 1, false, raw_data(&transform))
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "model"), 1, false, raw_data(&model))
-// 	gl.UniformMatrix3fv(gl.GetUniformLocation(explode_shader, "mit"), 1, false, raw_data(&mit))
-//
-// 	gl.Uniform1f(gl.GetUniformLocation(explode_shader, "time"), time)
-//
-// 	for _, &mesh in scene.meshes {
-// 		render.mesh_draw(&mesh, explode_shader)
-// 	}
-// }
-//
-// draw_normals :: proc(scene: render.Scene) {
-// 	draw_scene(scene)
-//
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	model := linalg.identity(types.TransformMatrix)
-// 	view_model := view * model
-// 	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-//
-// 	gl.UseProgram(normal_shader)
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "view_model"), 1, false, raw_data(&view_model))
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "projection"), 1, false, raw_data(&projection))
-// 	gl.UniformMatrix3fv(gl.GetUniformLocation(normal_shader, "mit"), 1, false, raw_data(&mit))
-//
-// 	for _, &mesh in scene.meshes {
-// 		render.mesh_draw(&mesh, normal_shader)
-// 	}
-// }
-//
-// draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
-// 	ensure(planet_shader != 0, "planet shader not initialized")
-// 	ensure(asteroid_shader != 0, "asteroid_shader shader not initialized")
-//
-//
-// 	gl.ClearColor(0.1, 0.1, 0.1, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.Enable(gl.DEPTH_TEST)
-//
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	pv := projection * view
-//
-// 	{
-// 		model := linalg.matrix4_translate(PLANET_CENTER)
-// 		model = model * linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
-// 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-// 		transform := pv * model
-//
-// 		gl.UseProgram(planet_shader)
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-// 		gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
-//
-// 		for _, &mesh in planet_scene.meshes {
-// 			render.mesh_draw(&mesh, planet_shader)
-// 		}
-// 	}
-//
-// 	{
-// 		gl.UseProgram(asteroid_shader)
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(asteroid_shader, "pv"), 1, false, raw_data(&pv))
-//
-// 		for _, &mesh in rock_scene.meshes {
-// 			render.mesh_draw_instanced(&mesh, asteroid_shader, NUM_ASTEROIDS)
-// 		}
-//
-// 		gl.BindVertexArray(0)
-// 	}
-// }
+draw_houses :: proc() {
+	gl.ClearColor(0, 0, 0, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+
+	house_shader := tableau.shaders[.House]
+	gl.UseProgram(house_shader)
+	primitives.points_draw()
+}
+
+draw_exploded_model :: proc(scene: render.Scene, time: f32) {
+	gl.ClearColor(0, 0, 0, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Enable(gl.DEPTH_TEST)
+
+	explode_shader := tableau.shaders[.Explode]
+	gl.UseProgram(explode_shader)
+
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	pv := projection * view
+	model := linalg.identity(types.TransformMatrix)
+	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+	transform := pv * model
+
+	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "transform"), 1, false, raw_data(&transform))
+	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "model"), 1, false, raw_data(&model))
+	gl.UniformMatrix3fv(gl.GetUniformLocation(explode_shader, "mit"), 1, false, raw_data(&mit))
+
+	gl.Uniform1f(gl.GetUniformLocation(explode_shader, "time"), time)
+
+	for _, &mesh in scene.meshes {
+		render.mesh_draw(&mesh, explode_shader)
+	}
+}
+
+draw_normals :: proc(scene: render.Scene) {
+	draw_scene(scene)
+
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	model := linalg.identity(types.TransformMatrix)
+	view_model := view * model
+	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+
+	normal_shader := tableau.shaders[.Normal]
+	gl.UseProgram(normal_shader)
+	gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "view_model"), 1, false, raw_data(&view_model))
+	gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "projection"), 1, false, raw_data(&projection))
+	gl.UniformMatrix3fv(gl.GetUniformLocation(normal_shader, "mit"), 1, false, raw_data(&mit))
+
+	for _, &mesh in scene.meshes {
+		render.mesh_draw(&mesh, normal_shader)
+	}
+}
+
+draw_instanced_rects :: proc() {
+	gl.UseProgram(tableau.shaders[.InstancedRect])
+	primitives.quad_draw_instanced(100, instanced_rect_offset_vbo)
+}
+
+draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
+	planet_shader := tableau.shaders[.Planet]
+	asteroid_shader := tableau.shaders[.Asteroid]
+
+	ensure(planet_shader != 0, "planet shader not initialized")
+	ensure(asteroid_shader != 0, "asteroid_shader shader not initialized")
+
+	gl.ClearColor(0.1, 0.1, 0.1, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Enable(gl.DEPTH_TEST)
+
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	pv := projection * view
+
+	{
+		model := linalg.matrix4_translate(PLANET_CENTER)
+		model = model * linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
+		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+		transform := pv * model
+
+		gl.UseProgram(planet_shader)
+		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
+		gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+
+		for _, &mesh in planet_scene.meshes {
+			render.mesh_draw(&mesh, planet_shader)
+		}
+	}
+
+	{
+		gl.UseProgram(asteroid_shader)
+		gl.UniformMatrix4fv(gl.GetUniformLocation(asteroid_shader, "pv"), 1, false, raw_data(&pv))
+
+		for _, &mesh in rock_scene.meshes {
+			render.mesh_draw_instanced(&mesh, asteroid_shader, NUM_ASTEROIDS)
+		}
+
+		gl.BindVertexArray(0)
+	}
+}
 
 draw_green_box :: proc() {
 	gl.BindFramebuffer(gl.FRAMEBUFFER, ms_fbo)
@@ -715,12 +732,6 @@ draw_green_box :: proc() {
 	gl.UseProgram(tableau.shaders[.Invert])
 	primitives.full_screen_draw()
 }
-
-
-// draw_instanced_rects :: proc() {
-// 	gl.UseProgram(instanced_rect_shader)
-// 	primitives.quad_draw_instanced(100, instanced_rect_offset_vbo)
-// }
 
 framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, height: i32) {
 	context = runtime.default_context()
