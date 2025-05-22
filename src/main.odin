@@ -153,7 +153,11 @@ main :: proc() {
 
 	// TODO: factor this out into tableau logic
 	// tableau.init_shaders(.SingleColor, .Invert)
-	tableau.init_shaders(.SingleColor, .Light, .Mesh)
+	// tableau.init_shaders(.SingleColor, .Light, .Mesh)
+	// tableau.init_shaders(.Texture)
+	// tableau.init_shaders(.Texture, .Fullscreen)
+	// tableau.init_shaders(.Texture, .Fullscreen, .SingleColor)
+	tableau.init_shaders(.Skybox, .SkyboxReflect, .SkyboxRefract)
 	defer tableau.delete_shaders()
 
 	backpack_scene :=
@@ -291,11 +295,11 @@ main :: proc() {
 		glfw.PollEvents()
 		process_input(window, delta)
 
-		draw_scene(backpack_scene)
+		// draw_scene(backpack_scene)
 		// draw_block_scene()
 		// draw_full_screen_scene()
 		// draw_box_scene_rearview_mirror()
-		// draw_skybox_scene(scene)
+		draw_skybox_scene(backpack_scene)
 		// draw_houses()
 		// draw_exploded_model(scene, new_time)
 		// draw_normals(scene)
@@ -392,179 +396,187 @@ draw_scene :: proc(scene: render.Scene, draw_outline: bool = false) {
 	gl.Enable(gl.DEPTH_TEST)
 }
 
-// draw_block_scene :: proc() {
-// 	gl.ClearColor(0.1, 0.2, 0.3, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.Enable(gl.DEPTH_TEST)
-//
-// 	gl.ActiveTexture(gl.TEXTURE0)
-//
-// 	gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-// 	gl.UseProgram(texture_shader)
-//
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	pv := projection * view
-//
-// 	{
-// 		// Draw floor
-// 		gl.BindTexture(gl.TEXTURE_2D, marble_texture.id)
-// 		model := linalg.matrix4_translate(types.Vec3{0, -1, 0})
-// 		model = model * linalg.matrix4_rotate(linalg.to_radians(f32(-90)), types.Vec3{1, 0, 0})
-// 		model = linalg.matrix4_scale_f32(types.Vec3{10, 1, 10}) * model
-// 		transform := pv * model
-//
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-//
-// 		primitives.quad_draw()
-// 	}
-//
-// 	{
-// 		gl.Enable(gl.CULL_FACE)
-// 		defer gl.Disable(gl.CULL_FACE)
-//
-// 		gl.CullFace(gl.FRONT)
-// 		defer gl.CullFace(gl.BACK)
-//
-// 		cube_positions := [?]types.Vec3{{-2, -0.45, -2.5}, {2, -0.45, -2}}
-// 		for position in cube_positions {
-// 			gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
-// 			model := linalg.matrix4_translate(position)
-// 			transform := pv * model
-//
-// 			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-//
-// 			primitives.cube_draw()
-// 		}
-// 	}
-//
-// 	gl.Enable(gl.BLEND)
-// 	defer gl.Disable(gl.BLEND)
-//
-// 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-//
-// 	gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
-// 	grass_positions := [?]types.Vec3 {
-// 		{0, -0.5, 1.05},
-// 		{-1.5, -0.5, 0.2},
-// 		{3.5, -0.5, 0.51},
-// 		{-0.3, -0.5, -4.3},
-// 		{0.5, -0.5, -1.5},
-// 	}
-// 	for position in grass_positions {
-// 		model := linalg.matrix4_translate(position)
-// 		transform := pv * model
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-//
-// 		primitives.cross_imposter_draw()
-// 	}
-//
-// 	gl.BindTexture(gl.TEXTURE_2D, window_texture.id)
-// 	window_positions := [?]types.Vec3 {
-// 		{1, -0.5, 0.55},
-// 		{-1.75, -0.5, -0.58},
-// 		{1.5, -0.5, 1},
-// 		{-0.3, -0.5, -2.6},
-// 		{0.5, -0.5, -0.7},
-// 	}
-// 	slice.sort_by(window_positions[:], distance_order)
-// 	for position in window_positions {
-// 		model := linalg.matrix4_translate(position)
-// 		transform := pv * model
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-//
-// 		primitives.quad_draw()
-// 	}
-// }
-//
-// draw_full_screen_scene :: proc() {
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
-// 	// NOTE: draw_block_scene clears the buffers for us
-// 	draw_block_scene()
-//
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-// 	gl.ClearColor(1, 1, 1, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT)
-// 	gl.Disable(gl.DEPTH_TEST)
-// 	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
-//
-// 	gl.UseProgram(full_screen_shader)
-// 	primitives.full_screen_draw()
-// }
-//
-// draw_box_scene_rearview_mirror :: proc() {
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
-// 	// NOTE: draw_block_scene clears the buffers for us
-//
-// 	camera.direction = -camera.direction
-// 	draw_block_scene()
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-//
-// 	camera.direction = -camera.direction
-// 	draw_block_scene()
-//
-// 	gl.UseProgram(texture_shader)
-// 	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
-//
-// 	gl.Enable(gl.STENCIL_TEST)
-// 	gl.Disable(gl.DEPTH_TEST)
-// 	gl.Clear(gl.STENCIL_BUFFER_BIT)
-// 	gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
-// 	gl.StencilFunc(gl.ALWAYS, 1, 0xff)
-// 	gl.StencilMask(0xff)
-//
-// 	transform := linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.75, 0.75, 0})
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
-// 	primitives.quad_draw()
-//
-// 	gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
-// 	gl.StencilMask(0x00)
-//
-// 	gl.UseProgram(single_color_shader)
-// 	transform = linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.8, 0.8, 0})
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
-// 	primitives.quad_draw()
-//
-// 	gl.Disable(gl.STENCIL_TEST)
-// 	gl.Enable(gl.DEPTH_TEST)
-// }
-//
-// draw_skybox_scene :: proc(scene: render.Scene) {
-// 	model := linalg.identity(types.TransformMatrix)
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	transform := projection * view * model
-// 	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-//
-// 	view_without_translate := types.TransformMatrix(types.SubTransformMatrix(view))
-// 	pv := projection * view_without_translate
-//
-// 	// gl.UseProgram(skybox_reflect_shader)
-// 	gl.UseProgram(skybox_refract_shader)
-//
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_reflect_shader, "transform"), 1, false, raw_data(&transform))
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_reflect_shader, "model"), 1, false, raw_data(&model))
-// 	gl.UniformMatrix3fv(gl.GetUniformLocation(skybox_reflect_shader, "mit"), 1, false, raw_data(&mit))
-// 	gl.Uniform3fv(gl.GetUniformLocation(skybox_reflect_shader, "camera_position"), 1, raw_data(&camera.position))
-//
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.Enable(gl.DEPTH_TEST)
-// 	gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap.texture_id)
-//
-// 	// primitives.cube_draw()
-// 	for _, &mesh in scene.meshes {
-// 		render.mesh_draw(&mesh, single_color_shader)
-// 	}
-//
-// 	gl.DepthFunc(gl.LEQUAL)
-// 	gl.UseProgram(skybox_shader)
-//
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_shader, "projection_view"), 1, false, raw_data(&pv))
-// 	primitives.cubemap_draw(&cubemap)
-//
-// 	gl.DepthFunc(gl.LESS)
-// }
-//
+draw_block_scene :: proc() {
+	gl.ClearColor(0.1, 0.2, 0.3, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Enable(gl.DEPTH_TEST)
+
+	texture_shader := tableau.shaders[.Texture]
+
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
+	gl.UseProgram(texture_shader)
+
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	pv := projection * view
+
+	{
+		// Draw floor
+		gl.BindTexture(gl.TEXTURE_2D, marble_texture.id)
+		model := linalg.matrix4_translate(types.Vec3{0, -1, 0})
+		model = model * linalg.matrix4_rotate(linalg.to_radians(f32(-90)), types.Vec3{1, 0, 0})
+		model = linalg.matrix4_scale_f32(types.Vec3{10, 1, 10}) * model
+		transform := pv * model
+
+		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+
+		primitives.quad_draw()
+	}
+
+	{
+		gl.Enable(gl.CULL_FACE)
+		defer gl.Disable(gl.CULL_FACE)
+
+		gl.CullFace(gl.FRONT)
+		defer gl.CullFace(gl.BACK)
+
+		cube_positions := [?]types.Vec3{{-2, -0.45, -2.5}, {2, -0.45, -2}}
+		for position in cube_positions {
+			gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
+			model := linalg.matrix4_translate(position)
+			transform := pv * model
+
+			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+
+			primitives.cube_draw()
+		}
+	}
+
+	gl.Enable(gl.BLEND)
+	defer gl.Disable(gl.BLEND)
+
+	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+	gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
+	grass_positions := [?]types.Vec3 {
+		{0, -0.5, 1.05},
+		{-1.5, -0.5, 0.2},
+		{3.5, -0.5, 0.51},
+		{-0.3, -0.5, -4.3},
+		{0.5, -0.5, -1.5},
+	}
+	for position in grass_positions {
+		model := linalg.matrix4_translate(position)
+		transform := pv * model
+		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+
+		primitives.cross_imposter_draw()
+	}
+
+	gl.BindTexture(gl.TEXTURE_2D, window_texture.id)
+	window_positions := [?]types.Vec3 {
+		{1, -0.5, 0.55},
+		{-1.75, -0.5, -0.58},
+		{1.5, -0.5, 1},
+		{-0.3, -0.5, -2.6},
+		{0.5, -0.5, -0.7},
+	}
+	slice.sort_by(window_positions[:], distance_order)
+	for position in window_positions {
+		model := linalg.matrix4_translate(position)
+		transform := pv * model
+		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+
+		primitives.quad_draw()
+	}
+}
+
+draw_full_screen_scene :: proc() {
+	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
+	// NOTE: draw_block_scene clears the buffers for us
+	draw_block_scene()
+
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+	gl.ClearColor(1, 1, 1, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.Disable(gl.DEPTH_TEST)
+	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+
+	gl.UseProgram(tableau.shaders[.Fullscreen])
+	primitives.full_screen_draw()
+}
+
+draw_box_scene_rearview_mirror :: proc() {
+	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
+	// NOTE: draw_block_scene clears the buffers for us
+
+	texture_shader := tableau.shaders[.Texture]
+	single_color_shader := tableau.shaders[.SingleColor]
+
+	camera.direction = -camera.direction
+	draw_block_scene()
+	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+	camera.direction = -camera.direction
+	draw_block_scene()
+
+	gl.UseProgram(texture_shader)
+	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+
+	gl.Enable(gl.STENCIL_TEST)
+	gl.Disable(gl.DEPTH_TEST)
+	gl.Clear(gl.STENCIL_BUFFER_BIT)
+	gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
+	gl.StencilFunc(gl.ALWAYS, 1, 0xff)
+	gl.StencilMask(0xff)
+
+	transform := linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.75, 0.75, 0})
+	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
+	primitives.quad_draw()
+
+	gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
+	gl.StencilMask(0x00)
+
+	gl.UseProgram(single_color_shader)
+	transform = linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.8, 0.8, 0})
+	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
+	primitives.quad_draw()
+
+	gl.Disable(gl.STENCIL_TEST)
+	gl.Enable(gl.DEPTH_TEST)
+}
+
+draw_skybox_scene :: proc(scene: render.Scene) {
+	model := linalg.identity(types.TransformMatrix)
+	projection := render.camera_get_projection(&camera)
+	view := render.camera_get_view(&camera)
+	transform := projection * view * model
+	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+
+	view_without_translate := types.TransformMatrix(types.SubTransformMatrix(view))
+	pv := projection * view_without_translate
+
+	skybox_reflect_shader := tableau.shaders[.SkyboxReflect]
+	skybox_refract_shader := tableau.shaders[.SkyboxRefract]
+	skybox_shader := tableau.shaders[.Skybox]
+
+	mesh_shader := skybox_refract_shader
+	gl.UseProgram(mesh_shader)
+
+	gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
+	gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
+	gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
+	gl.Uniform3fv(gl.GetUniformLocation(mesh_shader, "camera_position"), 1, raw_data(&camera.position))
+
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+	gl.Enable(gl.DEPTH_TEST)
+	gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap.texture_id)
+
+	// primitives.cube_draw()
+	for _, &mesh in scene.meshes {
+		render.mesh_draw(&mesh, mesh_shader)
+	}
+
+	gl.DepthFunc(gl.LEQUAL)
+	gl.UseProgram(skybox_shader)
+
+	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_shader, "projection_view"), 1, false, raw_data(&pv))
+	primitives.cubemap_draw(&cubemap)
+
+	gl.DepthFunc(gl.LESS)
+}
+
 // draw_houses :: proc() {
 // 	gl.ClearColor(0, 0, 0, 1)
 // 	gl.Clear(gl.COLOR_BUFFER_BIT)
