@@ -17,7 +17,7 @@ mouse_info := MouseStatus {
 	position = {INITIAL_WIDTH / 2, INITIAL_HEIGHT / 2},
 }
 
-process_input :: proc(window: glfw.WindowHandle, delta: f32) {
+process_input :: proc(window: glfw.WindowHandle, delta: f64) {
 	CAMERA_SPEED :: 5
 
 	if glfw.GetKey(window, glfw.KEY_ESCAPE) == glfw.PRESS {
@@ -33,7 +33,7 @@ process_input :: proc(window: glfw.WindowHandle, delta: f32) {
 
 	// NOTE: input should probably be stashed in a global somewhere,
 	// then this can run in the update directly.
-	render.camera_move(&camera, camera_movement, delta)
+	render.camera_move(&camera, camera_movement, f32(delta))
 }
 
 @(private = "file")

@@ -6,6 +6,7 @@ import gl "vendor:OpenGL"
 // greyscale_shader, invert_shader: u32
 // planet_shader, asteroid_shader: u32
 Shader :: enum {
+	VertexColor,
 	Mesh,
 	Texture,
 	Light,
@@ -38,6 +39,13 @@ init_shaders :: proc(wanted_shaders: ..Shader) {
 
 init_shader :: proc(shader: Shader) {
 	switch shader {
+	case .VertexColor:
+		shaders[.VertexColor] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_color.vert"),
+				#load("../../shaders/frag/vert_color.frag"),
+			) or_else panic("Failed to load the shader")
+
 	case .Mesh:
 		shaders[.Mesh] =
 			gl.load_shaders_source(
@@ -118,7 +126,7 @@ init_shader :: proc(shader: Shader) {
 	case .House:
 		house_shaders: [3]u32 = {
 			gl.compile_shader_from_source(
-				#load("../../shaders/vert/pos_and_color.vert"),
+				#load("../../shaders/vert/house_color.vert"),
 				gl.Shader_Type.VERTEX_SHADER,
 			) or_else panic("Failed to load the house vertex shader"),
 			gl.compile_shader_from_source(
