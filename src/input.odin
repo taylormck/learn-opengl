@@ -14,7 +14,7 @@ MouseStatus :: struct {
 }
 
 mouse_info := MouseStatus {
-	position = {WIDTH / 2, HEIGHT / 2},
+	position = {INITIAL_WIDTH / 2, INITIAL_HEIGHT / 2},
 }
 
 process_input :: proc(window: glfw.WindowHandle, delta: f32) {

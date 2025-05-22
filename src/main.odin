@@ -15,8 +15,11 @@ import "types"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 
-WIDTH :: 800
-HEIGHT :: 600
+INITIAL_WIDTH :: 800
+INITIAL_HEIGHT :: 600
+
+window_width: i32 = INITIAL_WIDTH
+window_height: i32 = INITIAL_HEIGHT
 
 GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
@@ -82,7 +85,7 @@ camera := render.Camera {
 	direction    = {0, 0, -1},
 	up           = {0, 1, 0},
 	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = f32(WIDTH) / HEIGHT,
+	aspect_ratio = f32(INITIAL_WIDTH) / INITIAL_HEIGHT,
 	near         = 0.1,
 	far          = 1000,
 	speed        = 5,
@@ -122,7 +125,7 @@ main :: proc() {
 	glfw.WindowHint(glfw.OPENGL_FORWARD_COMPAT, gl.TRUE)
 	glfw.WindowHint(glfw.SAMPLES, NUM_SAMPLES)
 
-	window := glfw.CreateWindow(WIDTH, HEIGHT, "Renderer", nil, nil)
+	window := glfw.CreateWindow(INITIAL_WIDTH, INITIAL_HEIGHT, "Renderer", nil, nil)
 	defer glfw.DestroyWindow(window)
 
 	if window == nil {
@@ -131,7 +134,7 @@ main :: proc() {
 
 	glfw.MakeContextCurrent(window)
 	gl.load_up_to(GL_MAJOR_VERSION, GL_MINOR_VERSION, glfw.gl_set_proc_address)
-	gl.Viewport(0, 0, WIDTH, HEIGHT)
+	gl.Viewport(0, 0, INITIAL_WIDTH, INITIAL_HEIGHT)
 	glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
 
 	glfw.SetInputMode(window, glfw.CURSOR, glfw.CURSOR_DISABLED)
@@ -384,7 +387,7 @@ main :: proc() {
 
 	gl.GenTextures(1, &fb_texture)
 	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, WIDTH, HEIGHT, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, INITIAL_WIDTH, INITIAL_HEIGHT, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -398,7 +401,7 @@ main :: proc() {
 
 	gl.GenRenderbuffers(1, &rbo)
 	gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
-	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, WIDTH, HEIGHT)
+	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, INITIAL_WIDTH, INITIAL_HEIGHT)
 	gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 
 	gl.GenFramebuffers(1, &ms_fbo)
@@ -407,18 +410,14 @@ main :: proc() {
 
 	gl.GenTextures(1, &ms_fb_texture)
 	gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture)
-	gl.TexImage2DMultisample(gl.TEXTURE_2D_MULTISAMPLE, NUM_SAMPLES, gl.RGB, WIDTH, HEIGHT, gl.TRUE)
-	// gl.TexParameteri(gl.TEXTURE_2D_MULTISAMPLE, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-	// gl.TexParameteri(gl.TEXTURE_2D_MULTISAMPLE, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-	// gl.TexParameteri(gl.TEXTURE_2D_MULTISAMPLE, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	// gl.TexParameteri(gl.TEXTURE_2D_MULTISAMPLE, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+	gl.TexImage2DMultisample(gl.TEXTURE_2D_MULTISAMPLE, NUM_SAMPLES, gl.RGB, INITIAL_WIDTH, INITIAL_HEIGHT, gl.TRUE)
 	gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, 0)
 
 	gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture, 0)
 
 	gl.GenRenderbuffers(1, &ms_rbo)
 	gl.BindRenderbuffer(gl.RENDERBUFFER, ms_rbo)
-	gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, WIDTH, HEIGHT)
+	gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, INITIAL_WIDTH, INITIAL_HEIGHT)
 	gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 
 	gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, ms_rbo)
@@ -452,13 +451,6 @@ main :: proc() {
 		glfw.SwapBuffers(window)
 		prev_time = new_time
 	}
-}
-
-framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, height: i32) {
-	context = runtime.default_context()
-
-	gl.Viewport(0, 0, width, height)
-	camera.aspect_ratio = f32(width) / f32(height)
 }
 
 draw_scene :: proc(scene: render.Scene, draw_outline: bool = false) {
@@ -826,7 +818,18 @@ draw_green_box :: proc() {
 
 	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, ms_fbo)
 	gl.BindFramebuffer(gl.DRAW_FRAMEBUFFER, fbo)
-	gl.BlitFramebuffer(0, 0, WIDTH, HEIGHT, 0, 0, WIDTH, HEIGHT, gl.COLOR_BUFFER_BIT, gl.NEAREST)
+	gl.BlitFramebuffer(
+		0,
+		0,
+		window_width,
+		window_height,
+		0,
+		0,
+		window_width,
+		window_height,
+		gl.COLOR_BUFFER_BIT,
+		gl.NEAREST,
+	)
 
 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	gl.ClearColor(0.1, 0.2, 0.3, 1)
@@ -842,6 +845,31 @@ draw_green_box :: proc() {
 draw_instanced_rects :: proc() {
 	gl.UseProgram(instanced_rect_shader)
 	primitives.quad_draw_instanced(100, instanced_rect_offset_vbo)
+}
+
+framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, height: i32) {
+	context = runtime.default_context()
+	window_width = width
+	window_height = height
+
+	gl.Viewport(0, 0, width, height)
+	camera.aspect_ratio = f32(width) / f32(height)
+
+	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+	defer gl.BindTexture(gl.TEXTURE_2D, 0)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
+
+	gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
+	defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, width, height)
+
+	gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture)
+	defer gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, 0)
+	gl.TexImage2DMultisample(gl.TEXTURE_2D_MULTISAMPLE, NUM_SAMPLES, gl.RGB, width, height, gl.TRUE)
+
+	gl.BindRenderbuffer(gl.RENDERBUFFER, ms_rbo)
+	defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+	gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, width, height)
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
