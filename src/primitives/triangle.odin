@@ -19,6 +19,9 @@ TRIANGLE_VERTICES := [NUM_TRIANGLE_VERTICES]render.Vertex {
 triangle_vao, triangle_vbo: u32
 
 triangle_send_to_gpu :: proc() {
+	assert(triangle_vao == 0, "attempted to send triangle to GPU twice")
+	assert(triangle_vbo == 0, "attempted to send triangle to GPU twice")
+
 	gl.GenVertexArrays(1, &triangle_vao)
 	gl.GenBuffers(1, &triangle_vbo)
 

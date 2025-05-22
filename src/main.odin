@@ -297,7 +297,8 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableau.triangle_tableau
+	current_tableau := tableau.orange_quad_wireframe_tableau
+
 	current_tableau.init()
 	defer current_tableau.teardown()
 	defer tableau.delete_shaders()
@@ -752,21 +753,21 @@ framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, hei
 	gl.Viewport(0, 0, width, height)
 	camera.aspect_ratio = f32(width) / f32(height)
 
-	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
-	defer gl.BindTexture(gl.TEXTURE_2D, 0)
-	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
-
-	gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
-	defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
-	gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, width, height)
-
-	gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture)
-	defer gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, 0)
-	gl.TexImage2DMultisample(gl.TEXTURE_2D_MULTISAMPLE, NUM_SAMPLES, gl.RGB, width, height, gl.TRUE)
-
-	gl.BindRenderbuffer(gl.RENDERBUFFER, ms_rbo)
-	defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
-	gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, width, height)
+	// gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+	// defer gl.BindTexture(gl.TEXTURE_2D, 0)
+	// gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
+	//
+	// gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
+	// defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+	// gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, width, height)
+	//
+	// gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture)
+	// defer gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, 0)
+	// gl.TexImage2DMultisample(gl.TEXTURE_2D_MULTISAMPLE, NUM_SAMPLES, gl.RGB, width, height, gl.TRUE)
+	//
+	// gl.BindRenderbuffer(gl.RENDERBUFFER, ms_rbo)
+	// defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+	// gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, width, height)
 }
 
 distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
