@@ -24,6 +24,9 @@ Tablueas :: enum {
 	Chapter_04_04_textures_exercise_02,
 	Chapter_04_05_textures_exercise_03,
 	Chapter_04_06_textures_exercise_04,
+	Chapter_05_01_transforms,
+	Chapter_05_02_transforms_exercise_01,
+	Chapter_05_03_transforms_exercise_02,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -47,4 +50,7 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_04_04_textures_exercise_02             = chapter_01_getting_started.exercise_04_04_textures_exercise_02,
 	.Chapter_04_05_textures_exercise_03             = chapter_01_getting_started.exercise_04_05_textures_exercise_03,
 	.Chapter_04_06_textures_exercise_04             = chapter_01_getting_started.exercise_04_06_textures_exercise_04,
+	.Chapter_05_01_transforms                       = chapter_01_getting_started.exercise_05_01_transforms,
+	.Chapter_05_02_transforms_exercise_01           = chapter_01_getting_started.exercise_05_02_transforms_exercise_01,
+	.Chapter_05_03_transforms_exercise_02           = chapter_01_getting_started.exercise_05_03_transforms_exercise_02,
 }
