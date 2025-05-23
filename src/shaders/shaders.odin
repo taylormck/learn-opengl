@@ -1,13 +1,11 @@
-package tableau
+package shaders
 
 import gl "vendor:OpenGL"
 
-// full_screen_shader, depth_shader, single_color_shader, house_shader, explode_shader, normal_shader: u32
-// greyscale_shader, invert_shader: u32
-// planet_shader, asteroid_shader: u32
 Shader :: enum {
 	Orange,
 	Yellow,
+	UniformColor,
 	VertexColor,
 	Mesh,
 	Texture,
@@ -54,6 +52,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos.vert"),
 				#load("../../shaders/frag/yellow.frag"),
 			) or_else panic("Failed to load the yellow shader")
+
+	case .UniformColor:
+		shaders[.UniformColor] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos.vert"),
+				#load("../../shaders/frag/uniform_color.frag"),
+			) or_else panic("Failed to load the uniform color shader")
 
 	case .VertexColor:
 		shaders[.VertexColor] =

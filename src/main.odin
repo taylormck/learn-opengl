@@ -11,7 +11,7 @@ import "core:slice"
 import "parse/obj"
 import "primitives"
 import "render"
-import "tableau"
+import "shaders"
 import "types"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
@@ -152,23 +152,6 @@ main :: proc() {
 	// gl.BindBuffer(gl.ARRAY_BUFFER, instanced_rect_offset_vbo)
 	// gl.BufferData(gl.ARRAY_BUFFER, size_of(instanced_rect_translations), &instanced_rect_translations, gl.STATIC_DRAW)
 
-	// tableau.init_shaders(.VertexColor)
-	// tableau.init_shaders(.SingleColor, .Light, .Mesh)
-	// tableau.init_shaders(.Texture)
-	// tableau.init_shaders(.Texture, .Fullscreen)
-	// tableau.init_shaders(.Texture, .Fullscreen, .SingleColor)
-	// tableau.init_shaders(.Skybox, .SkyboxReflect, .SkyboxRefract)
-	// tableau.init_shaders(.House)
-	// tableau.init_shaders(.Explode)
-	// tableau.init_shaders(.Normal)
-	// tableau.init_shaders(.InstancedRect)
-	// tableau.init_shaders(.Planet, .Asteroid)
-	// tableau.init_shaders(.SingleColor, .Invert)
-
-
-	// primitives.triangle_send_to_gpu()
-	// defer primitives.triangle_clear_from_gpu()
-
 	// backpack_scene :=
 	// 	obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 	// defer render.scene_destroy(&backpack_scene)
@@ -195,25 +178,7 @@ main :: proc() {
 	// 	render.mesh_send_transforms_to_gpu(&mesh, asteroid_model_transforms[:])
 	// }
 	// defer for _, &mesh in rock_scene.meshes do render.mesh_gpu_free(&mesh)
-	//
-	// primitives.cube_send_to_gpu()
-	// defer primitives.cube_clear_from_gpu()
-	//
-	// primitives.quad_send_to_gpu()
-	// defer primitives.quad_clear_from_gpu()
-	//
-	// primitives.cross_imposter_send_to_gpu()
-	// defer primitives.cross_imposter_clear_from_gpu()
-	//
-	// primitives.full_screen_send_to_gpu()
-	// defer primitives.full_screen_clear_from_gpu()
-	//
-	// cubemap = primitives.cubemap_load("textures/skybox")
-	// defer primitives.cubemap_free(&cubemap)
-	//
-	// primitives.points_send_to_gpu()
-	// defer primitives.points_clear_from_gpu()
-	//
+
 	// mesh_shader := tableau.shaders[.Mesh]
 	// if mesh_shader != 0 {
 	// 	gl.UseProgram(mesh_shader)
@@ -297,11 +262,11 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableau.two_triangles_different_colors_tableau
+	current_tableau := tableaus[.Chapter_03_02_shaders_interpolation]
 
 	current_tableau.init()
 	defer current_tableau.teardown()
-	defer tableau.delete_shaders()
+	defer shaders.delete_shaders()
 
 	prev_time := glfw.GetTime()
 
