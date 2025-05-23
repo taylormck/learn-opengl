@@ -15,12 +15,10 @@ import "shaders"
 import "types"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
+import "window"
 
 INITIAL_WIDTH :: 800
 INITIAL_HEIGHT :: 600
-
-window_width: i32 = INITIAL_WIDTH
-window_height: i32 = INITIAL_HEIGHT
 
 GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
@@ -80,17 +78,6 @@ spot_light := render.SpotLight {
 	outer_cutoff = math.cos(linalg.to_radians(f32(17.5))),
 }
 
-camera := render.Camera {
-	type         = .Flying,
-	position     = {0, 0, 3},
-	direction    = {0, 0, -1},
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = f32(INITIAL_WIDTH) / INITIAL_HEIGHT,
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
-}
 
 marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 
@@ -120,21 +107,24 @@ main :: proc() {
 	glfw.WindowHint(glfw.OPENGL_FORWARD_COMPAT, gl.TRUE)
 	glfw.WindowHint(glfw.SAMPLES, NUM_SAMPLES)
 
-	window := glfw.CreateWindow(INITIAL_WIDTH, INITIAL_HEIGHT, "Renderer", nil, nil)
-	defer glfw.DestroyWindow(window)
+	window_handle := glfw.CreateWindow(INITIAL_WIDTH, INITIAL_HEIGHT, "Renderer", nil, nil)
+	defer glfw.DestroyWindow(window_handle)
 
-	if window == nil {
+	if window_handle == nil {
 		panic("GLFW failed to open the window.")
 	}
 
-	glfw.MakeContextCurrent(window)
+	glfw.MakeContextCurrent(window_handle)
 	gl.load_up_to(GL_MAJOR_VERSION, GL_MINOR_VERSION, glfw.gl_set_proc_address)
 	gl.Viewport(0, 0, INITIAL_WIDTH, INITIAL_HEIGHT)
-	glfw.SetFramebufferSizeCallback(window, framebuffer_size_callback)
+	glfw.SetFramebufferSizeCallback(window_handle, framebuffer_size_callback)
 
-	glfw.SetInputMode(window, glfw.CURSOR, glfw.CURSOR_DISABLED)
-	glfw.SetCursorPosCallback(window, mouse_callback)
-	glfw.SetScrollCallback(window, scroll_callback)
+	glfw.SetInputMode(window_handle, glfw.CURSOR, glfw.CURSOR_DISABLED)
+	glfw.SetCursorPosCallback(window_handle, mouse_callback)
+	glfw.SetScrollCallback(window_handle, scroll_callback)
+
+	window.width = INITIAL_WIDTH
+	window.height = INITIAL_HEIGHT
 
 	init_input()
 
@@ -264,7 +254,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_05_03_transforms_exercise_02]
+	current_tableau := tableaus[.Chapter_06_01_coordinate_systems]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -272,18 +262,18 @@ main :: proc() {
 
 	prev_time := glfw.GetTime()
 
-	for !glfw.WindowShouldClose(window) {
+	for !glfw.WindowShouldClose(window_handle) {
 		new_time := glfw.GetTime()
 		delta := new_time - prev_time
 
 		glfw.PollEvents()
-		process_input(window, delta)
+		process_input(window_handle, delta)
 
 		if current_tableau.update != nil do current_tableau.update(delta)
 
 		current_tableau.draw()
 
-		glfw.SwapBuffers(window)
+		glfw.SwapBuffers(window_handle)
 		prev_time = new_time
 	}
 }
@@ -702,13 +692,13 @@ main :: proc() {
 // 	primitives.full_screen_draw()
 // }
 
-framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, height: i32) {
+framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, width, height: i32) {
 	context = runtime.default_context()
-	window_width = width
-	window_height = height
+	window.width = width
+	window.height = height
 
 	gl.Viewport(0, 0, width, height)
-	camera.aspect_ratio = f32(width) / f32(height)
+	// camera.aspect_ratio = window.aspect_ratio()
 
 	// gl.BindTexture(gl.TEXTURE_2D, fb_texture)
 	// defer gl.BindTexture(gl.TEXTURE_2D, 0)
@@ -727,14 +717,14 @@ framebuffer_size_callback :: proc "cdecl" (window: glfw.WindowHandle, width, hei
 	// gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, width, height)
 }
 
-distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
-	diff := camera.position - v
-	return linalg.dot(diff, diff)
-}
+// distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
+// 	diff := camera.position - v
+// 	return linalg.dot(diff, diff)
+// }
 
-distance_order :: proc(lhs, rhs: types.Vec3) -> bool {
-	return distance_squared_from_camera(lhs) > distance_squared_from_camera(rhs)
-}
+// distance_order :: proc(lhs, rhs: types.Vec3) -> bool {
+// 	return distance_squared_from_camera(lhs) > distance_squared_from_camera(rhs)
+// }
 
 set_asteroid_transforms :: proc() {
 	radius :: 50

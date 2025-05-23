@@ -32,7 +32,7 @@ process_input :: proc(window: glfw.WindowHandle, delta: f64) {
 
 	// NOTE: input should probably be stashed in a global somewhere,
 	// then this can run in the update directly.
-	render.camera_move(&camera, input.input_state.movement, f32(delta))
+	// render.camera_move(&camera, input.input_state.movement, f32(delta))
 }
 
 @(private = "file")
@@ -52,7 +52,7 @@ mouse_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
 		types.Vec2{x - input.input_state.mouse_position.x, input.input_state.mouse_position.y - y} * MOUSE_SENSITIVITY
 	input.input_state.mouse_position = {x, y}
 
-	render.camera_update_direction(&camera, offset)
+	// render.camera_update_direction(&camera, offset)
 }
 
 scroll_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
@@ -60,5 +60,5 @@ scroll_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
 	SCROLL_SCALE :: 0.03
 	y := f32(y) * SCROLL_SCALE
 
-	camera.fov = clamp(camera.fov - y, linalg.to_radians(f32(1)), linalg.to_radians(f32(45)))
+	// camera.fov = clamp(camera.fov - y, linalg.to_radians(f32(1)), linalg.to_radians(f32(45)))
 }
