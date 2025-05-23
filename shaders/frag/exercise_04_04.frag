@@ -9,5 +9,6 @@ uniform sampler2D diffuse_0;
 uniform sampler2D diffuse_1;
 
 void main() {
-	frag_color = mix(texture(diffuse_0, tex_coords), texture(diffuse_1, tex_coords), 0.2);
+	vec2 expanded_tex_coords = 2.0 * tex_coords;
+	frag_color = mix(texture(diffuse_0, expanded_tex_coords), texture(diffuse_1, expanded_tex_coords), 0.2);
 }

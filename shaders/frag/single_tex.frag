@@ -2,7 +2,7 @@
 
 in vec2 tex_coords;
 
-out vec4 FragColor;
+out vec4 frag_color;
 
 uniform sampler2D diffuse_0;
 
@@ -13,5 +13,5 @@ void main() {
 		discard;
 	}
 
-	FragColor = tex_color;
+	frag_color = tex_color;
 }

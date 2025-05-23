@@ -262,7 +262,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_03_02_shaders_interpolation]
+	current_tableau := tableaus[.Chapter_04_05_textures_excersie_03]
 
 	current_tableau.init()
 	defer current_tableau.teardown()

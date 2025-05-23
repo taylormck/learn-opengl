@@ -7,8 +7,16 @@ Shader :: enum {
 	Yellow,
 	UniformColor,
 	VertexColor,
-	Mesh,
+	UpsideDown,
+	Offset,
+	PositionAsColor,
 	Texture,
+	ColorTexture,
+	DoubleTexture,
+	Exercise_04_03,
+	Exercise_04_04,
+	TransformTexture,
+	Mesh,
 	Light,
 	Skybox,
 	SkyboxReflect,
@@ -67,19 +75,75 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/vert_color.frag"),
 			) or_else panic("Failed to load the shader")
 
+	case .UpsideDown:
+		shaders[.UpsideDown] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_upside_down.vert"),
+				#load("../../shaders/frag/orange.frag"),
+			) or_else panic("Failed to load the upside down shader")
+
+	case .Offset:
+		shaders[.Offset] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_uniform_offset.vert"),
+				#load("../../shaders/frag/orange.frag"),
+			) or_else panic("Failed to load the upside down shader")
+
+	case .PositionAsColor:
+		shaders[.PositionAsColor] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_as_color.vert"),
+				#load("../../shaders/frag/vert_color.frag"),
+			) or_else panic("Failed to load the upside down shader")
+
+	case .Texture:
+		shaders[.Texture] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/single_tex.frag"),
+			) or_else panic("Failed to load the texture shader")
+
+	case .ColorTexture:
+		shaders[.ColorTexture] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_color_tex.vert"),
+				#load("../../shaders/frag/tex_color.frag"),
+			) or_else panic("Failed to load the color texture shader")
+
+	case .DoubleTexture:
+		shaders[.DoubleTexture] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/double_tex.frag"),
+			) or_else panic("Failed to load the double texture shader")
+
+	case .Exercise_04_03:
+		shaders[.Exercise_04_03] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/exercise_04_03.frag"),
+			) or_else panic("Failed to load the exercise_04_03 shader")
+
+	case .Exercise_04_04:
+		shaders[.Exercise_04_04] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/exercise_04_04.frag"),
+			) or_else panic("Failed to load the exercise_04_04 shader")
+
+	case .TransformTexture:
+		shaders[.TransformTexture] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_transform.vert"),
+				#load("../../shaders/frag/single_tex.frag"),
+			) or_else panic("Failed to load the transform texture shader")
+
 	case .Mesh:
 		shaders[.Mesh] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/phong_material_sampled_multilights.frag"),
-			) or_else panic("Failed to load the shader")
-
-	case .Texture:
-		shaders[.Texture] =
-			gl.load_shaders_source(
-				#load("../../shaders/vert/pos_tex_transform.vert"),
-				#load("../../shaders/frag/single_tex.frag"),
-			) or_else panic("Failed to load the shader")
+			) or_else panic("Failed to load the mesh shader")
 
 	case .Depth:
 		shaders[.Depth] =
