@@ -20,9 +20,10 @@ Tablueas :: enum {
 	Chapter_04_01_textures,
 	Chapter_04_01_textures_color,
 	Chapter_04_02_textures_combined,
-	Chapter_04_03_textures_excersie_01,
-	Chapter_04_04_textures_excersie_02,
-	Chapter_04_05_textures_excersie_03,
+	Chapter_04_03_textures_exercise_01,
+	Chapter_04_04_textures_exercise_02,
+	Chapter_04_05_textures_exercise_03,
+	Chapter_04_06_textures_exercise_04,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -42,7 +43,8 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_04_01_textures                         = chapter_01_getting_started.exercise_04_01_textures,
 	.Chapter_04_01_textures_color                   = chapter_01_getting_started.exercise_04_01_textures_color,
 	.Chapter_04_02_textures_combined                = chapter_01_getting_started.exercise_04_02_textures_combined,
-	.Chapter_04_03_textures_excersie_01             = chapter_01_getting_started.exercise_04_03_textures_exercise_01,
-	.Chapter_04_04_textures_excersie_02             = chapter_01_getting_started.exercise_04_04_textures_exercise_02,
-	.Chapter_04_05_textures_excersie_03             = chapter_01_getting_started.exercise_04_05_textures_exercise_03,
+	.Chapter_04_03_textures_exercise_01             = chapter_01_getting_started.exercise_04_03_textures_exercise_01,
+	.Chapter_04_04_textures_exercise_02             = chapter_01_getting_started.exercise_04_04_textures_exercise_02,
+	.Chapter_04_05_textures_exercise_03             = chapter_01_getting_started.exercise_04_05_textures_exercise_03,
+	.Chapter_04_06_textures_exercise_04             = chapter_01_getting_started.exercise_04_06_textures_exercise_04,
 }

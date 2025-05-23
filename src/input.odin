@@ -2,6 +2,7 @@ package main
 
 import "base:runtime"
 import "core:math/linalg"
+import "input"
 import "render"
 import "types"
 import gl "vendor:OpenGL"
@@ -9,12 +10,10 @@ import glfw "vendor:glfw"
 
 MOUSE_SENSITIVITY :: 0.01
 
-MouseStatus :: struct {
-	position: types.Vec2,
-}
-
-mouse_info := MouseStatus {
-	position = {INITIAL_WIDTH / 2, INITIAL_HEIGHT / 2},
+init_input :: proc() {
+	input.input_state = input.InputState {
+		mouse_position = {INITIAL_WIDTH / 2, INITIAL_HEIGHT / 2},
+	}
 }
 
 process_input :: proc(window: glfw.WindowHandle, delta: f64) {
@@ -24,16 +23,16 @@ process_input :: proc(window: glfw.WindowHandle, delta: f64) {
 		glfw.SetWindowShouldClose(window, true)
 	}
 
-	camera_movement: types.Vec3
+	input.input_state.movement = types.Vec3{}
 
-	if (glfw.GetKey(window, glfw.KEY_W) == glfw.PRESS) do camera_movement += FORWARD
-	if (glfw.GetKey(window, glfw.KEY_S) == glfw.PRESS) do camera_movement += BACKWARD
-	if (glfw.GetKey(window, glfw.KEY_A) == glfw.PRESS) do camera_movement += LEFT
-	if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) do camera_movement += RIGHT
+	if (glfw.GetKey(window, glfw.KEY_W) == glfw.PRESS) do input.input_state.movement += FORWARD
+	if (glfw.GetKey(window, glfw.KEY_S) == glfw.PRESS) do input.input_state.movement += BACKWARD
+	if (glfw.GetKey(window, glfw.KEY_A) == glfw.PRESS) do input.input_state.movement += LEFT
+	if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) do input.input_state.movement += RIGHT
 
 	// NOTE: input should probably be stashed in a global somewhere,
 	// then this can run in the update directly.
-	render.camera_move(&camera, camera_movement, f32(delta))
+	render.camera_move(&camera, input.input_state.movement, f32(delta))
 }
 
 @(private = "file")
@@ -45,12 +44,13 @@ mouse_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
 	y := f32(y)
 
 	if first_mouse {
-		mouse_info.position = {x, y}
+		input.input_state.mouse_position = {x, y}
 		first_mouse = false
 	}
 
-	offset := types.Vec2{x - mouse_info.position.x, mouse_info.position.y - y} * MOUSE_SENSITIVITY
-	mouse_info.position = {x, y}
+	offset :=
+		types.Vec2{x - input.input_state.mouse_position.x, input.input_state.mouse_position.y - y} * MOUSE_SENSITIVITY
+	input.input_state.mouse_position = {x, y}
 
 	render.camera_update_direction(&camera, offset)
 }

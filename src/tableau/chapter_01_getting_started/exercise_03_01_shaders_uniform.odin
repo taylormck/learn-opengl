@@ -15,8 +15,10 @@ exercise_03_01_shaders_uniform := types.Tableau {
 		shaders.init_shaders(.UniformColor)
 		primitives.triangle_send_to_gpu()
 	},
-	draw = proc(delta: f64) {
+	update = proc(delta: f64) {
 		tableau_time += delta
+	},
+	draw = proc() {
 		uniform_color := types.Vec4{0, math.sin(f32(tableau_time)) / 2 + 0.5, 0, 1}
 		uniform_color_shader := shaders.shaders[.UniformColor]
 

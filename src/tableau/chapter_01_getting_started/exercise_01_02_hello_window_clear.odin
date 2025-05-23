@@ -5,7 +5,7 @@ import gl "vendor:OpenGL"
 
 exercise_01_02_hello_window_clear :: types.Tableau {
 	init = proc() {},
-	draw = proc(delta: f64) {
+	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 	},

@@ -36,7 +36,7 @@ exercise_02_03_hello_triangle_exercise_01 := types.Tableau {
 		gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), 0)
 		gl.EnableVertexAttribArray(0)
 	},
-	draw = proc(delta: f64) {
+	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		gl.UseProgram(shaders.shaders[.Orange])

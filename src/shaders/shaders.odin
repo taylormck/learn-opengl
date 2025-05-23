@@ -15,6 +15,7 @@ Shader :: enum {
 	DoubleTexture,
 	Exercise_04_03,
 	Exercise_04_04,
+	Exercise_04_06,
 	TransformTexture,
 	Mesh,
 	Light,
@@ -129,6 +130,13 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/exercise_04_04.frag"),
+			) or_else panic("Failed to load the exercise_04_04 shader")
+
+	case .Exercise_04_06:
+		shaders[.Exercise_04_06] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/exercise_04_06.frag"),
 			) or_else panic("Failed to load the exercise_04_04 shader")
 
 	case .TransformTexture:

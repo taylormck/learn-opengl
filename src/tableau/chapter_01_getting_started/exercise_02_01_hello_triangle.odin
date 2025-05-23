@@ -10,7 +10,7 @@ exercise_02_01_hello_triangle := types.Tableau {
 		shaders.init_shaders(.Orange)
 		primitives.triangle_send_to_gpu()
 	},
-	draw = proc(delta: f64) {
+	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		gl.UseProgram(shaders.shaders[.Orange])

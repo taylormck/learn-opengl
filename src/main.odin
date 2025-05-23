@@ -136,6 +136,8 @@ main :: proc() {
 	glfw.SetCursorPosCallback(window, mouse_callback)
 	glfw.SetScrollCallback(window, scroll_callback)
 
+	init_input()
+
 	// index := 0
 	// offset: f32 = 0.1
 	//
@@ -262,10 +264,10 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_05_textures_excersie_03]
+	current_tableau := tableaus[.Chapter_04_06_textures_exercise_04]
 
-	current_tableau.init()
-	defer current_tableau.teardown()
+	if current_tableau.init != nil do current_tableau.init()
+	defer if current_tableau.teardown != nil do current_tableau.teardown()
 	defer shaders.delete_shaders()
 
 	prev_time := glfw.GetTime()
@@ -277,19 +279,9 @@ main :: proc() {
 		glfw.PollEvents()
 		process_input(window, delta)
 
-		current_tableau.draw(delta)
+		if current_tableau.update != nil do current_tableau.update(delta)
 
-		// draw_scene(backpack_scene)
-		// draw_block_scene()
-		// draw_full_screen_scene()
-		// draw_box_scene_rearview_mirror()
-		// draw_skybox_scene(backpack_scene)
-		// draw_houses()
-		// draw_exploded_model(backpack_scene, new_time)
-		// draw_normals(backpack_scene)
-		// draw_instanced_rects()
-		// draw_asteroid_scene(planet_scene, rock_scene)
-		// draw_green_box()
+		current_tableau.draw()
 
 		glfw.SwapBuffers(window)
 		prev_time = new_time

@@ -41,7 +41,7 @@ exercise_02_05_hello_triangle_exercise_03 := types.Tableau {
 			gl.EnableVertexAttribArray(0)
 		}
 	},
-	draw = proc(delta: f64) {
+	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 

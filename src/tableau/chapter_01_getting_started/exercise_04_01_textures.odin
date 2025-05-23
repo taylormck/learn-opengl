@@ -15,7 +15,7 @@ exercise_04_01_textures := types.Tableau {
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		primitives.quad_send_to_gpu()
 	},
-	draw = proc(delta: f64) {
+	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
@@ -40,7 +40,7 @@ exercise_04_01_textures_color := types.Tableau {
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		primitives.quad_send_to_gpu()
 	},
-	draw = proc(delta: f64) {
+	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 

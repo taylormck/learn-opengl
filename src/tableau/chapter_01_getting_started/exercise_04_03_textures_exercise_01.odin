@@ -16,7 +16,7 @@ exercise_04_03_textures_exercise_01 := types.Tableau {
 		awesome_texture = render.prepare_texture("textures/awesomeface.png", .Diffuse, true)
 		primitives.quad_send_to_gpu()
 	},
-	draw = proc(delta: f64) {
+	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 

@@ -10,7 +10,7 @@ exercise_03_03_shaders_exercise_01 := types.Tableau {
 		shaders.init_shaders(.UpsideDown)
 		primitives.triangle_send_to_gpu()
 	},
-	draw = proc(delta: f64) {
+	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		gl.UseProgram(shaders.shaders[.UpsideDown])
