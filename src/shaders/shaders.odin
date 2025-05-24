@@ -23,6 +23,8 @@ Shader :: enum {
 	Phong,
 	PhongDiffuseSampled,
 	PhongSampled,
+	PhongSampledInvertedSpecular,
+	PhongEmissive,
 	Mesh,
 	Light,
 	Skybox,
@@ -192,14 +194,28 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/phong_material_diffuse_sampled_specular_calculated.frag"),
-			) or_else panic("Failed to load the phone_diffused_sampled shader")
+			) or_else panic("Failed to load the phong_diffuse_sampled shader")
 
 	case .PhongSampled:
 		shaders[.PhongSampled] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/phong_material_sampled.frag"),
-			) or_else panic("Failed to load the phone_diffused_sampled shader")
+			) or_else panic("Failed to load the phong_sampled shader")
+
+	case .PhongSampledInvertedSpecular:
+		shaders[.PhongSampledInvertedSpecular] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/phong_material_sampled_inverted_specular.frag"),
+			) or_else panic("Failed to load the phong_sampled_inverted_specular shader")
+
+	case .PhongEmissive:
+		shaders[.PhongEmissive] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/phong_material_sampled_emissive.frag"),
+			) or_else panic("Failed to load the phong_sampled_inverted_specular shader")
 
 	case .Mesh:
 		shaders[.Mesh] =

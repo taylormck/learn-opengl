@@ -17,6 +17,9 @@ container_texture: render.Texture
 container_specular_texture: render.Texture
 
 @(private = "file")
+matrix_texture: render.Texture
+
+@(private = "file")
 initial_camera_position := types.Vec3{-2, -1, 3}
 
 @(private = "file")
@@ -50,11 +53,12 @@ obj_material := render.MaterialSampled {
 @(private = "file")
 cube_position := types.Vec3{}
 
-exercise_04_02_lighting_maps_specular_map := types.Tableau {
+exercise_04_04_lighting_maps_exercise_04 := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.Light, .PhongSampled)
+		shaders.init_shaders(.Light, .PhongEmissive)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
 		container_specular_texture = render.prepare_texture("textures/container2_specular.png", .Specular, true)
+		matrix_texture = render.prepare_texture("textures/matrix.png", .Emissive, true)
 		primitives.cube_send_to_gpu()
 	},
 	update = proc(delta: f64) {
@@ -75,7 +79,7 @@ exercise_04_02_lighting_maps_specular_map := types.Tableau {
 		defer gl.Disable(gl.DEPTH_TEST)
 
 		light_shader := shaders.shaders[.Light]
-		obj_shader := shaders.shaders[.PhongSampled]
+		obj_shader := shaders.shaders[.PhongEmissive]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -111,12 +115,19 @@ exercise_04_02_lighting_maps_specular_map := types.Tableau {
 			gl.BindTexture(gl.TEXTURE_2D, 0)
 		}
 
+		gl.ActiveTexture(gl.TEXTURE2)
+		gl.BindTexture(gl.TEXTURE_2D, matrix_texture.id)
+		defer {
+			gl.ActiveTexture(gl.TEXTURE2)
+			gl.BindTexture(gl.TEXTURE_2D, 0)
+		}
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.position"), 1, raw_data(&light_position))
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.ambient"), 1, raw_data(&light_color))
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.diffuse"), 1, raw_data(&light_color))
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.specular"), 1, raw_data(&light_color))
 		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "material.diffuse"), 0)
 		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "material.specular"), 1)
+		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "material.emissive"), 2)
 		gl.Uniform1f(gl.GetUniformLocation(obj_shader, "material.shininess"), obj_material.shininess)
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
@@ -127,5 +138,6 @@ exercise_04_02_lighting_maps_specular_map := types.Tableau {
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
 		gl.DeleteTextures(1, &container_texture.id)
+		gl.DeleteTextures(1, &container_specular_texture.id)
 	},
 }

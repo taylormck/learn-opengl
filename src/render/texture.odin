@@ -15,6 +15,7 @@ TextureType :: enum {
 	Diffuse,
 	Specular,
 	Normal,
+	Emissive,
 }
 
 Image :: struct {

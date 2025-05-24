@@ -44,6 +44,8 @@ Tablueas :: enum {
 	Chapter_02_03_02_materials_exercise_01,
 	Chapter_02_04_01_lighting_maps_diffuse_map,
 	Chapter_02_04_02_lighting_maps_specular_map,
+	Chapter_02_04_03_lighting_maps_exercise_02,
+	Chapter_02_04_04_lighting_maps_exercise_04,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -86,4 +88,6 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_02_03_02_materials_exercise_01            = chapter_02_lighting.exercise_03_02_materials_exercise_01,
 	.Chapter_02_04_01_lighting_maps_diffuse_map        = chapter_02_lighting.exercise_04_01_lighting_maps_diffuse_map,
 	.Chapter_02_04_02_lighting_maps_specular_map       = chapter_02_lighting.exercise_04_02_lighting_maps_specular_map,
+	.Chapter_02_04_03_lighting_maps_exercise_02        = chapter_02_lighting.exercise_04_03_lighting_maps_exercise_01,
+	.Chapter_02_04_04_lighting_maps_exercise_04        = chapter_02_lighting.exercise_04_04_lighting_maps_exercise_04,
 }

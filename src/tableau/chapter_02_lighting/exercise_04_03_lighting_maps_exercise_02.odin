@@ -50,9 +50,9 @@ obj_material := render.MaterialSampled {
 @(private = "file")
 cube_position := types.Vec3{}
 
-exercise_04_02_lighting_maps_specular_map := types.Tableau {
+exercise_04_03_lighting_maps_exercise_01 := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.Light, .PhongSampled)
+		shaders.init_shaders(.Light, .PhongSampledInvertedSpecular)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
 		container_specular_texture = render.prepare_texture("textures/container2_specular.png", .Specular, true)
 		primitives.cube_send_to_gpu()
@@ -75,7 +75,7 @@ exercise_04_02_lighting_maps_specular_map := types.Tableau {
 		defer gl.Disable(gl.DEPTH_TEST)
 
 		light_shader := shaders.shaders[.Light]
-		obj_shader := shaders.shaders[.PhongSampled]
+		obj_shader := shaders.shaders[.PhongSampledInvertedSpecular]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
