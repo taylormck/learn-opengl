@@ -12,7 +12,7 @@ MOUSE_SENSITIVITY :: 0.01
 
 init_input :: proc() {
 	input.input_state = input.InputState {
-		mouse_position = {INITIAL_WIDTH / 2, INITIAL_HEIGHT / 2},
+		mouse = {position = {INITIAL_WIDTH / 2, INITIAL_HEIGHT / 2}},
 	}
 }
 
@@ -31,6 +31,11 @@ process_input :: proc(window: glfw.WindowHandle, delta: f64) {
 	if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) do input.input_state.movement += RIGHT
 }
 
+clear_input :: proc() {
+	input.input_state.mouse.offset = {}
+	input.input_state.mouse.scroll_offset = 0
+}
+
 @(private = "file")
 first_mouse := true
 
@@ -40,21 +45,20 @@ mouse_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
 	y := f32(y)
 
 	if first_mouse {
-		input.input_state.mouse_position = {x, y}
+		input.input_state.mouse.position = {x, y}
 		first_mouse = false
 	}
 
 	offset :=
-		types.Vec2{x - input.input_state.mouse_position.x, input.input_state.mouse_position.y - y} * MOUSE_SENSITIVITY
-	input.input_state.mouse_position = {x, y}
+		types.Vec2{x - input.input_state.mouse.position.x, input.input_state.mouse.position.y - y} * MOUSE_SENSITIVITY
+	input.input_state.mouse.offset += offset
 
-	// render.camera_update_direction(&camera, offset)
+	input.input_state.mouse.position = {x, y}
 }
 
 scroll_callback :: proc "cdecl" (window: glfw.WindowHandle, x, y: f64) {
 	context = runtime.default_context()
 	SCROLL_SCALE :: 0.03
-	y := f32(y) * SCROLL_SCALE
-
-	// camera.fov = clamp(camera.fov - y, linalg.to_radians(f32(1)), linalg.to_radians(f32(45)))
+	y := f32(y * SCROLL_SCALE)
+	input.input_state.mouse.scroll_offset += y
 }

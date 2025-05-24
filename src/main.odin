@@ -254,7 +254,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_07_01_camera_circle]
+	current_tableau := tableaus[.Chapter_07_04_camera_exercise_01]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -270,6 +270,8 @@ main :: proc() {
 		process_input(window_handle, delta)
 
 		if current_tableau.update != nil do current_tableau.update(delta)
+
+		clear_input()
 
 		current_tableau.draw()
 

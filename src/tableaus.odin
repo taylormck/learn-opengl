@@ -32,6 +32,9 @@ Tablueas :: enum {
 	Chapter_06_03_coordinate_systems_multiple,
 	Chapter_06_04_coordinate_systems_exercise_03,
 	Chapter_07_01_camera_circle,
+	Chapter_07_02_camera_keyboard_dt,
+	Chapter_07_03_camera_mouse_zoom,
+	Chapter_07_04_camera_exercise_01,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -63,4 +66,7 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_06_03_coordinate_systems_multiple      = chapter_01_getting_started.exercise_06_03_coordinate_systems_multiple,
 	.Chapter_06_04_coordinate_systems_exercise_03   = chapter_01_getting_started.exercise_06_04_coordinate_systems_exercise_03,
 	.Chapter_07_01_camera_circle                    = chapter_01_getting_started.exercise_07_01_camera_circle,
+	.Chapter_07_02_camera_keyboard_dt               = chapter_01_getting_started.exercise_07_02_camera_keyboard_dt,
+	.Chapter_07_03_camera_mouse_zoom                = chapter_01_getting_started.exercise_07_03_camera_mouse_zoom,
+	.Chapter_07_04_camera_exercise_01               = chapter_01_getting_started.exercise_07_04_camera_exercise_01,
 }
