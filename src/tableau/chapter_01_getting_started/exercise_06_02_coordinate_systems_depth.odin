@@ -22,21 +22,28 @@ camera := render.Camera {
 }
 
 @(private = "file")
+time: f64 = 0
+
+@(private = "file")
 container_texture, awesome_texture: render.Texture
 
-exercise_06_01_coordinate_systems := types.Tableau {
+exercise_06_02_coordinate_systems_depth := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		awesome_texture = render.prepare_texture("textures/awesomeface.png", .Diffuse, true)
-		primitives.quad_send_to_gpu()
+		primitives.cube_send_to_gpu()
 	},
 	update = proc(delta: f64) {
+		time += delta
 		camera.aspect_ratio = window.aspect_ratio()
 	},
 	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
-		gl.Clear(gl.COLOR_BUFFER_BIT)
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, container_texture.id)
@@ -48,7 +55,7 @@ exercise_06_01_coordinate_systems := types.Tableau {
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
-		model := linalg.matrix4_rotate_f32(-45, {1, 0, 0})
+		model := linalg.matrix4_rotate_f32(f32(time * linalg.to_radians(50.0)), {0.5, 1, 0})
 		transform := projection * view * model
 
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
@@ -56,9 +63,9 @@ exercise_06_01_coordinate_systems := types.Tableau {
 		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
 
 		gl.UseProgram(texture_shader)
-		primitives.quad_draw()
+		primitives.cube_draw()
 	},
 	teardown = proc() {
-		primitives.quad_clear_from_gpu()
+		primitives.cube_clear_from_gpu()
 	},
 }

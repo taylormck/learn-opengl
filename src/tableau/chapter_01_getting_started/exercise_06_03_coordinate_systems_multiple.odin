@@ -24,19 +24,41 @@ camera := render.Camera {
 @(private = "file")
 container_texture, awesome_texture: render.Texture
 
-exercise_06_01_coordinate_systems := types.Tableau {
+@(private = "file")
+models := [?]types.TransformMatrix {
+	linalg.matrix4_translate_f32({0, 0, 0}),
+	linalg.matrix4_translate_f32({2, 5, -15}),
+	linalg.matrix4_translate_f32({-1.5, -2.2, -2.5}),
+	linalg.matrix4_translate_f32({-3.8, -2, -12.3}),
+	linalg.matrix4_translate_f32({2.4, -0.4, -3.5}),
+	linalg.matrix4_translate_f32({-1.7, 3.0, -7.5}),
+	linalg.matrix4_translate_f32({1.3, -2, -2.5}),
+	linalg.matrix4_translate_f32({1.5, 2, -2.5}),
+	linalg.matrix4_translate_f32({1.5, 0.2, -1.5}),
+	linalg.matrix4_translate_f32({-1.3, 1, -1.5}),
+}
+
+exercise_06_03_coordinate_systems_multiple := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		awesome_texture = render.prepare_texture("textures/awesomeface.png", .Diffuse, true)
-		primitives.quad_send_to_gpu()
+		primitives.cube_send_to_gpu()
+
+		for &model, i in models {
+			angle := f32(20 * i)
+			model *= linalg.matrix4_rotate_f32(angle, {1, 0.3, 0.5})
+		}
 	},
 	update = proc(delta: f64) {
 		camera.aspect_ratio = window.aspect_ratio()
 	},
 	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
-		gl.Clear(gl.COLOR_BUFFER_BIT)
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, container_texture.id)
@@ -48,17 +70,19 @@ exercise_06_01_coordinate_systems := types.Tableau {
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
-		model := linalg.matrix4_rotate_f32(-45, {1, 0, 0})
-		transform := projection * view * model
 
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
-		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
 
-		gl.UseProgram(texture_shader)
-		primitives.quad_draw()
+		for model in models {
+			transform := projection * view * model
+			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+
+			gl.UseProgram(texture_shader)
+			primitives.cube_draw()
+		}
 	},
 	teardown = proc() {
-		primitives.quad_clear_from_gpu()
+		primitives.cube_clear_from_gpu()
 	},
 }

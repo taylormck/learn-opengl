@@ -28,6 +28,8 @@ Tablueas :: enum {
 	Chapter_05_02_transforms_exercise_01,
 	Chapter_05_03_transforms_exercise_02,
 	Chapter_06_01_coordinate_systems,
+	Chapter_06_02_coordinate_systems_depth,
+	Chapter_06_03_coordinate_systems_multiple,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -55,4 +57,6 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_05_02_transforms_exercise_01           = chapter_01_getting_started.exercise_05_02_transforms_exercise_01,
 	.Chapter_05_03_transforms_exercise_02           = chapter_01_getting_started.exercise_05_03_transforms_exercise_02,
 	.Chapter_06_01_coordinate_systems               = chapter_01_getting_started.exercise_06_01_coordinate_systems,
+	.Chapter_06_02_coordinate_systems_depth         = chapter_01_getting_started.exercise_06_02_coordinate_systems_depth,
+	.Chapter_06_03_coordinate_systems_multiple      = chapter_01_getting_started.exercise_06_03_coordinate_systems_multiple,
 }

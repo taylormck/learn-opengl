@@ -254,7 +254,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_06_01_coordinate_systems]
+	current_tableau := tableaus[.Chapter_06_03_coordinate_systems_multiple]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
