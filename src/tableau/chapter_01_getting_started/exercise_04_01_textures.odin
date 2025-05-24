@@ -56,5 +56,6 @@ exercise_04_01_textures_color := types.Tableau {
 	},
 	teardown = proc() {
 		primitives.quad_clear_from_gpu()
+		gl.DeleteTextures(1, &container_texture.id)
 	},
 }

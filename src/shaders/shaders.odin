@@ -21,6 +21,7 @@ Shader :: enum {
 	ObjLightColor,
 	Diffuse,
 	Phong,
+	PhongDiffuseSampled,
 	Mesh,
 	Light,
 	Skybox,
@@ -183,7 +184,14 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_normal_transform.vert"),
 				#load("../../shaders/frag/phong_material_calculated.frag"),
-			) or_else panic("Failed to load the diffuse shader")
+			) or_else panic("Failed to load the phong shader")
+
+	case .PhongDiffuseSampled:
+		shaders[.PhongDiffuseSampled] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/phong_material_diffuse_sampled_specular_calculated.frag"),
+			) or_else panic("Failed to load the phone_diffused_sampled shader")
 
 	case .Mesh:
 		shaders[.Mesh] =
