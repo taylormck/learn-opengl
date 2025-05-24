@@ -19,6 +19,7 @@ Shader :: enum {
 	TransformTexture,
 	TransformDoubleTexture,
 	ObjLightColor,
+	Diffuse,
 	Mesh,
 	Light,
 	Skybox,
@@ -161,6 +162,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_transform.vert"),
 				#load("../../shaders/frag/obj_light_color.frag"),
 			) or_else panic("Failed to load the obj_light_color shader")
+
+	case .Diffuse:
+		shaders[.Diffuse] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_normal_transform.vert"),
+				#load("../../shaders/frag/diffuse.frag"),
+			) or_else panic("Failed to load the diffuse shader")
 
 	case .Mesh:
 		shaders[.Mesh] =

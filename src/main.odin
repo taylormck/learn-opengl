@@ -254,7 +254,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_02_01_01_colors]
+	current_tableau := tableaus[.Chapter_02_02_01_basic_lighting_diffuse]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()

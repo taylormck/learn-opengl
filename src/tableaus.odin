@@ -37,6 +37,7 @@ Tablueas :: enum {
 	Chapter_01_07_03_camera_mouse_zoom,
 	Chapter_01_07_04_camera_exercise_01,
 	Chapter_02_01_01_colors,
+	Chapter_02_02_01_basic_lighting_diffuse,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -72,4 +73,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_01_07_03_camera_mouse_zoom                = chapter_01_getting_started.exercise_07_03_camera_mouse_zoom,
 	.Chapter_01_07_04_camera_exercise_01               = chapter_01_getting_started.exercise_07_04_camera_exercise_01,
 	.Chapter_02_01_01_colors                           = chapter_02_lighting.exercise_01_01_colors,
+	.Chapter_02_02_01_basic_lighting_diffuse           = chapter_02_lighting.exercise_02_01_basic_lighting_diffuse,
 }
