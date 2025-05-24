@@ -38,6 +38,10 @@ Tablueas :: enum {
 	Chapter_01_07_04_camera_exercise_01,
 	Chapter_02_01_01_colors,
 	Chapter_02_02_01_basic_lighting_diffuse,
+	Chapter_02_02_02_basic_lighting_specular,
+	Chapter_02_02_03_basic_lighting_exercise_01,
+	Chapter_02_03_01_materials,
+	Chapter_02_03_02_materials_exercise_01,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -74,4 +78,8 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_01_07_04_camera_exercise_01               = chapter_01_getting_started.exercise_07_04_camera_exercise_01,
 	.Chapter_02_01_01_colors                           = chapter_02_lighting.exercise_01_01_colors,
 	.Chapter_02_02_01_basic_lighting_diffuse           = chapter_02_lighting.exercise_02_01_basic_lighting_diffuse,
+	.Chapter_02_02_02_basic_lighting_specular          = chapter_02_lighting.exercise_02_02_basic_lighting_specular,
+	.Chapter_02_02_03_basic_lighting_exercise_01       = chapter_02_lighting.exercise_02_03_basic_lighting_exercise_01,
+	.Chapter_02_03_01_materials                        = chapter_02_lighting.exercise_03_01_materials,
+	.Chapter_02_03_02_materials_exercise_01            = chapter_02_lighting.exercise_03_02_materials_exercise_01,
 }

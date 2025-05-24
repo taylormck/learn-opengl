@@ -20,6 +20,7 @@ Shader :: enum {
 	TransformDoubleTexture,
 	ObjLightColor,
 	Diffuse,
+	Phong,
 	Mesh,
 	Light,
 	Skybox,
@@ -163,11 +164,25 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/obj_light_color.frag"),
 			) or_else panic("Failed to load the obj_light_color shader")
 
+	case .Light:
+		shaders[.Light] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_transform.vert"),
+				#load("../../shaders/frag/light_color.frag"),
+			) or_else panic("Failed to load the light shader")
+
 	case .Diffuse:
 		shaders[.Diffuse] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_normal_transform.vert"),
 				#load("../../shaders/frag/diffuse.frag"),
+			) or_else panic("Failed to load the diffuse shader")
+
+	case .Phong:
+		shaders[.Phong] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_normal_transform.vert"),
+				#load("../../shaders/frag/phong_material_calculated.frag"),
 			) or_else panic("Failed to load the diffuse shader")
 
 	case .Mesh:
@@ -190,13 +205,6 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_transform.vert"),
 				#load("../../shaders/frag/single_color.frag"),
 			) or_else panic("Failed to load the shader")
-
-	case .Light:
-		shaders[.Light] =
-			gl.load_shaders_source(
-				#load("../../shaders/vert/pos_transform.vert"),
-				#load("../../shaders/frag/light_color.frag"),
-			) or_else panic("Failed to load the light shader")
 
 	case .Fullscreen:
 		shaders[.Fullscreen] =

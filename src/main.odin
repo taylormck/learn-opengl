@@ -78,7 +78,6 @@ spot_light := render.SpotLight {
 	outer_cutoff = math.cos(linalg.to_radians(f32(17.5))),
 }
 
-
 marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 
 fbo, fb_texture, rbo: u32
@@ -171,43 +170,8 @@ main :: proc() {
 	// }
 	// defer for _, &mesh in rock_scene.meshes do render.mesh_gpu_free(&mesh)
 
-	// mesh_shader := tableau.shaders[.Mesh]
-	// if mesh_shader != 0 {
-	// 	gl.UseProgram(mesh_shader)
-	// 	render.directional_light_set_uniform(&directional_light, mesh_shader)
-	//
-	// 	for &point_light, i in point_lights {
-	// 		render.point_light_array_set_uniform(&point_light, mesh_shader, u32(i))
-	// 	}
-	// }
-	//
-	// planet_shader := tableau.shaders[.Planet]
-	// if planet_shader != 0 {
-	// 	gl.UseProgram(planet_shader)
-	// 	render.directional_light_set_uniform(&directional_light, planet_shader)
-	// }
-	//
-	// asteroid_shader := tableau.shaders[.Asteroid]
-	// if asteroid_shader != 0 {
-	// 	gl.UseProgram(asteroid_shader)
-	// 	render.directional_light_set_uniform(&directional_light, asteroid_shader)
-	// }
-	//
-	// gl.UseProgram(0)
-	//
-	// metal_texture = render.prepare_texture("textures/metal.png", .Diffuse, true)
-	// marble_texture = render.prepare_texture("textures/marble.jpg", .Diffuse, true)
-	// grass_texture = render.prepare_texture("textures/grass.png", .Diffuse, true)
-	// window_texture = render.prepare_texture("textures/blending_transparent_window.png", .Diffuse, true)
-	//
-	// gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	//
-	// gl.BindTexture(gl.TEXTURE_2D, window_texture.id)
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	//
+	// REMINDER: set directional light
+
 	// gl.GenFramebuffers(1, &fbo)
 	// defer gl.DeleteFramebuffers(1, &fbo)
 	// gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
@@ -254,7 +218,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_02_02_01_basic_lighting_diffuse]
+	current_tableau := tableaus[.Chapter_02_03_02_materials_exercise_01]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
