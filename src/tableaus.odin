@@ -31,6 +31,7 @@ Tablueas :: enum {
 	Chapter_06_02_coordinate_systems_depth,
 	Chapter_06_03_coordinate_systems_multiple,
 	Chapter_06_04_coordinate_systems_exercise_03,
+	Chapter_07_01_camera_circle,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -61,4 +62,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_06_02_coordinate_systems_depth         = chapter_01_getting_started.exercise_06_02_coordinate_systems_depth,
 	.Chapter_06_03_coordinate_systems_multiple      = chapter_01_getting_started.exercise_06_03_coordinate_systems_multiple,
 	.Chapter_06_04_coordinate_systems_exercise_03   = chapter_01_getting_started.exercise_06_04_coordinate_systems_exercise_03,
+	.Chapter_07_01_camera_circle                    = chapter_01_getting_started.exercise_07_01_camera_circle,
 }

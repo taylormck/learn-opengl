@@ -29,10 +29,6 @@ process_input :: proc(window: glfw.WindowHandle, delta: f64) {
 	if (glfw.GetKey(window, glfw.KEY_S) == glfw.PRESS) do input.input_state.movement += BACKWARD
 	if (glfw.GetKey(window, glfw.KEY_A) == glfw.PRESS) do input.input_state.movement += LEFT
 	if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) do input.input_state.movement += RIGHT
-
-	// NOTE: input should probably be stashed in a global somewhere,
-	// then this can run in the update directly.
-	// render.camera_move(&camera, input.input_state.movement, f32(delta))
 }
 
 @(private = "file")
