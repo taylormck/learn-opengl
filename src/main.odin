@@ -254,7 +254,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_07_04_camera_exercise_01]
+	current_tableau := tableaus[.Chapter_02_01_01_colors]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
