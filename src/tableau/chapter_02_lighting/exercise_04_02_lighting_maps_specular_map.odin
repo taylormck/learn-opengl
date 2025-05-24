@@ -14,10 +14,14 @@ import gl "vendor:OpenGL"
 container_texture: render.Texture
 
 @(private = "file")
+container_specular_texture: render.Texture
+
+@(private = "file")
 initial_camera_position := types.Vec3{-2, -1, 3}
 
 @(private = "file")
 initial_camera_target := types.Vec3{0.45, 0.45, 0.8}
+
 
 @(private = "file")
 camera := render.Camera {
@@ -39,18 +43,18 @@ light_position := types.Vec3{1.2, 1, 2}
 light_color := types.Vec3{1, 1, 1}
 
 @(private = "file")
-obj_material := render.MaterialCalculated {
-	specular  = types.Vec3{1, 1, 1},
+obj_material := render.MaterialSampled {
 	shininess = 32,
 }
 
 @(private = "file")
 cube_position := types.Vec3{}
 
-exercise_04_01_lighting_maps_diffuse_map := types.Tableau {
+exercise_04_02_lighting_maps_specular_map := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.Light, .PhongDiffuseSampled)
+		shaders.init_shaders(.Light, .PhongSampled)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
+		container_specular_texture = render.prepare_texture("textures/container2_specular.png", .Diffuse, true)
 		primitives.cube_send_to_gpu()
 	},
 	update = proc(delta: f64) {
@@ -71,7 +75,7 @@ exercise_04_01_lighting_maps_diffuse_map := types.Tableau {
 		defer gl.Disable(gl.DEPTH_TEST)
 
 		light_shader := shaders.shaders[.Light]
-		obj_shader := shaders.shaders[.PhongDiffuseSampled]
+		obj_shader := shaders.shaders[.PhongSampled]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -95,14 +99,24 @@ exercise_04_01_lighting_maps_diffuse_map := types.Tableau {
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, container_texture.id)
-		defer gl.BindTexture(gl.TEXTURE_2D, 0)
+		defer {
+			gl.ActiveTexture(gl.TEXTURE0)
+			gl.BindTexture(gl.TEXTURE_2D, 0)
+		}
+
+		gl.ActiveTexture(gl.TEXTURE1)
+		gl.BindTexture(gl.TEXTURE_2D, container_specular_texture.id)
+		defer {
+			gl.ActiveTexture(gl.TEXTURE1)
+			gl.BindTexture(gl.TEXTURE_2D, 0)
+		}
 
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.position"), 1, raw_data(&light_position))
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.ambient"), 1, raw_data(&light_color))
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.diffuse"), 1, raw_data(&light_color))
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.specular"), 1, raw_data(&light_color))
 		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "material.diffuse"), 0)
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "material.specular"), 1, raw_data(&obj_material.specular))
+		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "material.specular"), 1)
 		gl.Uniform1f(gl.GetUniformLocation(obj_shader, "material.shininess"), obj_material.shininess)
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))

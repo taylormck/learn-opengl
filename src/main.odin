@@ -218,7 +218,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_02_04_01_lighting_maps_diffuse_map]
+	current_tableau := tableaus[.Chapter_02_04_02_lighting_maps_specular_map]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
