@@ -47,6 +47,7 @@ Tablueas :: enum {
 	Chapter_02_04_03_lighting_maps_exercise_02,
 	Chapter_02_04_04_lighting_maps_exercise_04,
 	Chapter_02_05_01_light_casters_directional,
+	Chapter_02_05_02_light_casters_point,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -92,4 +93,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_02_04_03_lighting_maps_exercise_02        = chapter_02_lighting.exercise_04_03_lighting_maps_exercise_01,
 	.Chapter_02_04_04_lighting_maps_exercise_04        = chapter_02_lighting.exercise_04_04_lighting_maps_exercise_04,
 	.Chapter_02_05_01_light_casters_directional        = chapter_02_lighting.exercise_05_01_light_casters_directional,
+	.Chapter_02_05_02_light_casters_point              = chapter_02_lighting.exercise_05_02_light_casters_point,
 }

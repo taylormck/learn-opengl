@@ -26,6 +26,7 @@ Shader :: enum {
 	PhongSampledInvertedSpecular,
 	PhongEmissive,
 	PhongDirectional,
+	PhongPointLight,
 	Mesh,
 	Light,
 	Skybox,
@@ -223,6 +224,13 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/phong_material_sampled_directional_light.frag"),
+			) or_else panic("Failed to load the phong_directional shader")
+
+	case .PhongPointLight:
+		shaders[.PhongPointLight] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/phong_material_sampled_point_light.frag"),
 			) or_else panic("Failed to load the phong_directional shader")
 
 	case .Mesh:

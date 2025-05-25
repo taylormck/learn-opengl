@@ -218,7 +218,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_02_05_01_light_casters_directional]
+	current_tableau := tableaus[.Chapter_02_05_02_light_casters_point]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()

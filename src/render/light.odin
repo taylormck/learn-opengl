@@ -5,17 +5,17 @@ import "core:fmt"
 import gl "vendor:OpenGL"
 
 PointLight :: struct {
-	position, ambient, diffuse, specular: types.Vec3,
-	constant, linear, quadratic:          f32,
+	position, ambient, diffuse, specular, emissive: types.Vec3,
+	constant, linear, quadratic:                    f32,
 }
 
 DirectionalLight :: struct {
-	direction, ambient, diffuse, specular: types.Vec3,
+	direction, ambient, diffuse, specular, emissive: types.Vec3,
 }
 
 SpotLight :: struct {
-	position, direction, ambient, diffuse, specular: types.Vec3,
-	inner_cutoff, outer_cutoff:                      f32,
+	position, direction, ambient, diffuse, specular, emissive: types.Vec3,
+	inner_cutoff, outer_cutoff:                                f32,
 }
 
 point_light_set_uniform :: proc(light: ^PointLight, shader_id: u32) {

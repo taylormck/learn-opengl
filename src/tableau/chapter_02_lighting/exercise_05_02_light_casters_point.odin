@@ -17,10 +17,10 @@ container_texture: render.Texture
 container_specular_texture: render.Texture
 
 @(private = "file")
-initial_camera_position := types.Vec3{5, 6, 1}
+initial_camera_position := types.Vec3{-16, -3, 4}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, 0, -2}
+initial_camera_target := types.Vec3{0, 0, -5}
 
 @(private = "file")
 camera := render.Camera {
@@ -36,11 +36,15 @@ camera := render.Camera {
 }
 
 @(private = "file")
-light := render.DirectionalLight {
+light := render.PointLight {
+	position  = {1.2, 1, 2},
 	ambient   = {0.2, 0.2, 0.2},
 	diffuse   = {0.5, 0.5, 0.5},
 	specular  = {1, 1, 1},
-	direction = {-0.2, -1, -0.3},
+	emissive  = {1, 1, 1},
+	constant  = 1,
+	linear    = 0.09,
+	quadratic = 0.032,
 }
 
 @(private = "file")
@@ -62,9 +66,9 @@ models := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({-1.3, 1, -1.5}),
 }
 
-exercise_05_01_light_casters_directional := types.Tableau {
+exercise_05_02_light_casters_point := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.PhongDirectional)
+		shaders.init_shaders(.Light, .PhongPointLight)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
 		container_specular_texture = render.prepare_texture("textures/container2_specular.png", .Specular, true)
 		primitives.cube_send_to_gpu()
@@ -91,11 +95,20 @@ exercise_05_01_light_casters_directional := types.Tableau {
 		gl.Enable(gl.DEPTH_TEST)
 		defer gl.Disable(gl.DEPTH_TEST)
 
-		obj_shader := shaders.shaders[.PhongDirectional]
+		light_shader := shaders.shaders[.Light]
+		obj_shader := shaders.shaders[.PhongPointLight]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
 		pv := projection * view
+		model := linalg.matrix4_translate_f32(light.position) * linalg.matrix4_scale_f32(0.2)
+		transform := pv * model
+
+		gl.UseProgram(light_shader)
+		gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light.emissive))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+
+		primitives.cube_draw()
 
 		gl.UseProgram(obj_shader)
 
@@ -113,11 +126,11 @@ exercise_05_01_light_casters_directional := types.Tableau {
 			gl.BindTexture(gl.TEXTURE_2D, 0)
 		}
 
-		render.directional_light_set_uniform(&light, obj_shader)
+		render.point_light_set_uniform(&light, obj_shader)
 		render.material_sampled_set_uniform(&obj_material, obj_shader)
 
 		for &model in models {
-			transform := pv * model
+			transform = pv * model
 			mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 			gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
 			gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "model"), 1, false, raw_data(&model))
