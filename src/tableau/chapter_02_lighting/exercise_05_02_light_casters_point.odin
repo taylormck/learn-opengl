@@ -17,7 +17,7 @@ container_texture: render.Texture
 container_specular_texture: render.Texture
 
 @(private = "file")
-initial_camera_position := types.Vec3{-16, -3, 4}
+initial_camera_position := types.Vec3{-12, -3, 6}
 
 @(private = "file")
 initial_camera_target := types.Vec3{0, 0, -5}
@@ -128,6 +128,7 @@ exercise_05_02_light_casters_point := types.Tableau {
 
 		render.point_light_set_uniform(&light, obj_shader)
 		render.material_sampled_set_uniform(&obj_material, obj_shader)
+		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
 
 		for &model in models {
 			transform = pv * model

@@ -29,8 +29,9 @@ material_calculated_set_uniform :: proc(material: ^MaterialCalculated, shader_id
 }
 
 material_sampled_set_uniform :: proc(material: ^MaterialSampled, shader_id: u32) {
-	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.diffuse"), 0)
-	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.specular"), 1)
+	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.diffuse_0"), 0)
+	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.specular_0"), 1)
+	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.emissive_0"), 2)
 	gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), material.shininess)
 }
 

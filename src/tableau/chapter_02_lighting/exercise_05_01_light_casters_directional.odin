@@ -115,6 +115,7 @@ exercise_05_01_light_casters_directional := types.Tableau {
 
 		render.directional_light_set_uniform(&light, obj_shader)
 		render.material_sampled_set_uniform(&obj_material, obj_shader)
+		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
 
 		for &model in models {
 			transform := pv * model

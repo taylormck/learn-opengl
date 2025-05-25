@@ -24,12 +24,13 @@ uniform Material material;
 uniform DirectionalLight directional_light;
 
 vec3 calculate_directional_light(DirectionalLight light) {
-	vec3 ambient = light.ambient * vec3(texture(material.diffuse_0, tex_coords));
+	vec3 diffuse_tex = texture(material.diffuse_0, tex_coords).rgb;
+	vec3 ambient = light.ambient * diffuse_tex;
 
 	vec3 norm = normalize(normal);
 	vec3 light_dir = normalize(-light.direction);
 	float diff = max(dot(norm, light_dir), 0.0);
-	vec3 diffuse = light.diffuse * diff * vec3(texture(material.diffuse_0, tex_coords));
+	vec3 diffuse = light.diffuse * diff * diffuse_tex;
 
 	vec3 view_dir = normalize(view_position - frag_position);
 	vec3 reflect_dir = reflect(-light_dir, norm);

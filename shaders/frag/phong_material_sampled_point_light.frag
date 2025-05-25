@@ -41,11 +41,11 @@ vec3 calculate_point_light(PointLight light) {
 
 	vec3 specular = vec3(0.0);
 
-	if (dot(normal, light_dir) > 0.0) {
+	if (dot(norm, light_dir) > 0.0) {
 		vec3 view_dir = normalize(view_position - frag_position);
 		vec3 reflect_dir = reflect(-light_dir, norm);
 		float spec = pow(max(dot(view_dir, reflect_dir), 0.0), material.shininess);
-		vec3 specular = light.specular * spec * texture(material.specular_0, tex_coords).rgb;
+		specular = light.specular * spec * texture(material.specular_0, tex_coords).rgb;
 	}
 
 	float linear = light.linear * distance;

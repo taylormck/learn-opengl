@@ -125,10 +125,7 @@ exercise_04_04_lighting_maps_exercise_04 := types.Tableau {
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.ambient"), 1, raw_data(&light_color))
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.diffuse"), 1, raw_data(&light_color))
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.specular"), 1, raw_data(&light_color))
-		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "material.diffuse"), 0)
-		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "material.specular"), 1)
-		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "material.emissive"), 2)
-		gl.Uniform1f(gl.GetUniformLocation(obj_shader, "material.shininess"), obj_material.shininess)
+		render.material_sampled_set_uniform(&obj_material, obj_shader)
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "model"), 1, false, raw_data(&model))
@@ -139,5 +136,6 @@ exercise_04_04_lighting_maps_exercise_04 := types.Tableau {
 		primitives.cube_clear_from_gpu()
 		gl.DeleteTextures(1, &container_texture.id)
 		gl.DeleteTextures(1, &container_specular_texture.id)
+		gl.DeleteTextures(1, &matrix_texture.id)
 	},
 }
