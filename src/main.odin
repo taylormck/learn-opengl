@@ -90,13 +90,6 @@ main :: proc() {
 	// gl.BindBuffer(gl.ARRAY_BUFFER, instanced_rect_offset_vbo)
 	// gl.BufferData(gl.ARRAY_BUFFER, size_of(instanced_rect_translations), &instanced_rect_translations, gl.STATIC_DRAW)
 
-	// backpack_scene :=
-	// 	obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
-	// defer render.scene_destroy(&backpack_scene)
-	//
-	// for _, &mesh in backpack_scene.meshes do render.mesh_send_to_gpu(&mesh)
-	// defer for _, &mesh in backpack_scene.meshes do render.mesh_gpu_free(&mesh)
-	//
 	// planet_scene :=
 	// 	obj.load_scene_from_file_obj("models/planet", "planet.obj") or_else panic("Failed to load planet model.")
 	// defer render.scene_destroy(&planet_scene)
@@ -116,8 +109,6 @@ main :: proc() {
 	// 	render.mesh_send_transforms_to_gpu(&mesh, asteroid_model_transforms[:])
 	// }
 	// defer for _, &mesh in rock_scene.meshes do render.mesh_gpu_free(&mesh)
-
-	// REMINDER: set directional light
 
 	// gl.GenFramebuffers(1, &fbo)
 	// defer gl.DeleteFramebuffers(1, &fbo)
@@ -165,7 +156,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_02_06_05_multiple_lights_biochemical_lab]
+	current_tableau := tableaus[.Chapter_03_01_01_model]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()

@@ -209,5 +209,6 @@ exercise_06_05_multiple_lights_biochemical_lab := types.Tableau {
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
 		gl.DeleteTextures(1, &container_texture.id)
+		gl.DeleteTextures(1, &container_specular_texture.id)
 	},
 }

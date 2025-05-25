@@ -135,5 +135,6 @@ exercise_05_03_light_casters_spot := types.Tableau {
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
 		gl.DeleteTextures(1, &container_texture.id)
+		gl.DeleteTextures(1, &container_specular_texture.id)
 	},
 }

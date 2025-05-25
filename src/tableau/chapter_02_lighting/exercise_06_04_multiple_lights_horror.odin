@@ -209,5 +209,6 @@ exercise_06_04_multiple_lights_horror := types.Tableau {
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
 		gl.DeleteTextures(1, &container_texture.id)
+		gl.DeleteTextures(1, &container_specular_texture.id)
 	},
 }

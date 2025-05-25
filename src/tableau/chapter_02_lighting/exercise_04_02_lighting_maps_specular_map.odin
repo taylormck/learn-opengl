@@ -125,5 +125,6 @@ exercise_04_02_lighting_maps_specular_map := types.Tableau {
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
 		gl.DeleteTextures(1, &container_texture.id)
+		gl.DeleteTextures(1, &container_specular_texture.id)
 	},
 }

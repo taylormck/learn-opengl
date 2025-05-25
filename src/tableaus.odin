@@ -2,6 +2,7 @@ package main
 
 import "tableau/chapter_01_getting_started"
 import "tableau/chapter_02_lighting"
+import "tableau/chapter_03_model_loading"
 import "types"
 
 Tablueas :: enum {
@@ -55,6 +56,7 @@ Tablueas :: enum {
 	Chapter_02_06_03_multiple_lights_factory,
 	Chapter_02_06_04_multiple_lights_horror,
 	Chapter_02_06_05_multiple_lights_biochemical_lab,
+	Chapter_03_01_01_model,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -108,4 +110,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_02_06_03_multiple_lights_factory          = chapter_02_lighting.exercise_06_03_multiple_lights_factory,
 	.Chapter_02_06_04_multiple_lights_horror           = chapter_02_lighting.exercise_06_04_multiple_lights_horror,
 	.Chapter_02_06_05_multiple_lights_biochemical_lab  = chapter_02_lighting.exercise_06_05_multiple_lights_biochemical_lab,
+	.Chapter_03_01_01_model                            = chapter_03_model_loading.exercise_01_01_model,
 }
