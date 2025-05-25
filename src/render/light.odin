@@ -10,12 +10,12 @@ PointLight :: struct {
 }
 
 DirectionalLight :: struct {
-	direction, ambient, diffuse, specular, emissive: types.Vec3,
+	direction, ambient, diffuse, specular: types.Vec3,
 }
 
 SpotLight :: struct {
-	position, direction, ambient, diffuse, specular, emissive: types.Vec3,
-	inner_cutoff, outer_cutoff:                                f32,
+	position, direction, ambient, diffuse, specular: types.Vec3,
+	inner_cutoff, outer_cutoff:                      f32,
 }
 
 point_light_set_uniform :: proc(light: ^PointLight, shader_id: u32) {
@@ -23,6 +23,7 @@ point_light_set_uniform :: proc(light: ^PointLight, shader_id: u32) {
 	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "point_light.ambient"), 1, raw_data(&light.ambient))
 	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "point_light.diffuse"), 1, raw_data(&light.diffuse))
 	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "point_light.specular"), 1, raw_data(&light.specular))
+	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "point_light.emissive"), 1, raw_data(&light.emissive))
 
 	gl.Uniform1f(gl.GetUniformLocation(shader_id, "point_light.constant"), light.constant)
 	gl.Uniform1f(gl.GetUniformLocation(shader_id, "point_light.linear"), light.linear)
