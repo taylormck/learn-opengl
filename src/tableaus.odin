@@ -50,7 +50,11 @@ Tablueas :: enum {
 	Chapter_02_05_02_light_casters_point,
 	Chapter_02_05_03_light_casters_spot,
 	Chapter_02_05_04_light_casters_spot_soft,
-	Chapter_02_06_multiple_lights,
+	Chapter_02_06_01_multiple_lights,
+	Chapter_02_06_02_multiple_lights_desert,
+	Chapter_02_06_03_multiple_lights_factory,
+	Chapter_02_06_04_multiple_lights_horror,
+	Chapter_02_06_05_multiple_lights_biochemical_lab,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -99,5 +103,9 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_02_05_02_light_casters_point              = chapter_02_lighting.exercise_05_02_light_casters_point,
 	.Chapter_02_05_03_light_casters_spot               = chapter_02_lighting.exercise_05_03_light_casters_spot,
 	.Chapter_02_05_04_light_casters_spot_soft          = chapter_02_lighting.exercise_05_04_light_casters_spot_soft,
-	.Chapter_02_06_multiple_lights                     = chapter_02_lighting.exercise_06_01_multiple_lights,
+	.Chapter_02_06_01_multiple_lights                  = chapter_02_lighting.exercise_06_01_multiple_lights,
+	.Chapter_02_06_02_multiple_lights_desert           = chapter_02_lighting.exercise_06_02_multiple_lights_desert,
+	.Chapter_02_06_03_multiple_lights_factory          = chapter_02_lighting.exercise_06_03_multiple_lights_factory,
+	.Chapter_02_06_04_multiple_lights_horror           = chapter_02_lighting.exercise_06_04_multiple_lights_horror,
+	.Chapter_02_06_05_multiple_lights_biochemical_lab  = chapter_02_lighting.exercise_06_05_multiple_lights_biochemical_lab,
 }

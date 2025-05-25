@@ -42,6 +42,9 @@ light := render.SpotLight {
 	specular     = {1, 1, 1},
 	outer_cutoff = f32(math.cos(linalg.to_radians(12.5))),
 	inner_cutoff = f32(math.cos(linalg.to_radians(12.5))),
+	constant     = 1,
+	linear       = 0.09,
+	quadratic    = 0.032,
 }
 
 @(private = "file")

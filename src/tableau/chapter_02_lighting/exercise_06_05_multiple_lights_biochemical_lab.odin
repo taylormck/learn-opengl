@@ -11,6 +11,9 @@ import "core:math/linalg"
 import gl "vendor:OpenGL"
 
 @(private = "file")
+background_color := types.Vec3{0.9, 0.9, 0.9}
+
+@(private = "file")
 container_texture: render.Texture
 
 @(private = "file")
@@ -39,64 +42,64 @@ camera := render.Camera {
 point_lights := [?]render.PointLight {
 	{
 		position = {0.4, 0.2, 2},
-		ambient = {0.2, 0.2, 0.2},
-		diffuse = {0.5, 0.5, 0.5},
-		emissive = {1, 1, 1},
-		specular = {1, 1, 1},
+		ambient = {0.04, 0.07, 0.01},
+		diffuse = {0.4, 0.7, 0.1},
+		specular = {0.4, 0.7, 0.1},
+		emissive = {0.4, 0.7, 0.1},
 		constant = 1,
-		linear = 0.09,
-		quadratic = 0.032,
+		linear = 0.07,
+		quadratic = 0.017,
 	},
 	{
 		position = {2.3, -3.3, -4},
-		ambient = {0.2, 0.2, 0.2},
-		diffuse = {1, 0, 0},
-		emissive = {1, 0, 0},
-		specular = {1, 1, 1},
+		ambient = {0.04, 0.07, 0.01},
+		diffuse = {0.4, 0.7, 0.1},
+		specular = {0.4, 0.7, 0.1},
+		emissive = {0.4, 0.7, 0.1},
 		constant = 1,
-		linear = 0.09,
-		quadratic = 0.032,
+		linear = 0.07,
+		quadratic = 0.017,
 	},
 	{
 		position = {-4, 2, -12},
-		ambient = {0.2, 0.2, 0.2},
-		diffuse = {0, 1, 0},
-		emissive = {0, 1, 0},
-		specular = {1, 1, 1},
+		ambient = {0.04, 0.07, 0.01},
+		diffuse = {0.4, 0.7, 0.1},
+		specular = {0.4, 0.7, 0.1},
+		emissive = {0.4, 0.7, 0.1},
 		constant = 1,
-		linear = 0.09,
-		quadratic = 0.032,
+		linear = 0.07,
+		quadratic = 0.017,
 	},
 	{
 		position = {0, 0, -3},
-		ambient = {0.2, 0.2, 0.2},
-		diffuse = {0, 0, 1},
-		emissive = {0, 0, 1},
-		specular = {1, 1, 1},
+		ambient = {0.04, 0.07, 0.01},
+		diffuse = {0.4, 0.7, 0.1},
+		specular = {0.4, 0.7, 0.1},
+		emissive = {0.4, 0.7, 0.1},
 		constant = 1,
-		linear = 0.09,
-		quadratic = 0.032,
+		linear = 0.07,
+		quadratic = 0.017,
 	},
 }
 
 @(private = "file")
 directional_light := render.DirectionalLight {
 	direction = {-0.2, -1, -0.3},
-	ambient   = {0.2, 0.2, 0.2},
-	diffuse   = {0.5, 0.5, 0.5},
+	ambient   = {0.5, 0.5, 0.5},
+	diffuse   = {1, 1, 1},
 	specular  = {1, 1, 1},
 }
 
 @(private = "file")
 spot_light := render.SpotLight {
-	ambient      = {0.2, 0.2, 0.2},
-	diffuse      = {0.5, 0.5, 0.5},
-	specular     = {1, 1, 1},
-	inner_cutoff = math.cos(linalg.to_radians(f32(12.5))),
-	outer_cutoff = math.cos(linalg.to_radians(f32(17.5))),
+	ambient      = {0, 0, 0},
+	diffuse      = {0, 1, 0},
+	specular     = {0, 1, 0},
+	inner_cutoff = math.cos(linalg.to_radians(f32(7))),
+	outer_cutoff = math.cos(linalg.to_radians(f32(10))),
 	constant     = 1,
-	linear       = 0.09,
-	quadratic    = 0.032,
+	linear       = 0.07,
+	quadratic    = 0.017,
 }
 
 @(private = "file")
@@ -118,7 +121,7 @@ models := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({-1.3, 1, -1.5}),
 }
 
-exercise_06_01_multiple_lights := types.Tableau {
+exercise_06_05_multiple_lights_biochemical_lab := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .PhongMultiLight)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
@@ -141,7 +144,7 @@ exercise_06_01_multiple_lights := types.Tableau {
 		)
 	},
 	draw = proc() {
-		gl.ClearColor(0.1, 0.1, 0.1, 1)
+		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		gl.Enable(gl.DEPTH_TEST)

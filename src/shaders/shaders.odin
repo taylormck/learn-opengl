@@ -233,21 +233,21 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/phong_material_sampled_point_light.frag"),
-			) or_else panic("Failed to load the phong_directional shader")
+			) or_else panic("Failed to load the phong_point_light shader")
 
 	case .PhongSpotLight:
 		shaders[.PhongSpotLight] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/phong_material_sampled_spot_light.frag"),
-			) or_else panic("Failed to load the phong_directional shader")
+			) or_else panic("Failed to load the phong_spot_light shader")
 
 	case .PhongMultiLight:
 		shaders[.PhongMultiLight] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/phong_material_sampled_multilights.frag"),
-			) or_else panic("Failed to load the phong_directional shader")
+			) or_else panic("Failed to load the phong_multi_light shader")
 
 	case .Mesh:
 		shaders[.Mesh] =
