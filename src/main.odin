@@ -24,59 +24,6 @@ GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
 NUM_SAMPLES :: 4
 
-point_lights := [?]render.PointLight {
-	{
-		position = {0.4, 0.2, 2},
-		ambient = {0.2, 0.2, 0.2},
-		diffuse = {0.5, 0.5, 0.5},
-		specular = {1, 1, 1},
-		constant = 1,
-		linear = 0.09,
-		quadratic = 0.032,
-	},
-	{
-		position = {2.3, -3.3, -4},
-		ambient = {0.2, 0.2, 0.2},
-		diffuse = {1, 0, 0},
-		specular = {1, 1, 1},
-		constant = 1,
-		linear = 0.09,
-		quadratic = 0.032,
-	},
-	{
-		position = {-4, 2, -12},
-		ambient = {0.2, 0.2, 0.2},
-		diffuse = {0, 1, 0},
-		specular = {1, 1, 1},
-		constant = 1,
-		linear = 0.09,
-		quadratic = 0.032,
-	},
-	{
-		position = {0, 0, -3},
-		ambient = {0.2, 0.2, 0.2},
-		diffuse = {0, 0, 1},
-		specular = {1, 1, 1},
-		constant = 1,
-		linear = 0.09,
-		quadratic = 0.032,
-	},
-}
-
-directional_light := render.DirectionalLight {
-	direction = {-0.2, -1, -0.3},
-	ambient   = {0.2, 0.2, 0.2},
-	diffuse   = {0.5, 0.5, 0.5},
-	specular  = {1, 1, 1},
-}
-
-spot_light := render.SpotLight {
-	ambient      = {0.2, 0.2, 0.2},
-	diffuse      = {0.5, 0.5, 0.5},
-	specular     = {1, 1, 1},
-	inner_cutoff = math.cos(linalg.to_radians(f32(12.5))),
-	outer_cutoff = math.cos(linalg.to_radians(f32(17.5))),
-}
 
 marble_texture, metal_texture, grass_texture, window_texture: render.Texture
 
@@ -218,7 +165,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_02_05_04_light_casters_spot_soft]
+	current_tableau := tableaus[.Chapter_02_06_multiple_lights]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()

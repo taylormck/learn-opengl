@@ -55,6 +55,12 @@ point_light_array_set_uniform :: proc(light: ^PointLight, shader_id: u32, index:
 		raw_data(&light.specular),
 	)
 
+	gl.Uniform3fv(
+		gl.GetUniformLocation(shader_id, fmt.caprintf("point_lights[{}].emissive", index)),
+		1,
+		raw_data(&light.emissive),
+	)
+
 	gl.Uniform1f(gl.GetUniformLocation(shader_id, fmt.caprintf("point_lights[{}].constant", index)), light.constant)
 	gl.Uniform1f(gl.GetUniformLocation(shader_id, fmt.caprintf("point_lights[{}].linear", index)), light.linear)
 	gl.Uniform1f(gl.GetUniformLocation(shader_id, fmt.caprintf("point_lights[{}].quadratic", index)), light.quadratic)
