@@ -59,6 +59,7 @@ Tablueas :: enum {
 	Chapter_02_06_05_multiple_lights_biochemical_lab,
 	Chapter_03_01_01_model,
 	Chapter_04_01_01_depth,
+	Chapter_04_01_02_depth_testing_view,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -114,4 +115,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_02_06_05_multiple_lights_biochemical_lab  = chapter_02_lighting.exercise_06_05_multiple_lights_biochemical_lab,
 	.Chapter_03_01_01_model                            = chapter_03_model_loading.exercise_01_01_model,
 	.Chapter_04_01_01_depth                            = chapter_04_advanced_opengl.exercise_01_01_depth,
+	.Chapter_04_01_02_depth_testing_view               = chapter_04_advanced_opengl.exercise_01_02_depth_testing_view,
 }
