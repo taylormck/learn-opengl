@@ -153,7 +153,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_02_01_stencil_testing]
+	current_tableau := tableaus[.Chapter_04_03_01_blending_discard]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -178,90 +178,6 @@ main :: proc() {
 		prev_time = new_time
 	}
 }
-
-// draw_scene :: proc(scene: render.Scene, draw_outline: bool = false) {
-// 	gl.Enable(gl.STENCIL_TEST)
-// 	gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
-//
-// 	gl.ClearColor(0.1, 0.2, 0.3, 1)
-// 	gl.Enable(gl.DEPTH_TEST)
-//
-// 	if draw_outline {
-// 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
-// 		gl.StencilMask(0x00)
-// 		gl.StencilFunc(gl.ALWAYS, 1, 0xff)
-// 		gl.StencilMask(0xff)
-// 	} else {
-// 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	}
-//
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	pv := projection * view
-//
-// 	light_shader := tableau.shaders[.Light]
-// 	mesh_shader := tableau.shaders[.Mesh]
-// 	single_color_shader := tableau.shaders[.SingleColor]
-//
-// 	gl.UseProgram(light_shader)
-//
-// 	for point_light in point_lights {
-// 		// NOTE: This is just a quick hack to make the lights look brighter.
-// 		light_color := point_light.diffuse * 2
-//
-// 		model := linalg.matrix4_translate(point_light.position)
-// 		model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
-// 		transform := pv * model
-//
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
-// 		gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light_color))
-// 		primitives.cube_draw()
-// 	}
-//
-// 	gl.UseProgram(mesh_shader)
-// 	gl.Uniform3fv(gl.GetUniformLocation(mesh_shader, "view_position"), 1, raw_data(&camera.position))
-//
-// 	spot_light.position = camera.position
-// 	spot_light.direction = camera.direction
-// 	render.spot_light_set_uniform(&spot_light, mesh_shader)
-//
-// 	model := linalg.identity(types.TransformMatrix)
-// 	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-// 	transform := pv * model
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
-// 	gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
-//
-// 	for _, &mesh in scene.meshes {
-// 		render.mesh_draw(&mesh, mesh_shader)
-// 	}
-//
-// 	if !draw_outline do return
-//
-// 	// Draw the outline
-// 	gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
-// 	gl.StencilMask(0x00)
-// 	gl.Disable(gl.DEPTH_TEST)
-//
-// 	gl.UseProgram(single_color_shader)
-// 	gl.Uniform3fv(gl.GetUniformLocation(single_color_shader, "view_position"), 1, raw_data(&camera.position))
-//
-// 	model = linalg.matrix4_scale_f32({1.1, 1.1, 1.1})
-// 	mit = types.SubTransformMatrix(linalg.inverse_transpose(model))
-// 	transform = pv * model
-//
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "model"), 1, false, raw_data(&model))
-// 	gl.UniformMatrix3fv(gl.GetUniformLocation(single_color_shader, "mit"), 1, false, raw_data(&mit))
-//
-// 	for _, &mesh in scene.meshes {
-// 		render.mesh_draw(&mesh, single_color_shader)
-// 	}
-//
-// 	gl.StencilFunc(gl.ALWAYS, 1, 0xff)
-// 	gl.StencilMask(0xff)
-// 	gl.Enable(gl.DEPTH_TEST)
-// }
 
 // draw_block_scene :: proc() {
 // 	gl.ClearColor(0.1, 0.2, 0.3, 1)
@@ -599,7 +515,6 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 	window.height = height
 
 	gl.Viewport(0, 0, width, height)
-	// camera.aspect_ratio = window.aspect_ratio()
 
 	// gl.BindTexture(gl.TEXTURE_2D, fb_texture)
 	// defer gl.BindTexture(gl.TEXTURE_2D, 0)
@@ -627,34 +542,34 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 // 	return distance_squared_from_camera(lhs) > distance_squared_from_camera(rhs)
 // }
 
-set_asteroid_transforms :: proc() {
-	radius :: 50
-	rotation_axis :: types.Vec3{0.4, 0.6, 0.8}
-	scale_multiple: f32 : 1.0 / 10
-
-	for i in 0 ..< NUM_ASTEROIDS {
-		angle := f32(i) / f32(NUM_ASTEROIDS) * math.TAU
-
-		translation :=
-			types.Vec3 {
-				math.sin(angle) * radius + generate_random_displacement(),
-				generate_random_displacement() * 0.1,
-				math.cos(angle) * radius + generate_random_displacement(),
-			} +
-			PLANET_CENTER
-
-		scale := rand.float32_exponential(10) * scale_multiple + 0.005
-		rotation := rand.float32() * math.TAU
-
-		asteroid_model_transforms[i] =
-			linalg.matrix4_translate(translation) *
-			linalg.matrix4_rotate(rotation, rotation_axis) *
-			linalg.matrix4_scale_f32(scale)
-	}
-}
-
-generate_random_displacement :: proc() -> f32 {
-	offset :: 10.0
-
-	return rand.float32_normal(offset, 5.0) - offset
-}
+// set_asteroid_transforms :: proc() {
+// 	radius :: 50
+// 	rotation_axis :: types.Vec3{0.4, 0.6, 0.8}
+// 	scale_multiple: f32 : 1.0 / 10
+//
+// 	for i in 0 ..< NUM_ASTEROIDS {
+// 		angle := f32(i) / f32(NUM_ASTEROIDS) * math.TAU
+//
+// 		translation :=
+// 			types.Vec3 {
+// 				math.sin(angle) * radius + generate_random_displacement(),
+// 				generate_random_displacement() * 0.1,
+// 				math.cos(angle) * radius + generate_random_displacement(),
+// 			} +
+// 			PLANET_CENTER
+//
+// 		scale := rand.float32_exponential(10) * scale_multiple + 0.005
+// 		rotation := rand.float32() * math.TAU
+//
+// 		asteroid_model_transforms[i] =
+// 			linalg.matrix4_translate(translation) *
+// 			linalg.matrix4_rotate(rotation, rotation_axis) *
+// 			linalg.matrix4_scale_f32(scale)
+// 	}
+// }
+//
+// generate_random_displacement :: proc() -> f32 {
+// 	offset :: 10.0
+//
+// 	return rand.float32_normal(offset, 5.0) - offset
+// }
