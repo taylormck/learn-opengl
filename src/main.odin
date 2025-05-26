@@ -24,9 +24,6 @@ GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
 NUM_SAMPLES :: 4
 
-
-marble_texture, metal_texture, grass_texture, window_texture: render.Texture
-
 fbo, fb_texture, rbo: u32
 ms_fbo, ms_fb_texture, ms_rbo: u32
 cubemap: primitives.Cubemap
@@ -156,7 +153,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_03_01_01_model]
+	current_tableau := tableaus[.Chapter_04_01_01_depth]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -265,7 +262,7 @@ main :: proc() {
 // 	gl.StencilMask(0xff)
 // 	gl.Enable(gl.DEPTH_TEST)
 // }
-//
+
 // draw_block_scene :: proc() {
 // 	gl.ClearColor(0.1, 0.2, 0.3, 1)
 // 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -351,7 +348,7 @@ main :: proc() {
 // 		primitives.quad_draw()
 // 	}
 // }
-//
+
 // draw_full_screen_scene :: proc() {
 // 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 // 	// NOTE: draw_block_scene clears the buffers for us
@@ -366,7 +363,7 @@ main :: proc() {
 // 	gl.UseProgram(tableau.shaders[.Fullscreen])
 // 	primitives.full_screen_draw()
 // }
-//
+
 // draw_box_scene_rearview_mirror :: proc() {
 // 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 // 	// NOTE: draw_block_scene clears the buffers for us
@@ -406,7 +403,7 @@ main :: proc() {
 // 	gl.Disable(gl.STENCIL_TEST)
 // 	gl.Enable(gl.DEPTH_TEST)
 // }
-//
+
 // draw_skybox_scene :: proc(scene: render.Scene) {
 // 	model := linalg.identity(types.TransformMatrix)
 // 	projection := render.camera_get_projection(&camera)
@@ -446,7 +443,7 @@ main :: proc() {
 //
 // 	gl.DepthFunc(gl.LESS)
 // }
-//
+
 // draw_houses :: proc() {
 // 	gl.ClearColor(0, 0, 0, 1)
 // 	gl.Clear(gl.COLOR_BUFFER_BIT)
@@ -481,7 +478,7 @@ main :: proc() {
 // 		render.mesh_draw(&mesh, explode_shader)
 // 	}
 // }
-//
+
 // draw_normals :: proc(scene: render.Scene) {
 // 	draw_scene(scene)
 //
@@ -506,7 +503,7 @@ main :: proc() {
 // 	gl.UseProgram(tableau.shaders[.InstancedRect])
 // 	primitives.quad_draw_instanced(100, instanced_rect_offset_vbo)
 // }
-//
+
 // draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
 // 	planet_shader := tableau.shaders[.Planet]
 // 	asteroid_shader := tableau.shaders[.Asteroid]
@@ -549,7 +546,7 @@ main :: proc() {
 // 		gl.BindVertexArray(0)
 // 	}
 // }
-//
+
 // draw_green_box :: proc() {
 // 	gl.BindFramebuffer(gl.FRAMEBUFFER, ms_fbo)
 //
