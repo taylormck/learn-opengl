@@ -153,7 +153,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_01_02_depth_testing_view]
+	current_tableau := tableaus[.Chapter_04_02_01_stencil_testing]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()

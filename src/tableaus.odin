@@ -60,6 +60,7 @@ Tablueas :: enum {
 	Chapter_03_01_01_model,
 	Chapter_04_01_01_depth,
 	Chapter_04_01_02_depth_testing_view,
+	Chapter_04_02_01_stencil_testing,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -116,4 +117,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_03_01_01_model                            = chapter_03_model_loading.exercise_01_01_model,
 	.Chapter_04_01_01_depth                            = chapter_04_advanced_opengl.exercise_01_01_depth,
 	.Chapter_04_01_02_depth_testing_view               = chapter_04_advanced_opengl.exercise_01_02_depth_testing_view,
+	.Chapter_04_02_01_stencil_testing                  = chapter_04_advanced_opengl.exercise_02_01_stencil_testing,
 }
