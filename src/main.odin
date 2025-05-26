@@ -153,7 +153,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_03_01_blending_discard]
+	current_tableau := tableaus[.Chapter_04_03_02_blending_sort]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -532,15 +532,6 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 	// defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 	// gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, width, height)
 }
-
-// distance_squared_from_camera :: proc(v: types.Vec3) -> f32 {
-// 	diff := camera.position - v
-// 	return linalg.dot(diff, diff)
-// }
-
-// distance_order :: proc(lhs, rhs: types.Vec3) -> bool {
-// 	return distance_squared_from_camera(lhs) > distance_squared_from_camera(rhs)
-// }
 
 // set_asteroid_transforms :: proc() {
 // 	radius :: 50
