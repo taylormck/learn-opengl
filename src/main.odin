@@ -153,7 +153,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_03_02_blending_sort]
+	current_tableau := tableaus[.Chapter_04_04_01_face_culling]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -178,92 +178,6 @@ main :: proc() {
 		prev_time = new_time
 	}
 }
-
-// draw_block_scene :: proc() {
-// 	gl.ClearColor(0.1, 0.2, 0.3, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.Enable(gl.DEPTH_TEST)
-//
-// 	texture_shader := tableau.shaders[.Texture]
-//
-// 	gl.ActiveTexture(gl.TEXTURE0)
-// 	gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-// 	gl.UseProgram(texture_shader)
-//
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	pv := projection * view
-//
-// 	{
-// 		// Draw floor
-// 		gl.BindTexture(gl.TEXTURE_2D, marble_texture.id)
-// 		model := linalg.matrix4_translate(types.Vec3{0, -1, 0})
-// 		model = model * linalg.matrix4_rotate(linalg.to_radians(f32(-90)), types.Vec3{1, 0, 0})
-// 		model = linalg.matrix4_scale_f32(types.Vec3{10, 1, 10}) * model
-// 		transform := pv * model
-//
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-//
-// 		primitives.quad_draw()
-// 	}
-//
-// 	{
-// 		gl.Enable(gl.CULL_FACE)
-// 		defer gl.Disable(gl.CULL_FACE)
-//
-// 		gl.CullFace(gl.FRONT)
-// 		defer gl.CullFace(gl.BACK)
-//
-// 		cube_positions := [?]types.Vec3{{-2, -0.45, -2.5}, {2, -0.45, -2}}
-// 		for position in cube_positions {
-// 			gl.BindTexture(gl.TEXTURE_2D, metal_texture.id)
-// 			model := linalg.matrix4_translate(position)
-// 			transform := pv * model
-//
-// 			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-//
-// 			primitives.cube_draw()
-// 		}
-// 	}
-//
-// 	gl.Enable(gl.BLEND)
-// 	defer gl.Disable(gl.BLEND)
-//
-// 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
-//
-// 	gl.BindTexture(gl.TEXTURE_2D, grass_texture.id)
-// 	grass_positions := [?]types.Vec3 {
-// 		{0, -0.5, 1.05},
-// 		{-1.5, -0.5, 0.2},
-// 		{3.5, -0.5, 0.51},
-// 		{-0.3, -0.5, -4.3},
-// 		{0.5, -0.5, -1.5},
-// 	}
-// 	for position in grass_positions {
-// 		model := linalg.matrix4_translate(position)
-// 		transform := pv * model
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-//
-// 		primitives.cross_imposter_draw()
-// 	}
-//
-// 	gl.BindTexture(gl.TEXTURE_2D, window_texture.id)
-// 	window_positions := [?]types.Vec3 {
-// 		{1, -0.5, 0.55},
-// 		{-1.75, -0.5, -0.58},
-// 		{1.5, -0.5, 1},
-// 		{-0.3, -0.5, -2.6},
-// 		{0.5, -0.5, -0.7},
-// 	}
-// 	slice.sort_by(window_positions[:], distance_order)
-// 	for position in window_positions {
-// 		model := linalg.matrix4_translate(position)
-// 		transform := pv * model
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-//
-// 		primitives.quad_draw()
-// 	}
-// }
 
 // draw_full_screen_scene :: proc() {
 // 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)

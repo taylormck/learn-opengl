@@ -63,6 +63,7 @@ Tablueas :: enum {
 	Chapter_04_02_01_stencil_testing,
 	Chapter_04_03_01_blending_discard,
 	Chapter_04_03_02_blending_sort,
+	Chapter_04_04_01_face_culling,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -122,4 +123,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_04_02_01_stencil_testing                  = chapter_04_advanced_opengl.exercise_02_01_stencil_testing,
 	.Chapter_04_03_01_blending_discard                 = chapter_04_advanced_opengl.exercise_03_01_blending_discard,
 	.Chapter_04_03_02_blending_sort                    = chapter_04_advanced_opengl.exercise_03_02_blending_sort,
+	.Chapter_04_04_01_face_culling                     = chapter_04_advanced_opengl.exercise_04_01_face_culling,
 }
