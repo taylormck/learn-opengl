@@ -130,7 +130,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_05_05_framebuffers_edge]
+	current_tableau := tableaus[.Chapter_04_05_06_framebuffers_exercise_01]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -155,21 +155,6 @@ main :: proc() {
 		prev_time = new_time
 	}
 }
-
-// draw_full_screen_scene :: proc() {
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
-// 	// NOTE: draw_block_scene clears the buffers for us
-// 	draw_block_scene()
-//
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-// 	gl.ClearColor(1, 1, 1, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT)
-// 	gl.Disable(gl.DEPTH_TEST)
-// 	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
-//
-// 	gl.UseProgram(tableau.shaders[.Fullscreen])
-// 	primitives.full_screen_draw()
-// }
 
 // draw_box_scene_rearview_mirror :: proc() {
 // 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)

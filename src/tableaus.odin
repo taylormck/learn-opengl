@@ -69,6 +69,7 @@ Tablueas :: enum {
 	Chapter_04_05_03_framebuffers_sharpen,
 	Chapter_04_05_04_framebuffers_blur,
 	Chapter_04_05_05_framebuffers_edge,
+	Chapter_04_05_06_framebuffers_exercise_01,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -134,4 +135,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_04_05_03_framebuffers_sharpen             = chapter_04_advanced_opengl.exercise_05_03_framebuffers_sharpen,
 	.Chapter_04_05_04_framebuffers_blur                = chapter_04_advanced_opengl.exercise_05_04_framebuffers_blur,
 	.Chapter_04_05_05_framebuffers_edge                = chapter_04_advanced_opengl.exercise_05_05_framebuffers_edge,
+	.Chapter_04_05_06_framebuffers_exercise_01         = chapter_04_advanced_opengl.exercise_05_06_framebuffers_exercise_01,
 }
