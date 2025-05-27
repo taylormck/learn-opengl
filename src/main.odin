@@ -130,7 +130,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_05_01_framebuffers_invert]
+	current_tableau := tableaus[.Chapter_04_05_02_framebuffers_greyscale]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()

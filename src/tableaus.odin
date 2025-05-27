@@ -65,6 +65,7 @@ Tablueas :: enum {
 	Chapter_04_03_02_blending_sort,
 	Chapter_04_04_01_face_culling,
 	Chapter_04_05_01_framebuffers_invert,
+	Chapter_04_05_02_framebuffers_greyscale,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -126,4 +127,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_04_03_02_blending_sort                    = chapter_04_advanced_opengl.exercise_03_02_blending_sort,
 	.Chapter_04_04_01_face_culling                     = chapter_04_advanced_opengl.exercise_04_01_face_culling,
 	.Chapter_04_05_01_framebuffers_invert              = chapter_04_advanced_opengl.exercise_05_01_framebuffers_invert,
+	.Chapter_04_05_02_framebuffers_greyscale           = chapter_04_advanced_opengl.exercise_05_02_framebuffers_greyscale,
 }

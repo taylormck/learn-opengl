@@ -34,14 +34,15 @@ Shader :: enum {
 	Skybox,
 	SkyboxReflect,
 	SkyboxRefract,
-	Fullscreen,
+	Edge,
 	Depth,
+	Invert,
+	Blur,
 	SingleColor,
 	House,
 	Explode,
 	Normal,
 	Greyscale,
-	Invert,
 	Planet,
 	Asteroid,
 	InstancedRect,
@@ -270,26 +271,33 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/single_color.frag"),
 			) or_else panic("Failed to load the shader")
 
-	case .Fullscreen:
-		shaders[.Fullscreen] =
+	case .Edge:
+		shaders[.Edge] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/edge_kernel.frag"),
-			) or_else panic("Failed to load the full screen shader")
+			) or_else panic("Failed to load the edge shader")
 
 	case .Greyscale:
 		shaders[.Greyscale] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/flat_tex_greyscale.frag"),
-			) or_else panic("Failed to load the full screen shader")
+			) or_else panic("Failed to load the greyscale shader")
 
 	case .Invert:
 		shaders[.Invert] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/flat_tex_invert.frag"),
-			) or_else panic("Failed to load the full screen shader")
+			) or_else panic("Failed to load the invert shader")
+
+	case .Blur:
+		shaders[.Blur] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/blur_kernel.frag"),
+			) or_else panic("Failed to load the blur shader")
 
 	case .Skybox:
 		shaders[.Skybox] =
