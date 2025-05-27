@@ -107,29 +107,6 @@ main :: proc() {
 	// }
 	// defer for _, &mesh in rock_scene.meshes do render.mesh_gpu_free(&mesh)
 
-	// gl.GenFramebuffers(1, &fbo)
-	// defer gl.DeleteFramebuffers(1, &fbo)
-	// gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
-	//
-	// gl.GenTextures(1, &fb_texture)
-	// gl.BindTexture(gl.TEXTURE_2D, fb_texture)
-	// gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, INITIAL_WIDTH, INITIAL_HEIGHT, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-	// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-	// gl.BindTexture(gl.TEXTURE_2D, 0)
-	//
-	// gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, fb_texture, 0)
-	//
-	// if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
-	// gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-	//
-	// gl.GenRenderbuffers(1, &rbo)
-	// gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
-	// gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, INITIAL_WIDTH, INITIAL_HEIGHT)
-	// gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
-	//
 	// gl.GenFramebuffers(1, &ms_fbo)
 	// defer gl.DeleteFramebuffers(1, &ms_fbo)
 	// gl.BindFramebuffer(gl.FRAMEBUFFER, ms_fbo)
@@ -153,7 +130,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_04_01_face_culling]
+	current_tableau := tableaus[.Chapter_04_05_01_framebuffers_invert]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
