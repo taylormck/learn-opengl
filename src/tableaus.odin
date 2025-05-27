@@ -67,6 +67,7 @@ Tablueas :: enum {
 	Chapter_04_05_01_framebuffers_invert,
 	Chapter_04_05_02_framebuffers_greyscale,
 	Chapter_04_05_03_framebuffers_sharpen,
+	Chapter_04_05_04_framebuffers_blur,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -130,4 +131,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_04_05_01_framebuffers_invert              = chapter_04_advanced_opengl.exercise_05_01_framebuffers_invert,
 	.Chapter_04_05_02_framebuffers_greyscale           = chapter_04_advanced_opengl.exercise_05_02_framebuffers_greyscale,
 	.Chapter_04_05_03_framebuffers_sharpen             = chapter_04_advanced_opengl.exercise_05_03_framebuffers_sharpen,
+	.Chapter_04_05_04_framebuffers_blur                = chapter_04_advanced_opengl.exercise_05_04_framebuffers_blur,
 }
