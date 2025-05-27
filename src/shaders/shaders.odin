@@ -37,6 +37,7 @@ Shader :: enum {
 	Edge,
 	Depth,
 	Invert,
+	Sharpen,
 	Blur,
 	SingleColor,
 	House,
@@ -291,6 +292,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/flat_tex_invert.frag"),
 			) or_else panic("Failed to load the invert shader")
+
+	case .Sharpen:
+		shaders[.Sharpen] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/sharpen_kernel.frag"),
+			) or_else panic("Failed to load the blur shader")
 
 	case .Blur:
 		shaders[.Blur] =
