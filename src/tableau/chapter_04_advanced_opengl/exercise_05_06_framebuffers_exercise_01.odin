@@ -124,7 +124,7 @@ exercise_05_06_framebuffers_exercise_01 := types.Tableau {
 		transform = linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.8, 0.8, 0})
 		gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
 		primitives.quad_draw()
-
+		//
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
@@ -136,6 +136,15 @@ exercise_05_06_framebuffers_exercise_01 := types.Tableau {
 		gl.DeleteTextures(1, &fb_texture)
 		gl.DeleteFramebuffers(1, &fbo)
 		gl.DeleteRenderbuffers(1, &rbo)
+	},
+	framebuffer_size_callback = proc() {
+		gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+		defer gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, window.width, window.height, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
+
+		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
+		defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
 	},
 }
 

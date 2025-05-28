@@ -12,8 +12,9 @@ VoidProc :: #type proc()
 DeltaProc :: #type proc(delta: f64)
 
 Tableau :: struct {
-	init:     VoidProc,
-	update:   DeltaProc,
-	draw:     VoidProc,
-	teardown: VoidProc,
+	init:                      VoidProc,
+	update:                    DeltaProc,
+	draw:                      VoidProc,
+	teardown:                  VoidProc,
+	framebuffer_size_callback: VoidProc,
 }

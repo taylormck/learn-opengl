@@ -23,6 +23,8 @@ GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
 NUM_SAMPLES :: 4
 
+current_tableau: types.Tableau
+
 main :: proc() {
 	context.logger = log.create_console_logger()
 	defer log.destroy_console_logger(context.logger)
@@ -62,7 +64,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_11_02_anti_aliasing_offscreen]
+	current_tableau = tableaus[.Chapter_04_10_03_asteroids_instanced]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -88,52 +90,6 @@ main :: proc() {
 	}
 }
 
-// draw_green_box :: proc() {
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, ms_fbo)
-//
-// 	gl.ClearColor(0.1, 0.2, 0.3, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.Enable(gl.DEPTH_TEST)
-//
-// 	model := linalg.matrix4_rotate_f32(math.PI / 4, types.Vec3{1, 1, 1})
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	transform := projection * view * model
-//
-// 	gl.UseProgram(tableau.shaders[.SingleColor])
-// 	gl.UniformMatrix4fv(
-// 		gl.GetUniformLocation(tableau.shaders[.SingleColor], "transform"),
-// 		1,
-// 		false,
-// 		raw_data(&transform),
-// 	)
-// 	primitives.cube_draw()
-//
-// 	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, ms_fbo)
-// 	gl.BindFramebuffer(gl.DRAW_FRAMEBUFFER, fbo)
-// 	gl.BlitFramebuffer(
-// 		0,
-// 		0,
-// 		window_width,
-// 		window_height,
-// 		0,
-// 		0,
-// 		window_width,
-// 		window_height,
-// 		gl.COLOR_BUFFER_BIT,
-// 		gl.NEAREST,
-// 	)
-//
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-// 	gl.ClearColor(0.1, 0.2, 0.3, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT)
-// 	gl.Disable(gl.DEPTH_TEST)
-// 	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
-//
-// 	gl.UseProgram(tableau.shaders[.Invert])
-// 	primitives.full_screen_draw()
-// }
-
 framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, width, height: i32) {
 	context = runtime.default_context()
 	window.width = width
@@ -141,19 +97,5 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 
 	gl.Viewport(0, 0, width, height)
 
-	// gl.BindTexture(gl.TEXTURE_2D, fb_texture)
-	// defer gl.BindTexture(gl.TEXTURE_2D, 0)
-	// gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, width, height, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
-	//
-	// gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
-	// defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
-	// gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, width, height)
-	//
-	// gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture)
-	// defer gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, 0)
-	// gl.TexImage2DMultisample(gl.TEXTURE_2D_MULTISAMPLE, NUM_SAMPLES, gl.RGB, width, height, gl.TRUE)
-	//
-	// gl.BindRenderbuffer(gl.RENDERBUFFER, ms_rbo)
-	// defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
-	// gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, width, height)
+	if current_tableau.framebuffer_size_callback != nil do current_tableau.framebuffer_size_callback()
 }

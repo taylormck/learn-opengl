@@ -163,4 +163,27 @@ exercise_11_02_anti_aliasing_offscreen := types.Tableau {
 		gl.DeleteFramebuffers(1, &fbo)
 		gl.DeleteRenderbuffers(1, &rbo)
 	},
+	framebuffer_size_callback = proc() {
+		gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+		defer gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, window.width, window.height, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
+
+		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
+		defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
+
+		gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture)
+		defer gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, 0)
+		gl.TexImage2DMultisample(gl.TEXTURE_2D_MULTISAMPLE, window.samples, gl.RGB, window.width, window.height, gl.TRUE)
+
+		gl.BindRenderbuffer(gl.RENDERBUFFER, ms_rbo)
+		defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+		gl.RenderbufferStorageMultisample(
+			gl.RENDERBUFFER,
+			window.samples,
+			gl.DEPTH24_STENCIL8,
+			window.width,
+			window.height,
+		)
+	},
 }

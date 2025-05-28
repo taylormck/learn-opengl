@@ -150,4 +150,13 @@ exercise_05_03_framebuffers_sharpen := types.Tableau {
 		gl.DeleteFramebuffers(1, &fbo)
 		gl.DeleteRenderbuffers(1, &rbo)
 	},
+	framebuffer_size_callback = proc() {
+		gl.BindTexture(gl.TEXTURE_2D, fb_texture)
+		defer gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB, window.width, window.height, 0, gl.RGB, gl.UNSIGNED_BYTE, nil)
+
+		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
+		defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
+	},
 }
