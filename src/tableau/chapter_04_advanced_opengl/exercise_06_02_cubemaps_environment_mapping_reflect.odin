@@ -1,11 +1,13 @@
 package chapter_04_advanced_opengl
 
 import "../../input"
+import "../../parse/obj"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
+import "core:log"
 import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
@@ -14,7 +16,7 @@ import gl "vendor:OpenGL"
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
 @(private = "file")
-initial_camera_position := types.Vec3{4.5, 0.6, -0.3}
+initial_camera_position := types.Vec3{1, 0, 5}
 
 @(private = "file")
 initial_camera_target := types.Vec3{0, 0, 0}
@@ -33,17 +35,18 @@ camera := render.Camera {
 }
 
 @(private = "file")
-container_texture: render.Texture
-
-@(private = "file")
 cubemap: primitives.Cubemap
 
-exercise_06_01_skybox := types.Tableau {
+@(private = "file")
+backpack_model: render.Scene
+
+exercise_06_02_cubemaps_environment_mapping_reflect := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.TransformTexture, .Skybox)
-		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
+		shaders.init_shaders(.SkyboxReflect, .Skybox)
 		cubemap = primitives.cubemap_load("textures/skybox")
-		primitives.cube_send_to_gpu()
+		backpack_model =
+			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
+		render.scene_send_to_gpu(&backpack_model)
 	},
 	update = proc(delta: f64) {
 		camera.aspect_ratio = window.aspect_ratio()
@@ -57,12 +60,11 @@ exercise_06_01_skybox := types.Tableau {
 		)
 	},
 	draw = proc() {
-		texture_shader := shaders.shaders[.TransformTexture]
+		mesh_shader := shaders.shaders[.SkyboxReflect]
 		skybox_shader := shaders.shaders[.Skybox]
 
 		gl.ActiveTexture(gl.TEXTURE0)
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-		gl.UseProgram(texture_shader)
+		gl.Uniform1i(gl.GetUniformLocation(mesh_shader, "diffuse_0"), 0)
 
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -76,13 +78,13 @@ exercise_06_01_skybox := types.Tableau {
 		transform := pv * model
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
-		gl.BindTexture(gl.TEXTURE_2D, container_texture.id)
-		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(texture_shader, "mit"), 1, false, raw_data(&mit))
-		gl.Uniform3fv(gl.GetUniformLocation(texture_shader, "camera_position"), 1, raw_data(&camera.position))
+		gl.UseProgram(mesh_shader)
+		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
+		gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
+		gl.Uniform3fv(gl.GetUniformLocation(mesh_shader, "view_position"), 1, raw_data(&camera.position))
 
-		primitives.cube_draw()
+		render.scene_draw(&backpack_model, mesh_shader)
 
 		gl.DepthFunc(gl.LEQUAL)
 		gl.UseProgram(skybox_shader)
@@ -96,8 +98,8 @@ exercise_06_01_skybox := types.Tableau {
 
 	},
 	teardown = proc() {
-		primitives.cube_clear_from_gpu()
+		render.scene_clear_from_gpu(&backpack_model)
+		render.scene_destroy(&backpack_model)
 		primitives.cubemap_free(&cubemap)
-		gl.DeleteTextures(1, &container_texture.id)
 	},
 }
