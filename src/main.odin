@@ -130,7 +130,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_06_02_cubemaps_environment_mapping_reflect]
+	current_tableau := tableaus[.Chapter_04_06_03_cubemaps_environment_mapping_refract]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
