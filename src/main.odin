@@ -16,6 +16,11 @@ import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 import "window"
 
+import "tableau/chapter_01_getting_started"
+import "tableau/chapter_02_lighting"
+import "tableau/chapter_03_model_loading"
+import "tableau/chapter_04_advanced_opengl"
+
 INITIAL_WIDTH :: 800
 INITIAL_HEIGHT :: 600
 
@@ -64,7 +69,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = tableaus[.Chapter_04_10_03_asteroids_instanced]
+	current_tableau = chapter_04_advanced_opengl.exercise_10_03_asteroids_instanced
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
