@@ -130,7 +130,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_09_02_geometry_shader_exploding]
+	current_tableau := tableaus[.Chapter_04_09_03_geometry_shader_normals]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -175,7 +175,7 @@ main :: proc() {
 // 		render.mesh_draw(&mesh, normal_shader)
 // 	}
 // }
-//
+
 // draw_instanced_rects :: proc() {
 // 	gl.UseProgram(tableau.shaders[.InstancedRect])
 // 	primitives.quad_draw_instanced(100, instanced_rect_offset_vbo)

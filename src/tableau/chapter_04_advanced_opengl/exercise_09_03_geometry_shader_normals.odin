@@ -13,9 +13,6 @@ import "core:math/linalg"
 import gl "vendor:OpenGL"
 
 @(private = "file")
-time: f64
-
-@(private = "file")
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
 @(private = "file")
@@ -40,15 +37,14 @@ camera := render.Camera {
 @(private = "file")
 backpack_model: render.Scene
 
-exercise_09_02_geometry_shader_exploding := types.Tableau {
+exercise_09_03_geometry_shader_normals := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.Explode)
+		shaders.init_shaders(.TransformTexture, .Normal)
 		backpack_model =
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 		render.scene_send_to_gpu(&backpack_model)
 	},
 	update = proc(delta: f64) {
-		time += delta
 		camera.aspect_ratio = window.aspect_ratio()
 
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -60,7 +56,8 @@ exercise_09_02_geometry_shader_exploding := types.Tableau {
 		)
 	},
 	draw = proc() {
-		mesh_shader := shaders.shaders[.Explode]
+		mesh_shader := shaders.shaders[.TransformTexture]
+		normal_shader := shaders.shaders[.Normal]
 
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -70,17 +67,24 @@ exercise_09_02_geometry_shader_exploding := types.Tableau {
 		view := render.camera_get_view(&camera)
 		pv := projection * view
 		model := linalg.identity(types.TransformMatrix)
+		view_model := view * model
 		transform := pv * model
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
 		gl.UseProgram(mesh_shader)
-		gl.Uniform1f(gl.GetUniformLocation(mesh_shader, "time"), f32(time))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
 		gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
 		gl.Uniform3fv(gl.GetUniformLocation(mesh_shader, "view_position"), 1, raw_data(&camera.position))
 
 		render.scene_draw(&backpack_model, mesh_shader)
+
+		gl.UseProgram(normal_shader)
+		gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "view_model"), 1, false, raw_data(&view_model))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "projection"), 1, false, raw_data(&projection))
+		gl.UniformMatrix3fv(gl.GetUniformLocation(normal_shader, "mit"), 1, false, raw_data(&mit))
+
+		render.scene_draw(&backpack_model, normal_shader)
 	},
 	teardown = proc() {
 		render.scene_clear_from_gpu(&backpack_model)
