@@ -51,6 +51,7 @@ Shader :: enum {
 	Planet,
 	Asteroid,
 	InstancedRect,
+	TransformUniformColor,
 }
 
 ShaderMap :: map[Shader]u32
@@ -447,7 +448,16 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/instanced_color.vert"),
 				#load("../../shaders/frag/vert_color.frag"),
 			) or_else panic("Failed to load the instanced rect shader")
+
+	case .TransformUniformColor:
+		shaders[.TransformUniformColor] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_transform.vert"),
+				#load("../../shaders/frag/uniform_color.frag"),
+			) or_else panic("Failed to load the uniform color shader")
+
 	}
+
 }
 
 delete_shaders :: proc() {

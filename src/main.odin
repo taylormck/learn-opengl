@@ -84,7 +84,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_10_03_asteroids_instanced]
+	current_tableau := tableaus[.Chapter_04_11_01_anti_aliasing_msaa]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -109,49 +109,6 @@ main :: proc() {
 		prev_time = new_time
 	}
 }
-
-// draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
-// 	planet_shader := tableau.shaders[.Planet]
-// 	asteroid_shader := tableau.shaders[.Asteroid]
-//
-// 	ensure(planet_shader != 0, "planet shader not initialized")
-// 	ensure(asteroid_shader != 0, "asteroid_shader shader not initialized")
-//
-// 	gl.ClearColor(0.1, 0.1, 0.1, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.Enable(gl.DEPTH_TEST)
-//
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	pv := projection * view
-//
-// 	{
-// 		model := linalg.matrix4_translate(PLANET_CENTER)
-// 		model = model * linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
-// 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-// 		transform := pv * model
-//
-// 		gl.UseProgram(planet_shader)
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-// 		gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
-//
-// 		for _, &mesh in planet_scene.meshes {
-// 			render.mesh_draw(&mesh, planet_shader)
-// 		}
-// 	}
-//
-// 	{
-// 		gl.UseProgram(asteroid_shader)
-// 		gl.UniformMatrix4fv(gl.GetUniformLocation(asteroid_shader, "pv"), 1, false, raw_data(&pv))
-//
-// 		for _, &mesh in rock_scene.meshes {
-// 			render.mesh_draw_instanced(&mesh, asteroid_shader, NUM_ASTEROIDS)
-// 		}
-//
-// 		gl.BindVertexArray(0)
-// 	}
-// }
 
 // draw_green_box :: proc() {
 // 	gl.BindFramebuffer(gl.FRAMEBUFFER, ms_fbo)
@@ -222,35 +179,3 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 	// defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 	// gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, width, height)
 }
-
-// set_asteroid_transforms :: proc() {
-// 	radius :: 50
-// 	rotation_axis :: types.Vec3{0.4, 0.6, 0.8}
-// 	scale_multiple: f32 : 1.0 / 10
-//
-// 	for i in 0 ..< NUM_ASTEROIDS {
-// 		angle := f32(i) / f32(NUM_ASTEROIDS) * math.TAU
-//
-// 		translation :=
-// 			types.Vec3 {
-// 				math.sin(angle) * radius + generate_random_displacement(),
-// 				generate_random_displacement() * 0.1,
-// 				math.cos(angle) * radius + generate_random_displacement(),
-// 			} +
-// 			PLANET_CENTER
-//
-// 		scale := rand.float32_exponential(10) * scale_multiple + 0.005
-// 		rotation := rand.float32() * math.TAU
-//
-// 		asteroid_model_transforms[i] =
-// 			linalg.matrix4_translate(translation) *
-// 			linalg.matrix4_rotate(rotation, rotation_axis) *
-// 			linalg.matrix4_scale_f32(scale)
-// 	}
-// }
-//
-// generate_random_displacement :: proc() -> f32 {
-// 	offset :: 10.0
-//
-// 	return rand.float32_normal(offset, 5.0) - offset
-// }
