@@ -130,7 +130,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_09_01_geometry_shader_houses]
+	current_tableau := tableaus[.Chapter_04_09_02_geometry_shader_exploding]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -155,41 +155,6 @@ main :: proc() {
 		prev_time = new_time
 	}
 }
-
-// draw_houses :: proc() {
-// 	gl.ClearColor(0, 0, 0, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT)
-//
-// 	house_shader := tableau.shaders[.House]
-// 	gl.UseProgram(house_shader)
-// 	primitives.points_draw()
-// }
-//
-// draw_exploded_model :: proc(scene: render.Scene, time: f32) {
-// 	gl.ClearColor(0, 0, 0, 1)
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.Enable(gl.DEPTH_TEST)
-//
-// 	explode_shader := tableau.shaders[.Explode]
-// 	gl.UseProgram(explode_shader)
-//
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	pv := projection * view
-// 	model := linalg.identity(types.TransformMatrix)
-// 	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-// 	transform := pv * model
-//
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "transform"), 1, false, raw_data(&transform))
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(explode_shader, "model"), 1, false, raw_data(&model))
-// 	gl.UniformMatrix3fv(gl.GetUniformLocation(explode_shader, "mit"), 1, false, raw_data(&mit))
-//
-// 	gl.Uniform1f(gl.GetUniformLocation(explode_shader, "time"), time)
-//
-// 	for _, &mesh in scene.meshes {
-// 		render.mesh_draw(&mesh, explode_shader)
-// 	}
-// }
 
 // draw_normals :: proc(scene: render.Scene) {
 // 	draw_scene(scene)
