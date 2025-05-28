@@ -60,7 +60,9 @@ Cubemap :: struct {
 	vao, vbo, texture_id: u32,
 }
 
-cubemap_load :: proc(path: string) -> (cubemap: Cubemap) {
+cubemap_load :: proc(path: string, flip_vertically: bool = false) -> (cubemap: Cubemap) {
+	stbi.set_flip_vertically_on_load(1 if flip_vertically else 0)
+
 	gl.GenTextures(1, &cubemap.texture_id)
 	gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap.texture_id)
 	defer gl.BindTexture(gl.TEXTURE_CUBE_MAP, 0)

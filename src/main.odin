@@ -130,7 +130,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_05_06_framebuffers_exercise_01]
+	current_tableau := tableaus[.Chapter_04_06_01_skybox]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -155,46 +155,6 @@ main :: proc() {
 		prev_time = new_time
 	}
 }
-
-// draw_box_scene_rearview_mirror :: proc() {
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
-// 	// NOTE: draw_block_scene clears the buffers for us
-//
-// 	texture_shader := tableau.shaders[.Texture]
-// 	single_color_shader := tableau.shaders[.SingleColor]
-//
-// 	camera.direction = -camera.direction
-// 	draw_block_scene()
-// 	gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-//
-// 	camera.direction = -camera.direction
-// 	draw_block_scene()
-//
-// 	gl.UseProgram(texture_shader)
-// 	gl.BindTexture(gl.TEXTURE_2D, fb_texture)
-//
-// 	gl.Enable(gl.STENCIL_TEST)
-// 	gl.Disable(gl.DEPTH_TEST)
-// 	gl.Clear(gl.STENCIL_BUFFER_BIT)
-// 	gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
-// 	gl.StencilFunc(gl.ALWAYS, 1, 0xff)
-// 	gl.StencilMask(0xff)
-//
-// 	transform := linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.75, 0.75, 0})
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
-// 	primitives.quad_draw()
-//
-// 	gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
-// 	gl.StencilMask(0x00)
-//
-// 	gl.UseProgram(single_color_shader)
-// 	transform = linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.8, 0.8, 0})
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
-// 	primitives.quad_draw()
-//
-// 	gl.Disable(gl.STENCIL_TEST)
-// 	gl.Enable(gl.DEPTH_TEST)
-// }
 
 // draw_skybox_scene :: proc(scene: render.Scene) {
 // 	model := linalg.identity(types.TransformMatrix)

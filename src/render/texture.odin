@@ -24,7 +24,7 @@ Image :: struct {
 }
 
 load_texture_2d :: proc(path: cstring, flip_vertically: bool = false) -> (img: Image, ok: bool) {
-	if flip_vertically do stbi.set_flip_vertically_on_load(1)
+	stbi.set_flip_vertically_on_load(1 if flip_vertically else 0)
 	img.buffer = stbi.load(path, &img.width, &img.height, &img.channels, 0)
 
 	ok = img.buffer != nil
