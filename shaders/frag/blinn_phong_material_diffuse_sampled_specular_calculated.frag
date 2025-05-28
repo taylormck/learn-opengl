@@ -33,8 +33,8 @@ void main() {
 	vec3 diffuse = light.diffuse * diff * diff_tex;
 
 	vec3 view_dir = normalize(view_position - frag_position);
-	vec3 reflect_dir = reflect(-light_dir, norm);
-	float spec = pow(max(dot(view_dir, reflect_dir), 0.0), material.shininess);
+	vec3 halfway_dir = normalize(light_dir + view_dir);
+	float spec = pow(max(dot(norm, halfway_dir), 0.0), material.shininess);
 	vec3 specular = light.specular * spec * material.specular;
 
 	vec3 result = ambient + diffuse + specular;

@@ -20,6 +20,7 @@ import "tableau/chapter_01_getting_started"
 import "tableau/chapter_02_lighting"
 import "tableau/chapter_03_model_loading"
 import "tableau/chapter_04_advanced_opengl"
+import "tableau/chapter_05_advanced_lighting"
 
 INITIAL_WIDTH :: 800
 INITIAL_HEIGHT :: 600
@@ -60,6 +61,7 @@ main :: proc() {
 	glfw.SetInputMode(window_handle, glfw.CURSOR, glfw.CURSOR_DISABLED)
 	glfw.SetCursorPosCallback(window_handle, mouse_callback)
 	glfw.SetScrollCallback(window_handle, scroll_callback)
+	glfw.SetKeyCallback(window_handle, key_callback)
 
 	window.width = INITIAL_WIDTH
 	window.height = INITIAL_HEIGHT
@@ -69,7 +71,8 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_04_advanced_opengl.exercise_10_03_asteroids_instanced
+	current_tableau = chapter_05_advanced_lighting.exercise_01_01_advanced_lighting
+	// current_tableau = chapter_02_lighting.exercise_02_01_basic_lighting_diffuse
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()

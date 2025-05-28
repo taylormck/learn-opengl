@@ -52,6 +52,7 @@ Shader :: enum {
 	Asteroid,
 	InstancedRect,
 	TransformUniformColor,
+	BlinnPhongDiffuseSampled,
 }
 
 ShaderMap :: map[Shader]u32
@@ -456,8 +457,14 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/uniform_color.frag"),
 			) or_else panic("Failed to load the uniform color shader")
 
-	}
+	case .BlinnPhongDiffuseSampled:
+		shaders[.BlinnPhongDiffuseSampled] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/blinn_phong_material_diffuse_sampled_specular_calculated.frag"),
+			) or_else panic("Failed to load the phong_diffuse_sampled shader")
 
+	}
 }
 
 delete_shaders :: proc() {

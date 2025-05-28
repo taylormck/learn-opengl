@@ -29,11 +29,17 @@ process_input :: proc(window: glfw.WindowHandle, delta: f64) {
 	if (glfw.GetKey(window, glfw.KEY_S) == glfw.PRESS) do input.input_state.movement += BACKWARD
 	if (glfw.GetKey(window, glfw.KEY_A) == glfw.PRESS) do input.input_state.movement += LEFT
 	if (glfw.GetKey(window, glfw.KEY_D) == glfw.PRESS) do input.input_state.movement += RIGHT
+
 }
 
 clear_input :: proc() {
 	input.input_state.mouse.offset = {}
 	input.input_state.mouse.scroll_offset = 0
+	input.input_state.pressed_keys = {}
+}
+
+key_callback :: proc "cdecl" (window: glfw.WindowHandle, key, scancode, action, mods: i32) {
+	if key == glfw.KEY_B && action == glfw.PRESS do input.input_state.pressed_keys += {.B}
 }
 
 @(private = "file")
