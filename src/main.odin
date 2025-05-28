@@ -5,7 +5,6 @@ import "core:fmt"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
-import "core:math/rand"
 import "core:os"
 import "core:slice"
 import "parse/obj"
@@ -25,10 +24,6 @@ GL_MINOR_VERSION :: 5
 NUM_SAMPLES :: 4
 
 ms_fbo, ms_fb_texture, ms_rbo: u32
-
-NUM_ASTEROIDS :: 1000000
-PLANET_CENTER :: types.Vec3{0, -3, -55}
-asteroid_model_transforms: [dynamic]types.TransformMatrix
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -66,26 +61,6 @@ main :: proc() {
 
 	init_input()
 
-	// planet_scene :=
-	// 	obj.load_scene_from_file_obj("models/planet", "planet.obj") or_else panic("Failed to load planet model.")
-	// defer render.scene_destroy(&planet_scene)
-	//
-	// for _, &mesh in planet_scene.meshes do render.mesh_send_to_gpu(&mesh)
-	// defer for _, &mesh in planet_scene.meshes do render.mesh_gpu_free(&mesh)
-	//
-	// rock_scene := obj.load_scene_from_file_obj("models/rock", "rock.obj") or_else panic("Failed to load rock model.")
-	// defer render.scene_destroy(&rock_scene)
-	//
-	// asteroid_model_transforms = make([dynamic]types.TransformMatrix, NUM_ASTEROIDS)
-	// defer delete(asteroid_model_transforms)
-	// set_asteroid_transforms()
-	//
-	// for _, &mesh in rock_scene.meshes {
-	// 	render.mesh_send_to_gpu(&mesh)
-	// 	render.mesh_send_transforms_to_gpu(&mesh, asteroid_model_transforms[:])
-	// }
-	// defer for _, &mesh in rock_scene.meshes do render.mesh_gpu_free(&mesh)
-
 	// gl.GenFramebuffers(1, &ms_fbo)
 	// defer gl.DeleteFramebuffers(1, &ms_fbo)
 	// gl.BindFramebuffer(gl.FRAMEBUFFER, ms_fbo)
@@ -109,7 +84,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_10_01_instancing_quads]
+	current_tableau := tableaus[.Chapter_04_10_02_asteroids]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
