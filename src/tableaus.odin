@@ -77,6 +77,7 @@ Tablueas :: enum {
 	Chapter_04_09_01_geometry_shader_houses,
 	Chapter_04_09_02_geometry_shader_exploding,
 	Chapter_04_09_03_geometry_shader_normals,
+	Chapter_04_10_01_instancing_quads,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -150,4 +151,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_04_09_01_geometry_shader_houses               = chapter_04_advanced_opengl.exercise_09_01_geometry_shader_houses,
 	.Chapter_04_09_02_geometry_shader_exploding            = chapter_04_advanced_opengl.exercise_09_02_geometry_shader_exploding,
 	.Chapter_04_09_03_geometry_shader_normals              = chapter_04_advanced_opengl.exercise_09_03_geometry_shader_normals,
+	.Chapter_04_10_01_instancing_quads                     = chapter_04_advanced_opengl.exercise_10_01_instancing_quads,
 }

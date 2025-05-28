@@ -24,16 +24,11 @@ GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
 NUM_SAMPLES :: 4
 
-fbo, fb_texture, rbo: u32
 ms_fbo, ms_fb_texture, ms_rbo: u32
-cubemap: primitives.Cubemap
 
 NUM_ASTEROIDS :: 1000000
 PLANET_CENTER :: types.Vec3{0, -3, -55}
 asteroid_model_transforms: [dynamic]types.TransformMatrix
-
-instanced_rect_offset_vbo: u32
-instanced_rect_translations: [100]types.Vec2
 
 main :: proc() {
 	context.logger = log.create_console_logger()
@@ -70,22 +65,6 @@ main :: proc() {
 	window.height = INITIAL_HEIGHT
 
 	init_input()
-
-	// index := 0
-	// offset: f32 = 0.1
-	//
-	// for y := -10; y < 10; y += 2 {
-	// 	for x := -10; x < 10; x += 2 {
-	// 		translation := &instanced_rect_translations[index]
-	// 		translation.x = f32(x) / 10.0 + offset
-	// 		translation.y = f32(y) / 10.0 + offset
-	// 		index += 1
-	// 	}
-	// }
-	//
-	// gl.GenBuffers(1, &instanced_rect_offset_vbo)
-	// gl.BindBuffer(gl.ARRAY_BUFFER, instanced_rect_offset_vbo)
-	// gl.BufferData(gl.ARRAY_BUFFER, size_of(instanced_rect_translations), &instanced_rect_translations, gl.STATIC_DRAW)
 
 	// planet_scene :=
 	// 	obj.load_scene_from_file_obj("models/planet", "planet.obj") or_else panic("Failed to load planet model.")
@@ -130,7 +109,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_09_03_geometry_shader_normals]
+	current_tableau := tableaus[.Chapter_04_10_01_instancing_quads]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -155,31 +134,6 @@ main :: proc() {
 		prev_time = new_time
 	}
 }
-
-// draw_normals :: proc(scene: render.Scene) {
-// 	draw_scene(scene)
-//
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	model := linalg.identity(types.TransformMatrix)
-// 	view_model := view * model
-// 	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-//
-// 	normal_shader := tableau.shaders[.Normal]
-// 	gl.UseProgram(normal_shader)
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "view_model"), 1, false, raw_data(&view_model))
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "projection"), 1, false, raw_data(&projection))
-// 	gl.UniformMatrix3fv(gl.GetUniformLocation(normal_shader, "mit"), 1, false, raw_data(&mit))
-//
-// 	for _, &mesh in scene.meshes {
-// 		render.mesh_draw(&mesh, normal_shader)
-// 	}
-// }
-
-// draw_instanced_rects :: proc() {
-// 	gl.UseProgram(tableau.shaders[.InstancedRect])
-// 	primitives.quad_draw_instanced(100, instanced_rect_offset_vbo)
-// }
 
 // draw_asteroid_scene :: proc(planet_scene, rock_scene: render.Scene) {
 // 	planet_shader := tableau.shaders[.Planet]
