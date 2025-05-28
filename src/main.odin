@@ -130,7 +130,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_08_01_advanced_glsl_ubo]
+	current_tableau := tableaus[.Chapter_04_09_01_geometry_shader_houses]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()

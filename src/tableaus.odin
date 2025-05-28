@@ -74,6 +74,7 @@ Tablueas :: enum {
 	Chapter_04_06_02_cubemaps_environment_mapping_reflect,
 	Chapter_04_06_03_cubemaps_environment_mapping_refract,
 	Chapter_04_08_01_advanced_glsl_ubo,
+	Chapter_04_09_01_geometry_shader_houses,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -144,4 +145,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_04_06_02_cubemaps_environment_mapping_reflect = chapter_04_advanced_opengl.exercise_06_02_cubemaps_environment_mapping_reflect,
 	.Chapter_04_06_03_cubemaps_environment_mapping_refract = chapter_04_advanced_opengl.exercise_06_03_cubemaps_environment_mapping_refract,
 	.Chapter_04_08_01_advanced_glsl_ubo                    = chapter_04_advanced_opengl.exercise_08_01_advanced_glsl_ubo,
+	.Chapter_04_09_01_geometry_shader_houses               = chapter_04_advanced_opengl.exercise_09_01_geometry_shader_houses,
 }
