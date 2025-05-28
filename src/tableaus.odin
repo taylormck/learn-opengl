@@ -81,6 +81,7 @@ Tablueas :: enum {
 	Chapter_04_10_02_asteroids,
 	Chapter_04_10_03_asteroids_instanced,
 	Chapter_04_11_01_anti_aliasing_msaa,
+	Chapter_04_11_02_anti_aliasing_offscreen,
 }
 
 tableaus := [Tablueas]types.Tableau {
@@ -158,4 +159,5 @@ tableaus := [Tablueas]types.Tableau {
 	.Chapter_04_10_02_asteroids                            = chapter_04_advanced_opengl.exercise_10_02_asteroids,
 	.Chapter_04_10_03_asteroids_instanced                  = chapter_04_advanced_opengl.exercise_10_03_asteroids_instanced,
 	.Chapter_04_11_01_anti_aliasing_msaa                   = chapter_04_advanced_opengl.exercise_11_01_anti_aliasing_msaa,
+	.Chapter_04_11_02_anti_aliasing_offscreen              = chapter_04_advanced_opengl.exercise_11_02_anti_aliasing_offscreen,
 }

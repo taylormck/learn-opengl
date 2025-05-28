@@ -23,8 +23,6 @@ GL_MAJOR_VERSION :: 4
 GL_MINOR_VERSION :: 5
 NUM_SAMPLES :: 4
 
-ms_fbo, ms_fb_texture, ms_rbo: u32
-
 main :: proc() {
 	context.logger = log.create_console_logger()
 	defer log.destroy_console_logger(context.logger)
@@ -58,33 +56,13 @@ main :: proc() {
 
 	window.width = INITIAL_WIDTH
 	window.height = INITIAL_HEIGHT
+	window.samples = NUM_SAMPLES
 
 	init_input()
 
-	// gl.GenFramebuffers(1, &ms_fbo)
-	// defer gl.DeleteFramebuffers(1, &ms_fbo)
-	// gl.BindFramebuffer(gl.FRAMEBUFFER, ms_fbo)
-	//
-	// gl.GenTextures(1, &ms_fb_texture)
-	// gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture)
-	// gl.TexImage2DMultisample(gl.TEXTURE_2D_MULTISAMPLE, NUM_SAMPLES, gl.RGB, INITIAL_WIDTH, INITIAL_HEIGHT, gl.TRUE)
-	// gl.BindTexture(gl.TEXTURE_2D_MULTISAMPLE, 0)
-	//
-	// gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D_MULTISAMPLE, ms_fb_texture, 0)
-	//
-	// gl.GenRenderbuffers(1, &ms_rbo)
-	// gl.BindRenderbuffer(gl.RENDERBUFFER, ms_rbo)
-	// gl.RenderbufferStorageMultisample(gl.RENDERBUFFER, NUM_SAMPLES, gl.DEPTH24_STENCIL8, INITIAL_WIDTH, INITIAL_HEIGHT)
-	// gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
-	//
-	// gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, ms_rbo)
-	//
-	// if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Multisample Framebuffer incomplete!")
-	// gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_11_01_anti_aliasing_msaa]
+	current_tableau := tableaus[.Chapter_04_11_02_anti_aliasing_offscreen]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
