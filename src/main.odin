@@ -130,7 +130,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau := tableaus[.Chapter_04_06_03_cubemaps_environment_mapping_refract]
+	current_tableau := tableaus[.Chapter_04_08_01_advanced_glsl_ubo]
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
@@ -155,46 +155,6 @@ main :: proc() {
 		prev_time = new_time
 	}
 }
-
-// draw_skybox_scene :: proc(scene: render.Scene) {
-// 	model := linalg.identity(types.TransformMatrix)
-// 	projection := render.camera_get_projection(&camera)
-// 	view := render.camera_get_view(&camera)
-// 	transform := projection * view * model
-// 	mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-//
-// 	view_without_translate := types.TransformMatrix(types.SubTransformMatrix(view))
-// 	pv := projection * view_without_translate
-//
-// 	skybox_reflect_shader := tableau.shaders[.SkyboxReflect]
-// 	skybox_refract_shader := tableau.shaders[.SkyboxRefract]
-// 	skybox_shader := tableau.shaders[.Skybox]
-//
-// 	mesh_shader := skybox_refract_shader
-// 	gl.UseProgram(mesh_shader)
-//
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
-// 	gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
-// 	gl.Uniform3fv(gl.GetUniformLocation(mesh_shader, "camera_position"), 1, raw_data(&camera.position))
-//
-// 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-// 	gl.Enable(gl.DEPTH_TEST)
-// 	gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap.texture_id)
-//
-// 	// primitives.cube_draw()
-// 	for _, &mesh in scene.meshes {
-// 		render.mesh_draw(&mesh, mesh_shader)
-// 	}
-//
-// 	gl.DepthFunc(gl.LEQUAL)
-// 	gl.UseProgram(skybox_shader)
-//
-// 	gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_shader, "projection_view"), 1, false, raw_data(&pv))
-// 	primitives.cubemap_draw(&cubemap)
-//
-// 	gl.DepthFunc(gl.LESS)
-// }
 
 // draw_houses :: proc() {
 // 	gl.ClearColor(0, 0, 0, 1)

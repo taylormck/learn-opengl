@@ -40,6 +40,10 @@ Shader :: enum {
 	Sharpen,
 	Blur,
 	SingleColor,
+	UboRed,
+	UboGreen,
+	UboBlue,
+	UboYellow,
 	House,
 	Explode,
 	Normal,
@@ -271,6 +275,34 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_transform.vert"),
 				#load("../../shaders/frag/single_color.frag"),
 			) or_else panic("Failed to load the shader")
+
+	case .UboRed:
+		shaders[.UboRed] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/ubo_transform.vert"),
+				#load("../../shaders/frag/red.frag"),
+			) or_else panic("Failed to load the ubo red shader")
+
+	case .UboGreen:
+		shaders[.UboGreen] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/ubo_transform.vert"),
+				#load("../../shaders/frag/green.frag"),
+			) or_else panic("Failed to load the ubo green shader")
+
+	case .UboBlue:
+		shaders[.UboBlue] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/ubo_transform.vert"),
+				#load("../../shaders/frag/blue.frag"),
+			) or_else panic("Failed to load the ubo blue shader")
+
+	case .UboYellow:
+		shaders[.UboYellow] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/ubo_transform.vert"),
+				#load("../../shaders/frag/yellow.frag"),
+			) or_else panic("Failed to load the ubo yello shader")
 
 	case .Edge:
 		shaders[.Edge] =
