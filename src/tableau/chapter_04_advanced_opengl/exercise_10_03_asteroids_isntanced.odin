@@ -35,7 +35,7 @@ camera := render.Camera {
 }
 
 @(private = "file")
-NUM_ASTEROIDS :: 100000
+NUM_ASTEROIDS :: 1000000
 
 @(private = "file")
 asteroid_model_transforms: [dynamic]types.TransformMatrix
@@ -54,9 +54,9 @@ light := render.DirectionalLight {
 	direction = {-0.2, -1, -0.3},
 }
 
-exercise_10_02_asteroids := types.Tableau {
+exercise_10_03_asteroids_instanced := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.Planet)
+		shaders.init_shaders(.Planet, .Asteroid)
 
 		planet_model =
 			obj.load_scene_from_file_obj("models/planet", "planet.obj") or_else panic("Failed to load planet model.")
@@ -69,7 +69,7 @@ exercise_10_02_asteroids := types.Tableau {
 		asteroid_model_transforms = make([dynamic]types.TransformMatrix, NUM_ASTEROIDS)
 		set_asteroid_transforms()
 
-		// for &mesh in asteroid_model.meshes do render.mesh_send_transforms_to_gpu(&mesh, asteroid_model_transforms[:])
+		for _, &mesh in asteroid_model.meshes do render.mesh_send_transforms_to_gpu(&mesh, asteroid_model_transforms[:])
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -87,7 +87,7 @@ exercise_10_02_asteroids := types.Tableau {
 		gl.Enable(gl.DEPTH_TEST)
 
 		planet_shader := shaders.shaders[.Planet]
-		asteroid_shader := shaders.shaders[.Planet]
+		asteroid_shader := shaders.shaders[.Asteroid]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -97,29 +97,22 @@ exercise_10_02_asteroids := types.Tableau {
 		render.directional_light_set_uniform(&light, planet_shader)
 		gl.Uniform3fv(gl.GetUniformLocation(planet_shader, "view_position"), 1, raw_data(&camera.position))
 
-		{
-			model := linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
-			mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-			transform := pv * model
+		model := linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
+		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
+		transform := pv * model
 
-			gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-			gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
+		gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
 
-			render.scene_draw(&planet_model, planet_shader)
-		}
+		render.scene_draw(&planet_model, planet_shader)
 
-		for &model in asteroid_model_transforms {
-			mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-			transform := pv * model
+		gl.UseProgram(asteroid_shader)
+		render.directional_light_set_uniform(&light, asteroid_shader)
+		gl.Uniform3fv(gl.GetUniformLocation(asteroid_shader, "view_position"), 1, raw_data(&camera.position))
+		gl.UniformMatrix4fv(gl.GetUniformLocation(asteroid_shader, "pv"), 1, false, raw_data(&pv))
 
-			gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-			gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
-
-			render.scene_draw(&asteroid_model, planet_shader)
-		}
-
+		render.scene_draw_instanced(&asteroid_model, asteroid_shader, NUM_ASTEROIDS)
 	},
 	teardown = proc() {
 		render.scene_clear_from_gpu(&planet_model)

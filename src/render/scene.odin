@@ -23,6 +23,10 @@ scene_draw :: proc(scene: ^Scene, shader: u32) {
 	for _, &mesh in scene.meshes do mesh_draw(&mesh, shader)
 }
 
+scene_draw_instanced :: proc(scene: ^Scene, shader: u32, num_instances: i32) {
+	for _, &mesh in scene.meshes do mesh_draw_instanced(&mesh, shader, num_instances)
+}
+
 scene_destroy :: proc(scene: ^Scene) {
 	for key, &mesh in scene.meshes do mesh_free(&mesh)
 	delete(scene.meshes)
