@@ -31,7 +31,14 @@ load_texture_2d :: proc(path: cstring, flip_vertically: bool = false) -> (img: I
 	return
 }
 
-prepare_texture :: proc(path: cstring, texture_type: TextureType, flip_vertically: bool = false) -> (t: Texture) {
+prepare_texture :: proc(
+	path: cstring,
+	texture_type: TextureType,
+	flip_vertically: bool = false,
+	gamma_correction: bool = false,
+) -> (
+	t: Texture,
+) {
 	img, img_ok := load_texture_2d(path, flip_vertically)
 	if !img_ok {
 		panic(fmt.aprintf("Failed to load texture: {}", path))
@@ -47,21 +54,26 @@ prepare_texture :: proc(path: cstring, texture_type: TextureType, flip_verticall
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
-	format: i32 = ---
+	data_format: u32 = ---
+	internal_format: i32 = ---
 	switch img.channels {
 	case 1:
-		format = gl.RED
+		data_format = gl.RED
+		internal_format = gl.RED
 	case 2:
-		format = gl.RG
+		data_format = gl.RG
+		internal_format = gl.RG
 	case 3:
-		format = gl.RGB
+		data_format = gl.RGB
+		internal_format = gl.SRGB if gamma_correction else gl.RGB
 	case 4:
-		format = gl.RGBA
+		data_format = gl.RGBA
+		internal_format = gl.SRGB_ALPHA if gamma_correction else gl.RGBA
 	case:
 		panic(fmt.aprintf("Unsupported number of channels: {}", img.channels))
 	}
 
-	gl.TexImage2D(gl.TEXTURE_2D, 0, format, img.width, img.height, 0, transmute(u32)format, gl.UNSIGNED_BYTE, img.buffer)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, internal_format, img.width, img.height, 0, data_format, gl.UNSIGNED_BYTE, img.buffer)
 	gl.GenerateMipmap(gl.TEXTURE_2D)
 
 	return t

@@ -15,7 +15,7 @@ import gl "vendor:OpenGL"
 background_color := types.Vec3{0, 0, 0}
 
 @(private = "file")
-wood_texture: render.Texture
+wood_texture, wood_texture_gamma: render.Texture
 
 @(private = "file")
 initial_camera_position := types.Vec3{3, 3, 7}
@@ -95,7 +95,13 @@ gamma: bool = true
 exercise_01_02_gamma_correction := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnPhongDiffuseSampledMultilights, .TransformTexture)
-		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
+		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, flip_vertically = true)
+		wood_texture_gamma = render.prepare_texture(
+			"textures/wood.png",
+			.Diffuse,
+			flip_vertically = true,
+			gamma_correction = true,
+		)
 		primitives.plane_send_to_gpu()
 	},
 	update = proc(delta: f64) {
@@ -126,10 +132,11 @@ exercise_01_02_gamma_correction := types.Tableau {
 		transform := projection * view * model
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
-		gl.ActiveTexture(gl.TEXTURE0)
-		gl.BindTexture(gl.TEXTURE_2D, wood_texture.id)
+		texture := wood_texture_gamma if gamma else wood_texture
 
-		// shader = single_color_shader
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_2D, texture.id)
+
 		gl.UseProgram(shader)
 
 		gl.Uniform1i(gl.GetUniformLocation(shader, "num_point_lights"), len(lights))
@@ -151,5 +158,6 @@ exercise_01_02_gamma_correction := types.Tableau {
 	teardown = proc() {
 		primitives.plane_clear_from_gpu()
 		gl.DeleteTextures(1, &wood_texture.id)
+		gl.DeleteTextures(1, &wood_texture_gamma.id)
 	},
 }
