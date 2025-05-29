@@ -22,6 +22,10 @@ PLANE_INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
 plane_vao, plane_vbo, plane_ebo: u32
 
 plane_send_to_gpu :: proc() {
+	assert(plane_vao == 0, "Plane VAO already set")
+	assert(plane_vbo == 0, "Plane VBO already set")
+	assert(plane_ebo == 0, "Plane EBO already set")
+
 	gl.GenVertexArrays(1, &plane_vao)
 	gl.GenBuffers(1, &plane_vbo)
 	gl.GenBuffers(1, &plane_ebo)
@@ -53,12 +57,20 @@ plane_send_to_gpu :: proc() {
 }
 
 plane_clear_from_gpu :: proc() {
+	assert(plane_vao != 0, "Plane VAO not set")
+	assert(plane_vbo != 0, "Plane VBO not set")
+	assert(plane_ebo != 0, "Plane EBO not set")
+
 	gl.DeleteBuffers(1, &plane_vbo)
 	gl.DeleteBuffers(1, &plane_ebo)
 	gl.DeleteVertexArrays(1, &plane_vao)
 }
 
 plane_draw :: proc() {
+	assert(plane_vao != 0, "Plane VAO not set")
+	assert(plane_vbo != 0, "Plane VBO not set")
+	assert(plane_ebo != 0, "Plane EBO not set")
+
 	gl.BindVertexArray(plane_vao)
 	defer gl.BindVertexArray(0)
 

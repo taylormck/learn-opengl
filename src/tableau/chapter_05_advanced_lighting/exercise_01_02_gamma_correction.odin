@@ -18,10 +18,10 @@ background_color := types.Vec3{0, 0, 0}
 wood_texture: render.Texture
 
 @(private = "file")
-initial_camera_position := types.Vec3{0, 0, 3}
+initial_camera_position := types.Vec3{3, 3, 7}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, -0.5, 0}
+initial_camera_target := types.Vec3{1, -0.5, 2}
 
 @(private = "file")
 camera := render.Camera {
@@ -37,32 +37,64 @@ camera := render.Camera {
 }
 
 @(private = "file")
-light := render.PointLight {
-	position  = {0, 0, 0},
-	ambient   = {0.2, 0.2, 0.2},
-	diffuse   = {0.5, 0.5, 0.5},
-	specular  = {1, 1, 1},
-	emissive  = {1, 1, 1},
-	constant  = 1,
-	linear    = 0.09,
-	quadratic = 0.032,
+WHITE :: types.Vec3{1, 1, 1}
+
+@(private = "file")
+lights := [?]render.PointLight {
+	{
+		position = {-3, 0, 0},
+		ambient = WHITE * 0.1,
+		diffuse = WHITE * 0.25,
+		specular = WHITE * 0.25,
+		emissive = WHITE,
+		constant = 1,
+		linear = 0.09,
+		quadratic = 0.032,
+	},
+	{
+		position = {-1, 0, 0},
+		ambient = WHITE * 0.2,
+		diffuse = WHITE * 0.5,
+		specular = WHITE * 0.5,
+		emissive = WHITE,
+		constant = 1,
+		linear = 0.09,
+		quadratic = 0.032,
+	},
+	{
+		position = {1, 0, 0},
+		ambient = WHITE * 0.2,
+		diffuse = WHITE * 0.75,
+		specular = WHITE * 0.75,
+		emissive = WHITE,
+		constant = 1,
+		linear = 0.09,
+		quadratic = 0.032,
+	},
+	{
+		position = {3, 0, 0},
+		ambient = WHITE * 0.2,
+		diffuse = WHITE,
+		specular = WHITE,
+		emissive = WHITE,
+		constant = 1,
+		linear = 0.09,
+		quadratic = 0.032,
+	},
 }
 
 @(private = "file")
-phong_shininess: f32 = 8
-
-@(private = "file")
-blinn_phong_shininess: f32 = 32
+shininess: f32 = 64
 
 @(private = "file")
 plane_material_specular := types.Vec3{0.5, 0.5, 0.5}
 
 @(private = "file")
-use_blinn: bool = true
+gamma: bool = true
 
-exercise_01_01_advanced_lighting := types.Tableau {
+exercise_01_02_gamma_correction := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.PhongDiffuseSampled, .BlinnPhongDiffuseSampled)
+		shaders.init_shaders(.BlinnPhongDiffuseSampledMultilights, .TransformTexture)
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
 		primitives.plane_send_to_gpu()
 	},
@@ -76,7 +108,7 @@ exercise_01_01_advanced_lighting := types.Tableau {
 			linalg.to_radians(f32(45)),
 		)
 
-		if .B in input.input_state.pressed_keys do use_blinn = !use_blinn
+		if .Space in input.input_state.pressed_keys do gamma = !gamma
 	},
 	draw = proc() {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
@@ -85,34 +117,34 @@ exercise_01_01_advanced_lighting := types.Tableau {
 		gl.Enable(gl.DEPTH_TEST)
 		defer gl.Disable(gl.DEPTH_TEST)
 
-		phong_shader := shaders.shaders[.PhongDiffuseSampled]
-		blinn_phong_shader := shaders.shaders[.BlinnPhongDiffuseSampled]
+		shader := shaders.shaders[.BlinnPhongDiffuseSampledMultilights]
+		single_color_shader := shaders.shaders[.TransformTexture]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
-		pv := projection * view
 		model := linalg.identity(types.TransformMatrix)
-		transform := pv * model
+		transform := projection * view * model
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, wood_texture.id)
 
-		shader := blinn_phong_shader if use_blinn else phong_shader
-		shininess := blinn_phong_shininess if use_blinn else phong_shininess
-
+		// shader = single_color_shader
 		gl.UseProgram(shader)
+
+		gl.Uniform1i(gl.GetUniformLocation(shader, "num_point_lights"), len(lights))
+		gl.Uniform1i(gl.GetUniformLocation(shader, "gamma"), i32(gamma))
+
 		gl.Uniform3fv(gl.GetUniformLocation(shader, "view_position"), 1, raw_data(&camera.position))
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "light.position"), 1, raw_data(&light.position))
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "light.ambient"), 1, raw_data(&light.ambient))
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "light.diffuse"), 1, raw_data(&light.diffuse))
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "light.specular"), 1, raw_data(&light.specular))
-		gl.Uniform1i(gl.GetUniformLocation(shader, "material.diffuse_0"), 0)
-		gl.Uniform1f(gl.GetUniformLocation(shader, "material.shininess"), shininess)
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "material.specular"), 1, raw_data(&plane_material_specular))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "transform"), 1, false, raw_data(&transform))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model"), 1, false, raw_data(&model))
 		gl.UniformMatrix3fv(gl.GetUniformLocation(shader, "mit"), 1, false, raw_data(&mit))
+
+		gl.Uniform1i(gl.GetUniformLocation(shader, "material.diffuse_0"), 0)
+		gl.Uniform1f(gl.GetUniformLocation(shader, "material.shininess"), shininess)
+		gl.Uniform3fv(gl.GetUniformLocation(shader, "material.specular"), 1, raw_data(&plane_material_specular))
+
+		for &light, i in lights do render.point_light_array_set_uniform(&light, shader, u32(i))
 
 		primitives.plane_draw()
 	},

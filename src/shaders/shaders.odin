@@ -53,6 +53,7 @@ Shader :: enum {
 	InstancedRect,
 	TransformUniformColor,
 	BlinnPhongDiffuseSampled,
+	BlinnPhongDiffuseSampledMultilights,
 }
 
 ShaderMap :: map[Shader]u32
@@ -464,6 +465,12 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/blinn_phong_material_diffuse_sampled_specular_calculated.frag"),
 			) or_else panic("Failed to load the phong_diffuse_sampled shader")
 
+	case .BlinnPhongDiffuseSampledMultilights:
+		shaders[.BlinnPhongDiffuseSampledMultilights] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/blinn_phong_material_diffuse_specular_calculated_gamma_corrected_multilight.frag"),
+			) or_else panic("Failed to load the phong_diffuse_sampled_multilights shader")
 	}
 }
 

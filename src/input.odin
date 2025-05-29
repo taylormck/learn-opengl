@@ -40,6 +40,7 @@ clear_input :: proc() {
 
 key_callback :: proc "cdecl" (window: glfw.WindowHandle, key, scancode, action, mods: i32) {
 	if key == glfw.KEY_B && action == glfw.PRESS do input.input_state.pressed_keys += {.B}
+	if key == glfw.KEY_SPACE && action == glfw.PRESS do input.input_state.pressed_keys += {.Space}
 }
 
 @(private = "file")
