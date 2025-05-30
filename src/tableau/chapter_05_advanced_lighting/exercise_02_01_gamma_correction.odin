@@ -92,7 +92,7 @@ plane_material_specular := types.Vec3{0.5, 0.5, 0.5}
 @(private = "file")
 gamma: bool = true
 
-exercise_01_02_gamma_correction := types.Tableau {
+exercise_02_01_gamma_correction := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnPhongDiffuseSampledMultilights, .TransformTexture)
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, flip_vertically = true)
