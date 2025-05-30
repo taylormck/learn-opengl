@@ -31,17 +31,31 @@ float calculate_shadow_factor(vec4 frag_position_light_space, float diff) {
 	vec3 shadow_coords = frag_position_light_space.xyz / frag_position_light_space.w;
 	shadow_coords = shadow_coords * 0.5 + 0.5;
 
+	// No shadows outside the shadow maps frustum.
 	if (shadow_coords.z > 1.0) {
 		return 0.0;
 	}
 
+	// Add bias to avoid z-fighting.
 	float bias = max(0.05 * (1.0 - diff), 0.005);
 
-	float closest_depth = texture(shadow_map, shadow_coords.xy).r;
+	// Use Percentage-closer Fitlering to smooth the shadow edges.
 	float current_depth = shadow_coords.z;
-	float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
+	vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
+	float shadow = 0.0;
 
-	return shadow;
+	for (int x = -1; x <= 1; x += 1) {
+		for (int y = -1; y <= 1; y += 1) {
+			vec2 offset = vec2(x, y) * texel_size;
+			float pcf_depth = texture(shadow_map, shadow_coords.xy + offset).r;
+
+			if (current_depth - bias > pcf_depth) {
+				shadow += 1.0;
+			}
+		}
+	}
+
+	return shadow / 9.0;
 }
 
 vec3 calculate_blinn_specular(vec3 light_dir, vec3 normal) {
