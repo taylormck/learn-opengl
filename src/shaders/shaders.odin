@@ -54,6 +54,8 @@ Shader :: enum {
 	TransformUniformColor,
 	BlinnPhongDiffuseSampled,
 	BlinnPhongDiffuseSampledMultilights,
+	EmptyDepth,
+	DepthR,
 }
 
 ShaderMap :: map[Shader]u32
@@ -268,7 +270,7 @@ init_shader :: proc(shader: Shader) {
 	case .Depth:
 		shaders[.Depth] =
 			gl.load_shaders_source(
-				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/vert/pos_transform.vert"),
 				#load("../../shaders/frag/depth.frag"),
 			) or_else panic("Failed to load the shader")
 
@@ -471,6 +473,21 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/blinn_phong_material_diffuse_specular_calculated_gamma_corrected_multilight.frag"),
 			) or_else panic("Failed to load the phong_diffuse_sampled_multilights shader")
+
+	case .EmptyDepth:
+		shaders[.EmptyDepth] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_transform.vert"),
+				#load("../../shaders/frag/depth_empty.frag"),
+			) or_else panic("Failed to load the empty depth shader")
+
+	case .DepthR:
+		shaders[.DepthR] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/depth_r.frag"),
+			) or_else panic("Failed to load the texture-to-depth shader")
+
 	}
 }
 

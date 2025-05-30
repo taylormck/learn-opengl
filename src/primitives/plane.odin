@@ -8,13 +8,13 @@ NUM_PLANE_VERTICES :: 4
 
 PLANE_VERTICES := [NUM_PLANE_VERTICES]render.Vertex {
 	// near right
-	{position = {10, -0.5, 10}, texture_coords = {10, 0}, color = {0, 1, 1}, normal = {0, 1, 0}},
+	{position = {25, -0.5, 25}, texture_coords = {25, 0}, color = {0, 1, 1}, normal = {0, 1, 0}},
 	// near left
-	{position = {-10, -0.5, 10}, texture_coords = {0, 0}, color = {1, 0, 0}, normal = {0, 1, 0}},
+	{position = {-25, -0.5, 25}, texture_coords = {0, 0}, color = {1, 0, 0}, normal = {0, 1, 0}},
 	// far right
-	{position = {10, -0.5, -10}, texture_coords = {10, 10}, color = {0, 1, 0}, normal = {0, 1, 0}},
+	{position = {25, -0.5, -25}, texture_coords = {25, 25}, color = {0, 1, 0}, normal = {0, 1, 0}},
 	// far left
-	{position = {-10, -0.5, -10}, texture_coords = {0, 10}, color = {0, 0, 1}, normal = {0, 1, 0}},
+	{position = {-25, -0.5, -25}, texture_coords = {0, 25}, color = {0, 0, 1}, normal = {0, 1, 0}},
 }
 
 PLANE_INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}

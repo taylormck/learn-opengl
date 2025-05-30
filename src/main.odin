@@ -71,7 +71,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_05_advanced_lighting.exercise_02_01_gamma_correction
+	current_tableau = chapter_05_advanced_lighting.exercise_03_01_01_depth
 
 	if current_tableau.init != nil do current_tableau.init()
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
