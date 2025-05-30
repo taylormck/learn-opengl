@@ -56,6 +56,7 @@ Shader :: enum {
 	BlinnPhongDiffuseSampledMultilights,
 	EmptyDepth,
 	DepthR,
+	BlinnPhongDirectionalShadow,
 }
 
 ShaderMap :: map[Shader]u32
@@ -488,6 +489,12 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/depth_r.frag"),
 			) or_else panic("Failed to load the texture-to-depth shader")
 
+	case .BlinnPhongDirectionalShadow:
+		shaders[.BlinnPhongDirectionalShadow] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform_light.vert"),
+				#load("../../shaders/frag/blinn_phong_shadow.frag"),
+			) or_else panic("Failed to load the directional shadow shader")
 	}
 }
 
