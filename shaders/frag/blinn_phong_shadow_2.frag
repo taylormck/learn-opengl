@@ -31,6 +31,10 @@ float calculate_shadow_factor(vec4 frag_position_light_space, float diff) {
 	vec3 shadow_coords = frag_position_light_space.xyz / frag_position_light_space.w;
 	shadow_coords = shadow_coords * 0.5 + 0.5;
 
+	if (shadow_coords.z > 1.0) {
+		return 0.0;
+	}
+
 	float bias = max(0.05 * (1.0 - diff), 0.005);
 
 	float closest_depth = texture(shadow_map, shadow_coords.xy).r;

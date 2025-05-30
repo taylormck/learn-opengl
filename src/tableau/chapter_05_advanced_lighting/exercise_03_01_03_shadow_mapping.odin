@@ -90,6 +90,9 @@ depth_fbo, depth_fb_texture: u32
 @(private = "file")
 shadow_width, shadow_height: i32 = 1024, 1024
 
+@(private = "file")
+shadow_border_color := types.Vec4{1, 1, 1, 1}
+
 exercise_03_01_03_shadow_mapping := types.Tableau {
 	init = proc() {
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
@@ -118,8 +121,9 @@ exercise_03_01_03_shadow_mapping := types.Tableau {
 		)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_BORDER)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_BORDER)
+		gl.TexParameterfv(gl.TEXTURE_2D, gl.TEXTURE_BORDER_COLOR, raw_data(&shadow_border_color))
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_fb_texture, 0)
