@@ -100,7 +100,6 @@ exercise_03_01_03_shadow_mapping := types.Tableau {
 
 		primitives.plane_send_to_gpu()
 		primitives.cube_send_to_gpu()
-		primitives.full_screen_send_to_gpu()
 
 		gl.GenFramebuffers(1, &depth_fbo)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, depth_fbo)
@@ -194,7 +193,6 @@ exercise_03_01_03_shadow_mapping := types.Tableau {
 	teardown = proc() {
 		primitives.plane_clear_from_gpu()
 		primitives.cube_clear_from_gpu()
-		primitives.full_screen_clear_from_gpu()
 
 		gl.DeleteTextures(1, &depth_fb_texture)
 		gl.DeleteFramebuffers(1, &depth_fbo)

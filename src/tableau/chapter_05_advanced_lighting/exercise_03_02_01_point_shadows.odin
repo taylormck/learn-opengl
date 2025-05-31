@@ -81,13 +81,7 @@ shininess: f32 = 32
 material_specular := types.Vec3{0.5, 0.5, 0.5}
 
 @(private = "file")
-light_view := linalg.matrix4_look_at_f32(eye = light.position, centre = types.Vec3{0, 0, 0}, up = types.Vec3{0, 1, 0})
-
-@(private = "file")
-light_projection_view := light_projection * light_view
-
-@(private = "file")
-depth_fbo, depth_fb_texture: u32
+depth_fbo, depth_cube_map: u32
 
 @(private = "file")
 shadow_width, shadow_height: i32 = 1024, 1024
@@ -95,45 +89,85 @@ shadow_width, shadow_height: i32 = 1024, 1024
 @(private = "file")
 shadow_border_color := types.Vec4{1, 1, 1, 1}
 
+@(private = "file")
+shadow_projection := linalg.matrix4_perspective_f32(
+	fovy = linalg.to_radians(f32(90)),
+	aspect = f32(shadow_width) / f32(shadow_height),
+	near = 1,
+	far = 25,
+)
+
+@(private = "file")
+shadow_transforms := [?]types.TransformMatrix {
+	linalg.matrix4_look_at_f32(
+		eye = light.position,
+		centre = light.position + types.Vec3{1, 0, 0},
+		up = types.Vec3{0, -1, 0},
+	),
+	linalg.matrix4_look_at_f32(
+		eye = light.position,
+		centre = light.position + types.Vec3{-1, 0, 0},
+		up = types.Vec3{0, -1, 0},
+	),
+	linalg.matrix4_look_at_f32(
+		eye = light.position,
+		centre = light.position + types.Vec3{0, 1, 0},
+		up = types.Vec3{0, 0, 1},
+	),
+	linalg.matrix4_look_at_f32(
+		eye = light.position,
+		centre = light.position + types.Vec3{0, -1, 0},
+		up = types.Vec3{0, 0, -1},
+	),
+	linalg.matrix4_look_at_f32(
+		eye = light.position,
+		centre = light.position + types.Vec3{0, 0, 1},
+		up = types.Vec3{0, -1, 0},
+	),
+	linalg.matrix4_look_at_f32(
+		eye = light.position,
+		centre = light.position + types.Vec3{0, 0, -1},
+		up = types.Vec3{0, -1, 0},
+	),
+}
+
 exercise_03_02_01_point_shadows := types.Tableau {
 	init = proc() {
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
-		shaders.init_shaders(
-			 /* .EmptyDepth, */.BlinnPhongDirectionalShadow3,
-		)
+		shaders.init_shaders(.DepthCube, .BlinnPhongDirectionalShadow3)
 
 		primitives.cube_send_to_gpu()
-		// primitives.full_screen_send_to_gpu()
-		//
-		// gl.GenFramebuffers(1, &depth_fbo)
-		// gl.BindFramebuffer(gl.FRAMEBUFFER, depth_fbo)
-		//
-		// gl.GenTextures(1, &depth_fb_texture)
-		// gl.BindTexture(gl.TEXTURE_2D, depth_fb_texture)
-		//
-		// gl.TexImage2D(
-		// 	gl.TEXTURE_2D,
-		// 	0,
-		// 	gl.DEPTH_COMPONENT,
-		// 	shadow_width,
-		// 	shadow_height,
-		// 	0,
-		// 	gl.DEPTH_COMPONENT,
-		// 	gl.FLOAT,
-		// 	nil,
-		// )
-		// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-		// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-		// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_BORDER)
-		// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_BORDER)
-		// gl.TexParameterfv(gl.TEXTURE_2D, gl.TEXTURE_BORDER_COLOR, raw_data(&shadow_border_color))
-		// gl.BindTexture(gl.TEXTURE_2D, 0)
-		//
-		// gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_fb_texture, 0)
-		// gl.DrawBuffer(gl.NONE)
-		// gl.ReadBuffer(gl.NONE)
-		//
-		// gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+		gl.GenTextures(1, &depth_cube_map)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, depth_cube_map)
+
+		for i in 0 ..< 6 {
+			gl.TexImage2D(
+				gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i),
+				0,
+				gl.DEPTH_COMPONENT,
+				shadow_width,
+				shadow_height,
+				0,
+				gl.DEPTH_COMPONENT,
+				gl.FLOAT,
+				nil,
+			)
+		}
+
+		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
+
+		gl.GenFramebuffers(1, &depth_fbo)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, depth_fbo)
+		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_cube_map, 0)
+		gl.DrawBuffer(gl.NONE)
+		gl.ReadBuffer(gl.NONE)
+
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -146,29 +180,28 @@ exercise_03_02_01_point_shadows := types.Tableau {
 		)
 	},
 	draw = proc() {
-		// depth_shader := shaders.shaders[.EmptyDepth]
+		depth_shader := shaders.shaders[.DepthCube]
 		scene_shader := shaders.shaders[.BlinnPhongDirectionalShadow3]
 
 		// // Render shadow map
-		// gl.Viewport(0, 0, shadow_width, shadow_height)
-		// gl.BindFramebuffer(gl.FRAMEBUFFER, depth_fbo)
-		// gl.ClearColor(0, 0, 0, 1)
-		// gl.Clear(gl.DEPTH_BUFFER_BIT)
+		gl.Viewport(0, 0, shadow_width, shadow_height)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, depth_fbo)
+		gl.ClearColor(0, 0, 0, 1)
+		gl.Clear(gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
 
 		// render_scene(depth_shader, &light_projection_view)
 
 		// // Render scene
-		// gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-		// gl.Viewport(0, 0, window.width, window.height)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		gl.Viewport(0, 0, window.width, window.height)
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, wood_texture.id)
 
-		// gl.ActiveTexture(gl.TEXTURE1)
-		// gl.BindTexture(gl.TEXTURE_2D, depth_fb_texture)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, depth_cube_map)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -185,20 +218,12 @@ exercise_03_02_01_point_shadows := types.Tableau {
 		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "shadow_map"), 1)
 		gl.Uniform3fv(gl.GetUniformLocation(scene_shader, "view_position"), 1, raw_data(&camera.position))
 
-		gl.UniformMatrix4fv(
-			gl.GetUniformLocation(scene_shader, "light_projection_view"),
-			1,
-			false,
-			raw_data(&light_projection_view),
-		)
-
 		render_scene(scene_shader, &projection_view)
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.full_screen_clear_from_gpu()
 
-		gl.DeleteTextures(1, &depth_fb_texture)
+		gl.DeleteTextures(1, &depth_cube_map)
 		gl.DeleteFramebuffers(1, &depth_fbo)
 
 		gl.DeleteTextures(1, &wood_texture.id)
@@ -236,9 +261,6 @@ render_scene :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
 		gl.Enable(gl.CULL_FACE)
 		gl.CullFace(gl.FRONT)
 		defer gl.CullFace(gl.BACK)
-
-		// gl.Disable(gl.CULL_FACE)
-		// defer gl.Enable(gl.CULL_FACE)
 
 		gl.Uniform1i(gl.GetUniformLocation(shader, "reverse_normals"), 1)
 		defer gl.Uniform1i(gl.GetUniformLocation(shader, "reverse_normals"), 0)

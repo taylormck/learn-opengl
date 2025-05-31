@@ -1,5 +1,6 @@
 package shaders
 
+import "core:fmt"
 import gl "vendor:OpenGL"
 
 Shader :: enum {
@@ -59,6 +60,7 @@ Shader :: enum {
 	BlinnPhongDirectionalShadow,
 	BlinnPhongDirectionalShadow2,
 	BlinnPhongDirectionalShadow3,
+	DepthCube,
 }
 
 ShaderMap :: map[Shader]u32
@@ -369,71 +371,28 @@ init_shader :: proc(shader: Shader) {
 			) or_else panic("Failed to load the skybox refraction shader")
 
 	case .House:
-		house_shaders: [3]u32 = {
-			gl.compile_shader_from_source(
-				#load("../../shaders/vert/house_color.vert"),
-				gl.Shader_Type.VERTEX_SHADER,
-			) or_else panic("Failed to load the house vertex shader"),
-			gl.compile_shader_from_source(
-				#load("../../shaders/geom/house.geom"),
-				gl.Shader_Type.GEOMETRY_SHADER,
-			) or_else panic("Failed to load the house geometry shader"),
-			gl.compile_shader_from_source(
-				#load("../../shaders/frag/vert_color.frag"),
-				gl.Shader_Type.FRAGMENT_SHADER,
-			) or_else panic("Failed to load the house fragment shader"),
-		}
-
-		shaders[.House] = gl.create_and_link_program(house_shaders[:]) or_else panic("Failed to link house shader")
-
-		for shader in house_shaders {
-			gl.DeleteShader(shader)
-		}
+		shaders[.House] = load_triple_shader(
+			"house",
+			#load("../../shaders/vert/house_color.vert"),
+			#load("../../shaders/geom/house.geom"),
+			#load("../../shaders/frag/vert_color.frag"),
+		)
 
 	case .Explode:
-		explode_shaders: [3]u32 = {
-			gl.compile_shader_from_source(
-				#load("../../shaders/vert/explode.vert"),
-				gl.Shader_Type.VERTEX_SHADER,
-			) or_else panic("Failed to load the explode vertex shader"),
-			gl.compile_shader_from_source(
-				#load("../../shaders/geom/explode.geom"),
-				gl.Shader_Type.GEOMETRY_SHADER,
-			) or_else panic("Failed to load the explode geometry shader"),
-			gl.compile_shader_from_source(
-				#load("../../shaders/frag/single_tex.frag"),
-				gl.Shader_Type.FRAGMENT_SHADER,
-			) or_else panic("Failed to load the explode fragment shader"),
-		}
-
-		shaders[.Explode] = gl.create_and_link_program(explode_shaders[:]) or_else panic("Failed to link explode shader")
-
-		for shader in explode_shaders {
-			gl.DeleteShader(shader)
-		}
+		shaders[.Explode] = load_triple_shader(
+			"explode",
+			#load("../../shaders/vert/explode.vert"),
+			#load("../../shaders/geom/explode.geom"),
+			#load("../../shaders/frag/single_tex.frag"),
+		)
 
 	case .Normal:
-		normal_shaders: [3]u32 = {
-			gl.compile_shader_from_source(
-				#load("../../shaders/vert/draw_normal.vert"),
-				gl.Shader_Type.VERTEX_SHADER,
-			) or_else panic("Failed to load the explode vertex shader"),
-			gl.compile_shader_from_source(
-				#load("../../shaders/geom/draw_normal.geom"),
-				gl.Shader_Type.GEOMETRY_SHADER,
-			) or_else panic("Failed to load the explode geometry shader"),
-			gl.compile_shader_from_source(
-				#load("../../shaders/frag/yellow.frag"),
-				gl.Shader_Type.FRAGMENT_SHADER,
-			) or_else panic("Failed to load the explode fragment shader"),
-		}
-
-		shaders[.Normal] =
-			gl.create_and_link_program(normal_shaders[:]) or_else panic("Failed to compile and link normal shader")
-
-		for shader in normal_shaders {
-			gl.DeleteShader(shader)
-		}
+		shaders[.Normal] = load_triple_shader(
+			"normal",
+			#load("../../shaders/vert/draw_normal.vert"),
+			#load("../../shaders/geom/draw_normal.geom"),
+			#load("../../shaders/frag/yellow.frag"),
+		)
 
 	case .Planet:
 		shaders[.Planet] =
@@ -512,6 +471,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/blinn_phong_shadow_3.frag"),
 			) or_else panic("Failed to load the point light shadow shader")
 
+	case .DepthCube:
+		shaders[.DepthCube] = load_triple_shader(
+			"depth cube",
+			#load("../../shaders/vert/pos_model.vert"),
+			#load("../../shaders/geom/depth_cube.geom"),
+			#load("../../shaders/frag/depth_linear.frag"),
+		)
 	}
 }
 
@@ -519,4 +485,30 @@ delete_shaders :: proc() {
 	for key, shader in shaders {
 		if shader != 0 do gl.DeleteProgram(shader)
 	}
+}
+
+load_triple_shader :: proc(name, frag, geom, vert: string) -> u32 {
+	individual_shaders: [3]u32 = {
+		gl.compile_shader_from_source(frag, gl.Shader_Type.VERTEX_SHADER) or_else fmt.panicf(
+			"Failed to load the {} vertex shader",
+			name,
+		),
+		gl.compile_shader_from_source(geom, gl.Shader_Type.GEOMETRY_SHADER) or_else fmt.panicf(
+			"Failed to load the {} geometry shader",
+			name,
+		),
+		gl.compile_shader_from_source(vert, gl.Shader_Type.FRAGMENT_SHADER) or_else fmt.panicf(
+			"Failed to load the {} fragment shader",
+			name,
+		),
+	}
+
+	defer for shader in individual_shaders {
+		gl.DeleteShader(shader)
+	}
+
+	shader :=
+		gl.create_and_link_program(individual_shaders[:]) or_else fmt.panicf("Failed to compile and link {} shader", name)
+
+	return shader
 }
