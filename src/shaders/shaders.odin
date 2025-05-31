@@ -58,6 +58,7 @@ Shader :: enum {
 	DepthR,
 	BlinnPhongDirectionalShadow,
 	BlinnPhongDirectionalShadow2,
+	BlinnPhongDirectionalShadow3,
 }
 
 ShaderMap :: map[Shader]u32
@@ -503,6 +504,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex_normal_transform_light.vert"),
 				#load("../../shaders/frag/blinn_phong_shadow_2.frag"),
 			) or_else panic("Failed to load the directional shadow shader")
+
+	case .BlinnPhongDirectionalShadow3:
+		shaders[.BlinnPhongDirectionalShadow3] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform_vs_out.vert"),
+				#load("../../shaders/frag/blinn_phong_shadow_3.frag"),
+			) or_else panic("Failed to load the point light shadow shader")
 
 	}
 }

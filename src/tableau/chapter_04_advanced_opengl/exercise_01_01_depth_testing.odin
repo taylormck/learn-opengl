@@ -78,12 +78,6 @@ exercise_01_01_depth := types.Tableau {
 
 		// Draw cubes first
 		{
-			// gl.Enable(gl.CULL_FACE)
-			// defer gl.Disable(gl.CULL_FACE)
-			//
-			// gl.CullFace(gl.FRONT)
-			// defer gl.CullFace(gl.BACK)
-
 			cube_positions := [?]types.Vec3{{-1, 0, -1}, {2, 0, 0}}
 			for position in cube_positions {
 				gl.BindTexture(gl.TEXTURE_2D, marble_texture.id)
