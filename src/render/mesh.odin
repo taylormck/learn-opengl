@@ -90,7 +90,7 @@ mesh_send_transforms_to_gpu :: proc(mesh: ^Mesh, transforms: []types.TransformMa
 }
 
 mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
-	diffuse_count, specular_count, normal_count, emissive_count: u32
+	diffuse_count, specular_count, normal_count, emissive_count, displacement_count: u32
 
 	for texture, i in mesh.textures {
 		i := i32(i)
@@ -115,6 +115,11 @@ mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
 			texture_type = "emissive"
 			number = emissive_count
 			emissive_count += 1
+
+		case .Displacement:
+			texture_type = "displacement"
+			number = displacement_count
+			displacement_count += 1
 		}
 
 		texture_name := fmt.caprintf("material.{}_{}", texture_type, number)
