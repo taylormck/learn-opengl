@@ -11,6 +11,9 @@ import "core:math/linalg"
 import gl "vendor:OpenGL"
 
 @(private = "file")
+time: f64
+
+@(private = "file")
 brick_wall_texture, brick_wall_normal_texture: render.Texture
 
 @(private = "file")
@@ -34,7 +37,7 @@ camera := render.Camera {
 
 @(private = "file")
 light := render.PointLight {
-	position  = {1.2, 1, 2},
+	position  = {0, 0, 1},
 	ambient   = {0.2, 0.2, 0.2},
 	diffuse   = {0.5, 0.5, 0.5},
 	specular  = {1, 1, 1},
@@ -50,7 +53,7 @@ obj_material := render.MaterialSampled {
 }
 
 @(private = "file")
-obj_specular := types.Vec3{1, 1, 1}
+obj_specular := types.Vec3{0.5, 0.5, 0.5}
 
 @(private = "file")
 wall_model :=
@@ -69,6 +72,8 @@ exercise_04_01_normal_mapping := types.Tableau {
 		primitives.quad_send_to_gpu()
 	},
 	update = proc(delta: f64) {
+		time += delta
+
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
 		render.camera_update_direction(&camera, input.input_state.mouse.offset)
 		camera.aspect_ratio = window.aspect_ratio()
@@ -77,6 +82,9 @@ exercise_04_01_normal_mapping := types.Tableau {
 			linalg.to_radians(f32(1)),
 			linalg.to_radians(f32(45)),
 		)
+		light.position.x = math.sin(f32(time))
+		light.position.y = math.cos(f32(time))
+		light.position.z = -light.position.y + 1
 	},
 	draw = proc() {
 		gl.ClearColor(0.1, 0.1, 0.1, 1)
