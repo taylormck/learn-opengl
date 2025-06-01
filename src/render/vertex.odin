@@ -7,6 +7,8 @@ Vertex :: struct {
 	color:          types.Vec3,
 	texture_coords: types.Vec2,
 	normal:         types.Vec3,
+	tangent:        types.Vec3,
+	bitangent:      types.Vec3,
 }
 
 VertexData :: struct {

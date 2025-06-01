@@ -61,6 +61,7 @@ Shader :: enum {
 	BlinnPhongDirectionalShadow2,
 	BlinnPhongDirectionalShadow3,
 	BlinnPhongDirectionalShadow4,
+	BlinnPhongPointLightNormalMap,
 	DepthCube,
 }
 
@@ -486,6 +487,13 @@ init_shader :: proc(shader: Shader) {
 			#load("../../shaders/geom/depth_cube.geom"),
 			#load("../../shaders/frag/depth_linear.frag"),
 		)
+
+	case .BlinnPhongPointLightNormalMap:
+		shaders[.BlinnPhongPointLightNormalMap] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/normal_mapped.vert"),
+				#load("../../shaders/frag/normal_map_blinn_phong_point_light.frag"),
+			) or_else panic("Failed to load the soft point light shadow shader")
 	}
 }
 

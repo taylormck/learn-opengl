@@ -8,13 +8,41 @@ NUM_QUAD_VERTICES :: 4
 
 QUAD_VERTICES := [NUM_QUAD_VERTICES]render.Vertex {
 	// top right
-	{position = {0.5, 0.5, 0.0}, texture_coords = {1, 1}, color = {0, 1, 1}, normal = {0, 0, 1}},
+	{
+		position = {0.5, 0.5, 0.0},
+		texture_coords = {1, 1},
+		color = {0, 1, 1},
+		normal = {0, 0, 1},
+		tangent = {1, 0, 0},
+		bitangent = {0, 1, 0},
+	},
 	// top left
-	{position = {-0.5, 0.5, 0.0}, texture_coords = {0, 1}, color = {1, 0, 0}, normal = {0, 0, 1}},
+	{
+		position = {-0.5, 0.5, 0.0},
+		texture_coords = {0, 1},
+		color = {1, 0, 0},
+		normal = {0, 0, 1},
+		tangent = {1, 0, 0},
+		bitangent = {0, 1, 0},
+	},
 	// bottom right
-	{position = {0.5, -0.5, 0.0}, texture_coords = {1, 0}, color = {0, 1, 0}, normal = {0, 0, 1}},
+	{
+		position = {0.5, -0.5, 0.0},
+		texture_coords = {1, 0},
+		color = {0, 1, 0},
+		normal = {0, 0, 1},
+		tangent = {1, 0, 0},
+		bitangent = {0, 1, 0},
+	},
 	// bottom left
-	{position = {-0.5, -0.5, 0.0}, texture_coords = {0, 0}, color = {0, 0, 1}, normal = {0, 0, 1}},
+	{
+		position = {-0.5, -0.5, 0.0},
+		texture_coords = {0, 0},
+		color = {0, 0, 1},
+		normal = {0, 0, 1},
+		tangent = {1, 0, 0},
+		bitangent = {0, 1, 0},
+	},
 }
 
 QUAD_INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
@@ -22,6 +50,8 @@ QUAD_INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
 quad_vao, quad_vbo, quad_ebo: u32
 
 quad_send_to_gpu :: proc() {
+	t1, t2, b1, b2, e1, e2: types.Vec3
+
 	gl.GenVertexArrays(1, &quad_vao)
 	gl.GenBuffers(1, &quad_vbo)
 	gl.GenBuffers(1, &quad_ebo)
@@ -47,6 +77,12 @@ quad_send_to_gpu :: proc() {
 
 	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, color))
 	gl.EnableVertexAttribArray(3)
+
+	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, tangent))
+	gl.EnableVertexAttribArray(4)
+
+	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, bitangent))
+	gl.EnableVertexAttribArray(5)
 
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, quad_ebo)
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(QUAD_INDICES), &QUAD_INDICES, gl.STATIC_DRAW)
