@@ -27,39 +27,24 @@ fs_in;
 uniform vec3 view_position;
 uniform Material material;
 uniform PointLight point_light;
-uniform bool reverse_normals;
+uniform float far_plane;
 
-uniform sampler2D shadow_map;
+uniform samplerCube depth_map;
 
-float calculate_shadow_factor(vec4 frag_position_light_space, float diff) {
-	vec3 shadow_coords = frag_position_light_space.xyz / frag_position_light_space.w;
-	shadow_coords = shadow_coords * 0.5 + 0.5;
+const float bias = 0.05;
 
-	// No shadows outside the shadow maps frustum.
-	if (shadow_coords.z > 1.0) {
-		return 0.0;
-	}
+float calculate_shadow_factor(PointLight light, vec3 frag_position) {
+	vec3 frag_to_light = frag_position - light.position;
+	float closest_depth = texture(depth_map, frag_to_light).r;
 
-	// Add bias to avoid z-fighting.
-	float bias = max(0.05 * (1.0 - diff), 0.005);
+	// NOTE: return here to debug
+	// return closest_depth;
 
-	// Use Percentage-closer Fitlering to smooth the shadow edges.
-	float current_depth = shadow_coords.z;
-	vec2 texel_size = 1.0 / textureSize(shadow_map, 0);
-	float shadow = 0.0;
+	closest_depth *= far_plane;
+	float current_depth = length(frag_to_light);
+	float shadow = current_depth - bias > closest_depth ? 1.0 : 0.0;
 
-	for (int x = -1; x <= 1; x += 1) {
-		for (int y = -1; y <= 1; y += 1) {
-			vec2 offset = vec2(x, y) * texel_size;
-			float pcf_depth = texture(shadow_map, shadow_coords.xy + offset).r;
-
-			if (current_depth - bias > pcf_depth) {
-				shadow += 1.0;
-			}
-		}
-	}
-
-	return shadow / 9.0;
+	return shadow;
 }
 
 vec3 calculate_blinn_specular(vec3 light_dir, vec3 normal) {
@@ -76,10 +61,6 @@ vec3 calculate_point_light(PointLight light) {
 
 	vec3 normal = normalize(fs_in.normal);
 
-	if (reverse_normals) {
-		normal = -normal;
-	}
-
 	vec3 light_diff = light.position - fs_in.frag_position;
 	vec3 light_dir = normalize(light_diff);
 	float distance = length(light_diff);
@@ -93,10 +74,10 @@ vec3 calculate_point_light(PointLight light) {
 	float quadratic = light.quadratic * (distance * distance);
 	float attenuation = 1.0 / (light.constant + linear + quadratic);
 
-	return (ambient + diffuse + specular) * attenuation;
+	float shadow = calculate_shadow_factor(light, fs_in.frag_position);
+	vec3 color = ambient + (1.0 - shadow) * (diffuse + specular);
 
-	// float shadow = calculate_shadow_factor(fs_in.frag_position_light_space, diff);
-	// return ambient + (1.0 - shadow) * (diffuse + specular);
+	return color * attenuation;
 }
 
 void main() {

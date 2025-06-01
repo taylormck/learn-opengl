@@ -6,6 +6,7 @@ import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
+import "core:fmt"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
@@ -62,17 +63,7 @@ cube_transforms := [?]types.TransformMatrix {
 near: f32 = 1.0
 
 @(private = "file")
-far: f32 = 7.5
-
-@(private = "file")
-light_projection := linalg.matrix_ortho3d_f32(
-	left = -10.0,
-	right = 10.0,
-	bottom = -10.0,
-	top = 10.0,
-	near = near,
-	far = far,
-)
+far: f32 = 25.0
 
 @(private = "file")
 shininess: f32 = 32
@@ -93,37 +84,43 @@ shadow_border_color := types.Vec4{1, 1, 1, 1}
 shadow_projection := linalg.matrix4_perspective_f32(
 	fovy = linalg.to_radians(f32(90)),
 	aspect = f32(shadow_width) / f32(shadow_height),
-	near = 1,
-	far = 25,
+	near = near,
+	far = far,
 )
 
 @(private = "file")
 shadow_transforms := [?]types.TransformMatrix {
+	shadow_projection *
 	linalg.matrix4_look_at_f32(
 		eye = light.position,
 		centre = light.position + types.Vec3{1, 0, 0},
 		up = types.Vec3{0, -1, 0},
 	),
+	shadow_projection *
 	linalg.matrix4_look_at_f32(
 		eye = light.position,
 		centre = light.position + types.Vec3{-1, 0, 0},
 		up = types.Vec3{0, -1, 0},
 	),
+	shadow_projection *
 	linalg.matrix4_look_at_f32(
 		eye = light.position,
 		centre = light.position + types.Vec3{0, 1, 0},
 		up = types.Vec3{0, 0, 1},
 	),
+	shadow_projection *
 	linalg.matrix4_look_at_f32(
 		eye = light.position,
 		centre = light.position + types.Vec3{0, -1, 0},
 		up = types.Vec3{0, 0, -1},
 	),
+	shadow_projection *
 	linalg.matrix4_look_at_f32(
 		eye = light.position,
 		centre = light.position + types.Vec3{0, 0, 1},
 		up = types.Vec3{0, -1, 0},
 	),
+	shadow_projection *
 	linalg.matrix4_look_at_f32(
 		eye = light.position,
 		centre = light.position + types.Vec3{0, 0, -1},
@@ -163,7 +160,7 @@ exercise_03_02_01_point_shadows := types.Tableau {
 
 		gl.GenFramebuffers(1, &depth_fbo)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, depth_fbo)
-		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_cube_map, 0)
+		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, depth_cube_map, 0)
 		gl.DrawBuffer(gl.NONE)
 		gl.ReadBuffer(gl.NONE)
 
@@ -190,7 +187,17 @@ exercise_03_02_01_point_shadows := types.Tableau {
 		gl.Clear(gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
 
-		// render_scene(depth_shader, &light_projection_view)
+		gl.UseProgram(depth_shader)
+		for &transform, i in shadow_transforms {
+			uniform_name := fmt.ctprintf("shadow_matrices[{}]", i)
+			gl.UniformMatrix4fv(gl.GetUniformLocation(depth_shader, uniform_name), 1, false, raw_data(&transform))
+		}
+
+		fake_pv := linalg.identity(types.TransformMatrix)
+		gl.Uniform1f(gl.GetUniformLocation(depth_shader, "far_plane"), far)
+		gl.Uniform3fv(gl.GetUniformLocation(depth_shader, "light_position"), 1, raw_data(&light.position))
+
+		render_scene(depth_shader, &fake_pv)
 
 		// // Render scene
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
@@ -201,6 +208,7 @@ exercise_03_02_01_point_shadows := types.Tableau {
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, wood_texture.id)
 
+		gl.ActiveTexture(gl.TEXTURE1)
 		gl.BindTexture(gl.TEXTURE_CUBE_MAP, depth_cube_map)
 
 		projection := render.camera_get_projection(&camera)
@@ -215,7 +223,8 @@ exercise_03_02_01_point_shadows := types.Tableau {
 		gl.Uniform1f(gl.GetUniformLocation(scene_shader, "material.shininess"), shininess)
 		gl.Uniform3fv(gl.GetUniformLocation(scene_shader, "material.specular"), 1, raw_data(&material_specular))
 
-		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "shadow_map"), 1)
+		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "depth_map"), 1)
+		gl.Uniform1f(gl.GetUniformLocation(scene_shader, "far_plane"), far)
 		gl.Uniform3fv(gl.GetUniformLocation(scene_shader, "view_position"), 1, raw_data(&camera.position))
 
 		render_scene(scene_shader, &projection_view)
