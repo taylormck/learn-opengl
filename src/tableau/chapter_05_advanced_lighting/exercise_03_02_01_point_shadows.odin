@@ -128,6 +128,9 @@ shadow_transforms := [?]types.TransformMatrix {
 	),
 }
 
+@(private = "file")
+debug := false
+
 exercise_03_02_01_point_shadows := types.Tableau {
 	init = proc() {
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
@@ -175,6 +178,8 @@ exercise_03_02_01_point_shadows := types.Tableau {
 			linalg.to_radians(f32(1)),
 			linalg.to_radians(f32(45)),
 		)
+
+		if .Space in input.input_state.pressed_keys do debug = !debug
 	},
 	draw = proc() {
 		depth_shader := shaders.shaders[.DepthCube]
@@ -223,6 +228,7 @@ exercise_03_02_01_point_shadows := types.Tableau {
 		gl.Uniform1f(gl.GetUniformLocation(scene_shader, "material.shininess"), shininess)
 		gl.Uniform3fv(gl.GetUniformLocation(scene_shader, "material.specular"), 1, raw_data(&material_specular))
 
+		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "debug"), i32(debug))
 		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "depth_map"), 1)
 		gl.Uniform1f(gl.GetUniformLocation(scene_shader, "far_plane"), far)
 		gl.Uniform3fv(gl.GetUniformLocation(scene_shader, "view_position"), 1, raw_data(&camera.position))

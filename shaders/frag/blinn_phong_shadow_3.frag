@@ -28,8 +28,8 @@ uniform vec3 view_position;
 uniform Material material;
 uniform PointLight point_light;
 uniform float far_plane;
-
 uniform samplerCube depth_map;
+uniform bool debug;
 
 const float bias = 0.05;
 
@@ -37,8 +37,9 @@ float calculate_shadow_factor(PointLight light, vec3 frag_position) {
 	vec3 frag_to_light = frag_position - light.position;
 	float closest_depth = texture(depth_map, frag_to_light).r;
 
-	// NOTE: return here to debug
-	// return closest_depth;
+	if (debug) {
+		return closest_depth;
+	}
 
 	closest_depth *= far_plane;
 	float current_depth = length(frag_to_light);
@@ -56,6 +57,12 @@ vec3 calculate_blinn_specular(vec3 light_dir, vec3 normal) {
 }
 
 vec3 calculate_point_light(PointLight light) {
+	float shadow = calculate_shadow_factor(light, fs_in.frag_position);
+
+	if (debug) {
+		return vec3(shadow);
+	}
+
 	vec3 diffuse_tex = texture(material.diffuse_0, fs_in.tex_coords).rgb;
 	vec3 ambient = light.ambient * diffuse_tex;
 
@@ -74,7 +81,6 @@ vec3 calculate_point_light(PointLight light) {
 	float quadratic = light.quadratic * (distance * distance);
 	float attenuation = 1.0 / (light.constant + linear + quadratic);
 
-	float shadow = calculate_shadow_factor(light, fs_in.frag_position);
 	vec3 color = ambient + (1.0 - shadow) * (diffuse + specular);
 
 	return color * attenuation;
