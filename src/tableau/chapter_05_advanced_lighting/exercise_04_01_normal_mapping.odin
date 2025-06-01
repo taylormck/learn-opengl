@@ -66,10 +66,11 @@ wall_mit := types.SubTransformMatrix(linalg.inverse_transpose(wall_model))
 
 exercise_04_01_normal_mapping := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.BlinnPhongPointLightNormalMap)
+		shaders.init_shaders(.BlinnPhongPointLightNormalMap, .Light)
 		brick_wall_texture = render.prepare_texture("textures/brickwall.png", .Diffuse, true)
 		brick_wall_normal_texture = render.prepare_texture("textures/brickwall_normal.png", .Specular, true)
 		primitives.quad_send_to_gpu()
+		primitives.cube_send_to_gpu()
 	},
 	update = proc(delta: f64) {
 		time += delta
@@ -83,7 +84,7 @@ exercise_04_01_normal_mapping := types.Tableau {
 			linalg.to_radians(f32(45)),
 		)
 		light.position.x = math.sin(f32(time))
-		light.position.y = math.cos(f32(time))
+		light.position.y = math.cos(f32(time)) * 0.5 + 0.5
 		light.position.z = -light.position.y + 1
 	},
 	draw = proc() {
@@ -93,6 +94,23 @@ exercise_04_01_normal_mapping := types.Tableau {
 		gl.Enable(gl.DEPTH_TEST)
 
 		obj_shader := shaders.shaders[.BlinnPhongPointLightNormalMap]
+		light_shader := shaders.shaders[.Light]
+
+		projection := render.camera_get_projection(&camera)
+		view := render.camera_get_view(&camera)
+		pv := projection * view
+
+		{
+			model := linalg.matrix4_translate(light.position)
+			model *= linalg.matrix4_scale_f32(0.2)
+			transform := pv * model
+
+			gl.UseProgram(light_shader)
+			gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light.emissive))
+			gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+
+			primitives.cube_draw()
+		}
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, brick_wall_texture.id)
@@ -106,10 +124,8 @@ exercise_04_01_normal_mapping := types.Tableau {
 		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "normal_map"), 1)
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "material.specular"), 1, raw_data(&obj_specular))
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
+		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light_position"), 1, raw_data(&light.position))
 
-		projection := render.camera_get_projection(&camera)
-		view := render.camera_get_view(&camera)
-		pv := projection * view
 		transform := pv * wall_model
 
 		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
@@ -119,6 +135,7 @@ exercise_04_01_normal_mapping := types.Tableau {
 		primitives.quad_draw()
 	},
 	teardown = proc() {
+		primitives.cube_clear_from_gpu()
 		primitives.quad_clear_from_gpu()
 		gl.DeleteTextures(1, &brick_wall_texture.id)
 		gl.DeleteTextures(1, &brick_wall_normal_texture.id)

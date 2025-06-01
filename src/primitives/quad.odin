@@ -78,7 +78,7 @@ quad_send_to_gpu :: proc() {
 	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, color))
 	gl.EnableVertexAttribArray(3)
 
-	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, tangent))
+	gl.VertexAttribPointer(4, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, tangent))
 	gl.EnableVertexAttribArray(4)
 
 	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, bitangent))
