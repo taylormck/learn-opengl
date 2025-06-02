@@ -28,9 +28,9 @@ exercise_04_02_textures_combined := types.Tableau {
 
 		texture_shader := shaders.shaders[.DoubleTexture]
 
+		gl.UseProgram(texture_shader)
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
-		gl.UseProgram(texture_shader)
 		primitives.quad_draw()
 	},
 	teardown = proc() {

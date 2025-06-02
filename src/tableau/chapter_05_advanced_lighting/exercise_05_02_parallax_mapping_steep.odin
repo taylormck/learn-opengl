@@ -71,9 +71,27 @@ height_scale: f32 = 0.1
 exercise_05_02_parallax_mapping_steep := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnDisplacement, .Light)
-		toy_box_diffuse = render.prepare_texture("textures/toy_box_diffuse.png", .Diffuse, flip_vertically = true)
-		toy_box_normal = render.prepare_texture("textures/toy_box_normal.png", .Specular, flip_vertically = true)
-		toy_box_disp = render.prepare_texture("textures/toy_box_disp.png", .Displacement, flip_vertically = true)
+		toy_box_diffuse = render.prepare_texture(
+			"textures/toy_box_diffuse.png",
+			.Diffuse,
+			flip_vertically = true,
+			desired_channels = 3,
+		)
+
+		toy_box_normal = render.prepare_texture(
+			"textures/toy_box_normal.png",
+			.Normal,
+			flip_vertically = true,
+			desired_channels = 3,
+		)
+
+		toy_box_disp = render.prepare_texture(
+			"textures/toy_box_disp.png",
+			.Displacement,
+			flip_vertically = true,
+			desired_channels = 4,
+		)
+
 		primitives.quad_send_to_gpu()
 		primitives.cube_send_to_gpu()
 	},
@@ -117,6 +135,8 @@ exercise_05_02_parallax_mapping_steep := types.Tableau {
 			primitives.cube_draw()
 		}
 
+		gl.UseProgram(obj_shader)
+
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, toy_box_diffuse.id)
 
@@ -126,7 +146,6 @@ exercise_05_02_parallax_mapping_steep := types.Tableau {
 		gl.ActiveTexture(gl.TEXTURE2)
 		gl.BindTexture(gl.TEXTURE_2D, toy_box_disp.id)
 
-		gl.UseProgram(obj_shader)
 		render.point_light_set_uniform(&light, obj_shader)
 		shaders.set_int(obj_shader, "material.diffuse_0", 0)
 		shaders.set_float(obj_shader, "material.shininess", obj_material.shininess)

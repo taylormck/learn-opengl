@@ -61,12 +61,7 @@ quad_send_to_gpu :: proc() {
 	gl.BindBuffer(gl.ARRAY_BUFFER, quad_vbo)
 	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
-	gl.BufferData(
-		gl.ARRAY_BUFFER,
-		size_of(render.Vertex) * NUM_QUAD_VERTICES,
-		raw_data(QUAD_VERTICES[:]),
-		gl.STATIC_DRAW,
-	)
+	gl.BufferData(gl.ARRAY_BUFFER, size_of(QUAD_VERTICES), raw_data(QUAD_VERTICES[:]), gl.STATIC_DRAW)
 
 	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, position))
 	gl.EnableVertexAttribArray(0)

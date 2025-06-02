@@ -24,9 +24,16 @@ Image :: struct {
 	buffer:                  [^]u8,
 }
 
-load_texture_2d :: proc(path: cstring, flip_vertically: bool = false) -> (img: Image, ok: bool) {
+load_texture_2d :: proc(
+	path: cstring,
+	desired_channels: i32 = 0,
+	flip_vertically: bool = false,
+) -> (
+	img: Image,
+	ok: bool,
+) {
 	stbi.set_flip_vertically_on_load(1 if flip_vertically else 0)
-	img.buffer = stbi.load(path, &img.width, &img.height, &img.channels, 0)
+	img.buffer = stbi.load(path, &img.width, &img.height, &img.channels, desired_channels)
 
 	ok = img.buffer != nil
 	return
@@ -37,10 +44,11 @@ prepare_texture :: proc(
 	texture_type: TextureType,
 	flip_vertically: bool = false,
 	gamma_correction: bool = false,
+	desired_channels: i32 = 0,
 ) -> (
 	t: Texture,
 ) {
-	img, img_ok := load_texture_2d(path, flip_vertically)
+	img, img_ok := load_texture_2d(path, desired_channels, flip_vertically)
 	if !img_ok {
 		fmt.panicf("Failed to load texture: {}", path)
 	}
@@ -49,11 +57,6 @@ prepare_texture :: proc(
 	t.type = texture_type
 	gl.GenTextures(1, &t.id)
 	gl.BindTexture(gl.TEXTURE_2D, t.id)
-
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
-	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
 	data_format: u32 = ---
 	internal_format: i32 = ---
@@ -74,8 +77,15 @@ prepare_texture :: proc(
 		fmt.panicf("Unsupported number of channels: {}", img.channels)
 	}
 
+	log.infof("Generating texture for image: {} - {}", path, img)
+
 	gl.TexImage2D(gl.TEXTURE_2D, 0, internal_format, img.width, img.height, 0, data_format, gl.UNSIGNED_BYTE, img.buffer)
 	gl.GenerateMipmap(gl.TEXTURE_2D)
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
 	return t
 }

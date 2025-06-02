@@ -71,7 +71,7 @@ exercise_05_01_parallax_mapping := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnDisplacement, .Light)
 		brick_wall_texture = render.prepare_texture("textures/bricks2.png", .Diffuse, true)
-		brick_wall_normal_texture = render.prepare_texture("textures/bricks2_normal.png", .Specular, true)
+		brick_wall_normal_texture = render.prepare_texture("textures/bricks2_normal.png", .Normal, true)
 		brick_wall_displacement_texture = render.prepare_texture("textures/bricks2_disp.png", .Displacement, true)
 		primitives.quad_send_to_gpu()
 		primitives.cube_send_to_gpu()

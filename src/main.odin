@@ -118,6 +118,10 @@ print_gl_errors :: proc() {
 		switch (err) {
 		case gl.INVALID_OPERATION:
 			err_msg = "Invalid operation"
+		case gl.INVALID_ENUM:
+			err_msg = "Invalid enum"
+		case gl.INVALID_VALUE:
+			err_msg = "Invalid value"
 		case:
 			err_msg = fmt.tprintf("Untranslated error: {}", err)
 		}
