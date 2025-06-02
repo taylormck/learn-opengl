@@ -3,6 +3,7 @@ package render
 import "../types"
 import "core:fmt"
 import "core:log"
+import "core:slice"
 import gl "vendor:OpenGL"
 import stbi "vendor:stb/image"
 
@@ -49,9 +50,7 @@ prepare_texture :: proc(
 	t: Texture,
 ) {
 	img, img_ok := load_texture_2d(path, desired_channels, flip_vertically)
-	if !img_ok {
-		fmt.panicf("Failed to load texture: {}", path)
-	}
+	if !img_ok do fmt.panicf("Failed to load texture: {}", path)
 	defer stbi.image_free(img.buffer)
 
 	num_channels := img.channels if desired_channels == 0 else desired_channels
@@ -76,7 +75,7 @@ prepare_texture :: proc(
 		data_format = gl.RGBA
 		internal_format = gl.SRGB_ALPHA if gamma_correction else gl.RGBA
 	case:
-		fmt.panicf("Unsupported number of channels: {}", img.channels)
+		fmt.panicf("Unsupported number of channels: {}", num_channels)
 	}
 
 	log.infof("Generating texture for image: {} - {}", path, img)

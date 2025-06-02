@@ -62,7 +62,7 @@ wall_model :=
 	linalg.matrix4_scale_f32(2)
 
 @(private = "file")
-wall_mit := types.SubTransformMatrix(linalg.inverse_transpose(wall_model))
+wall_mit: types.SubTransformMatrix
 
 @(private = "file")
 height_scale: f32 = 0.1
@@ -75,6 +75,8 @@ exercise_05_01_parallax_mapping := types.Tableau {
 		brick_wall_displacement_texture = render.prepare_texture("textures/bricks2_disp.png", .Displacement, true)
 		primitives.quad_send_to_gpu()
 		primitives.cube_send_to_gpu()
+
+		wall_mit = types.SubTransformMatrix(linalg.inverse_transpose(wall_model))
 	},
 	update = proc(delta: f64) {
 		time += delta

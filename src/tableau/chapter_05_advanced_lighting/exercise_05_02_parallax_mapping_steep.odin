@@ -63,7 +63,7 @@ toy_box_model :=
 	linalg.matrix4_scale_f32(2)
 
 @(private = "file")
-toy_box_mit := types.SubTransformMatrix(linalg.inverse_transpose(toy_box_model))
+toy_box_mit: types.SubTransformMatrix
 
 @(private = "file")
 height_scale: f32 = 0.1
@@ -94,6 +94,8 @@ exercise_05_02_parallax_mapping_steep := types.Tableau {
 
 		primitives.quad_send_to_gpu()
 		primitives.cube_send_to_gpu()
+
+		toy_box_mit = types.SubTransformMatrix(linalg.inverse_transpose(toy_box_model))
 	},
 	update = proc(delta: f64) {
 		time += delta

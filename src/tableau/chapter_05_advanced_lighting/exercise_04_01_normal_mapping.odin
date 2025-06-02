@@ -6,6 +6,7 @@ import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
+import "core:log"
 import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
@@ -62,15 +63,17 @@ wall_model :=
 	linalg.matrix4_scale_f32(2)
 
 @(private = "file")
-wall_mit := types.SubTransformMatrix(linalg.inverse_transpose(wall_model))
+wall_mit: types.SubTransformMatrix
 
 exercise_04_01_normal_mapping := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnPhongPointLightNormalMap, .Light)
 		brick_wall_texture = render.prepare_texture("textures/brickwall.png", .Diffuse, true)
-		brick_wall_normal_texture = render.prepare_texture("textures/brickwall_normal.png", .Specular, true)
+		brick_wall_normal_texture = render.prepare_texture("textures/brickwall_normal.png", .Normal, true)
 		primitives.quad_send_to_gpu()
 		primitives.cube_send_to_gpu()
+
+		wall_mit = types.SubTransformMatrix(linalg.inverse_transpose(wall_model))
 	},
 	update = proc(delta: f64) {
 		time += delta
@@ -106,8 +109,9 @@ exercise_04_01_normal_mapping := types.Tableau {
 			transform := pv * model
 
 			gl.UseProgram(light_shader)
-			gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light.emissive))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+
+			shaders.set_vec3(light_shader, "light_color", raw_data(&light.emissive))
+			shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
 
 			primitives.cube_draw()
 		}
@@ -119,18 +123,20 @@ exercise_04_01_normal_mapping := types.Tableau {
 		gl.BindTexture(gl.TEXTURE_2D, brick_wall_normal_texture.id)
 
 		gl.UseProgram(obj_shader)
+
 		render.point_light_set_uniform(&light, obj_shader)
-		render.material_sampled_set_uniform(&obj_material, obj_shader)
-		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "normal_map"), 1)
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "material.specular"), 1, raw_data(&obj_specular))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light_position"), 1, raw_data(&light.position))
+		shaders.set_int(obj_shader, "material.diffuse_0", 0)
+		shaders.set_float(obj_shader, "material.shininess", obj_material.shininess)
+		shaders.set_vec3(obj_shader, "material.specular", raw_data(&obj_specular))
+		shaders.set_int(obj_shader, "normal_map", 1)
+		shaders.set_vec3(obj_shader, "view_position", raw_data(&camera.position))
+		shaders.set_vec3(obj_shader, "light_position", raw_data(&light.position))
 
 		transform := pv * wall_model
 
-		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "model"), 1, false, raw_data(&wall_model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(obj_shader, "mit"), 1, false, raw_data(&wall_mit))
+		shaders.set_mat_4x4(obj_shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(obj_shader, "model", raw_data(&wall_model))
+		shaders.set_mat_3x3(obj_shader, "mit", raw_data(&wall_mit))
 
 		primitives.quad_draw()
 	},
