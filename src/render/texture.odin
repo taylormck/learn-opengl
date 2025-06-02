@@ -54,13 +54,15 @@ prepare_texture :: proc(
 	}
 	defer stbi.image_free(img.buffer)
 
+	num_channels := img.channels if desired_channels == 0 else desired_channels
+
 	t.type = texture_type
 	gl.GenTextures(1, &t.id)
 	gl.BindTexture(gl.TEXTURE_2D, t.id)
 
 	data_format: u32 = ---
 	internal_format: i32 = ---
-	switch img.channels {
+	switch num_channels {
 	case 1:
 		data_format = gl.RED
 		internal_format = gl.RED
