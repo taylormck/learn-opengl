@@ -2,7 +2,7 @@
 
 layout(location = 0) in vec3 aPos;
 layout(location = 3) in vec3 aColor;
-layout(location = 4) in vec2 aOffset;
+layout(location = 6) in vec2 aOffset;
 
 out vec3 vert_color;
 

@@ -2,6 +2,7 @@ package primitives
 
 import "../render"
 import "../types"
+import "core:log"
 import gl "vendor:OpenGL"
 
 NUM_QUAD_VERTICES :: 4
@@ -50,15 +51,16 @@ QUAD_INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
 quad_vao, quad_vbo, quad_ebo: u32
 
 quad_send_to_gpu :: proc() {
-	t1, t2, b1, b2, e1, e2: types.Vec3
-
 	gl.GenVertexArrays(1, &quad_vao)
 	gl.GenBuffers(1, &quad_vbo)
 	gl.GenBuffers(1, &quad_ebo)
 
 	gl.BindVertexArray(quad_vao)
+	defer gl.BindVertexArray(0)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, quad_vbo)
+	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
 	gl.BufferData(
 		gl.ARRAY_BUFFER,
 		size_of(render.Vertex) * NUM_QUAD_VERTICES,
@@ -81,7 +83,7 @@ quad_send_to_gpu :: proc() {
 	gl.VertexAttribPointer(4, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, tangent))
 	gl.EnableVertexAttribArray(4)
 
-	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, bitangent))
+	gl.VertexAttribPointer(5, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, bitangent))
 	gl.EnableVertexAttribArray(5)
 
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, quad_ebo)
@@ -106,11 +108,11 @@ quad_draw_instanced :: proc(num_instances: i32, instance_data_vbo: u32) {
 	defer gl.BindVertexArray(0)
 
 	// TODO: factor this out into some kind of setup function
-	gl.EnableVertexAttribArray(4)
+	gl.EnableVertexAttribArray(6)
 	gl.BindBuffer(gl.ARRAY_BUFFER, instance_data_vbo)
-	gl.VertexAttribPointer(4, 2, gl.FLOAT, gl.FALSE, size_of(types.Vec2), 0)
+	gl.VertexAttribPointer(6, 2, gl.FLOAT, gl.FALSE, size_of(types.Vec2), 0)
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-	gl.VertexAttribDivisor(4, 1)
+	gl.VertexAttribDivisor(6, 1)
 
 	gl.DrawElementsInstanced(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil, num_instances)
 }

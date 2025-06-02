@@ -71,9 +71,12 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_05_advanced_lighting.exercise_05_01_parallax_mapping
+	current_tableau = chapter_05_advanced_lighting.exercise_05_02_parallax_mapping_steep
 
 	if current_tableau.init != nil do current_tableau.init()
+
+	print_gl_errors()
+
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
 	defer shaders.delete_shaders()
 
@@ -91,6 +94,7 @@ main :: proc() {
 		clear_input()
 
 		current_tableau.draw()
+		print_gl_errors()
 
 		glfw.SwapBuffers(window_handle)
 		prev_time = new_time
@@ -105,4 +109,19 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 	gl.Viewport(0, 0, width, height)
 
 	if current_tableau.framebuffer_size_callback != nil do current_tableau.framebuffer_size_callback()
+}
+
+print_gl_errors :: proc() {
+	for err := gl.GetError(); err != gl.NO_ERROR; err = gl.GetError() {
+		err_msg: string
+
+		switch (err) {
+		case gl.INVALID_OPERATION:
+			err_msg = "Invalid operation"
+		case:
+			err_msg = fmt.tprintf("Untranslated error: {}", err)
+		}
+
+		log.errorf("OpenGL Error: {}", err_msg)
+	}
 }

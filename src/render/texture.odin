@@ -42,7 +42,7 @@ prepare_texture :: proc(
 ) {
 	img, img_ok := load_texture_2d(path, flip_vertically)
 	if !img_ok {
-		panic(fmt.aprintf("Failed to load texture: {}", path))
+		fmt.panicf("Failed to load texture: {}", path)
 	}
 	defer stbi.image_free(img.buffer)
 
@@ -71,7 +71,7 @@ prepare_texture :: proc(
 		data_format = gl.RGBA
 		internal_format = gl.SRGB_ALPHA if gamma_correction else gl.RGBA
 	case:
-		panic(fmt.aprintf("Unsupported number of channels: {}", img.channels))
+		fmt.panicf("Unsupported number of channels: {}", img.channels)
 	}
 
 	gl.TexImage2D(gl.TEXTURE_2D, 0, internal_format, img.width, img.height, 0, data_format, gl.UNSIGNED_BYTE, img.buffer)

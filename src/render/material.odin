@@ -1,5 +1,6 @@
 package render
 
+import "../shaders"
 import "../types"
 import gl "vendor:OpenGL"
 
@@ -29,10 +30,10 @@ material_calculated_set_uniform :: proc(material: ^MaterialCalculated, shader_id
 }
 
 material_sampled_set_uniform :: proc(material: ^MaterialSampled, shader_id: u32) {
-	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.diffuse_0"), 0)
-	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.specular_0"), 1)
-	gl.Uniform1i(gl.GetUniformLocation(shader_id, "material.emissive_0"), 2)
-	gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), material.shininess)
+	shaders.set_int(shader_id, "material.diffuse_0", 0)
+	shaders.set_int(shader_id, "material.specular_0", 1)
+	shaders.set_int(shader_id, "material.emissive_0", 2)
+	shaders.set_float(shader_id, "material.shininess", material.shininess)
 }
 
 material_free :: proc(material: ^Material) {
