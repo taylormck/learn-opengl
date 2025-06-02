@@ -51,6 +51,10 @@ vec3 calculate_point_light(PointLight light) {
 	vec3 view_dir = normalize(fs_in.tangent_view_position - fs_in.tangent_frag_position);
 	vec2 tex_coords = parallax_mapping(fs_in.tex_coords, view_dir);
 
+	if (tex_coords.x > 1.0 || tex_coords.y > 1.0 || tex_coords.x < 0.0 || tex_coords.y < 0.0) {
+		discard;
+	}
+
 	vec3 diffuse_tex = texture(material.diffuse_0, tex_coords).rgb;
 	vec3 ambient = light.ambient * diffuse_tex;
 
