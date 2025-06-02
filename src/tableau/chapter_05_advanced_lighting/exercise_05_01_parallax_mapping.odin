@@ -110,8 +110,9 @@ exercise_05_01_parallax_mapping := types.Tableau {
 			transform := pv * model
 
 			gl.UseProgram(light_shader)
-			gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light.emissive))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+
+			shaders.set_vec3(light_shader, "light_color", raw_data(&light.emissive))
+			shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
 
 			primitives.cube_draw()
 		}
@@ -127,19 +128,21 @@ exercise_05_01_parallax_mapping := types.Tableau {
 
 		gl.UseProgram(obj_shader)
 		render.point_light_set_uniform(&light, obj_shader)
-		render.material_sampled_set_uniform(&obj_material, obj_shader)
-		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "normal_map"), 1)
-		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "depth_map"), 2)
-		gl.Uniform1f(gl.GetUniformLocation(obj_shader, "height_scale"), height_scale)
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "material.specular"), 1, raw_data(&obj_specular))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light_position"), 1, raw_data(&light.position))
+
+		shaders.set_int(obj_shader, "material.diffuse_0", 0)
+		shaders.set_float(obj_shader, "material.shininess", obj_material.shininess)
+		shaders.set_vec3(obj_shader, "material.specular", raw_data(&obj_specular))
+		shaders.set_int(obj_shader, "normal_map", 1)
+		shaders.set_int(obj_shader, "depth_map", 2)
+		shaders.set_float(obj_shader, "height_scale", height_scale)
+		shaders.set_vec3(obj_shader, "view_position", raw_data(&camera.position))
+		shaders.set_vec3(obj_shader, "light_position", raw_data(&light.position))
 
 		transform := pv * wall_model
 
-		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "model"), 1, false, raw_data(&wall_model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(obj_shader, "mit"), 1, false, raw_data(&wall_mit))
+		shaders.set_mat_4x4(obj_shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(obj_shader, "model", raw_data(&wall_model))
+		shaders.set_mat_3x3(obj_shader, "mit", raw_data(&wall_mit))
 
 		primitives.quad_draw()
 	},
