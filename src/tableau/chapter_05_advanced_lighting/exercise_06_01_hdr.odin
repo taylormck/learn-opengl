@@ -81,7 +81,7 @@ lights := [?]render.PointLight {
 }
 
 @(private = "file")
-shininess: f32 = 64
+wood_shininess: f32 = 64
 
 @(private = "file")
 wood_specular := types.Vec3{0.5, 0.5, 0.5}
@@ -95,9 +95,12 @@ fbo, fb_texture, rbo: u32
 @(private = "file")
 tunnel_model: types.TransformMatrix
 
+@(private = "file")
+tunnel_mit: types.SubTransformMatrix
+
 exercise_06_01_hdr := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.TransformTexture, .Invert)
+		shaders.init_shaders(.Texture, .BlinnPhongDiffuseSampledMultilights)
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
 
 		primitives.cube_send_to_gpu()
@@ -130,6 +133,7 @@ exercise_06_01_hdr := types.Tableau {
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 		tunnel_model = linalg.matrix4_translate_f32({0, 0, -25}) * linalg.matrix4_scale_f32({5, 5, 53})
+		tunnel_mit = types.SubTransformMatrix(linalg.inverse_transpose(tunnel_model))
 	},
 	update = proc(delta: f64) {
 		camera.aspect_ratio = window.aspect_ratio()
@@ -143,26 +147,36 @@ exercise_06_01_hdr := types.Tableau {
 		)
 	},
 	draw = proc() {
-		texture_shader := shaders.shaders[.TransformTexture]
-		invert_shader := shaders.shaders[.Invert]
+		scene_shader := shaders.shaders[.BlinnPhongDiffuseSampledMultilights]
+		full_screen_shader := shaders.shaders[.Texture]
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
 
-		gl.UseProgram(texture_shader)
+		gl.UseProgram(scene_shader)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
 		pv := projection * view
 		transform := pv * tunnel_model
-		shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(scene_shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(scene_shader, "model", raw_data(&tunnel_model))
+		shaders.set_mat_3x3(scene_shader, "mit", raw_data(&tunnel_mit))
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, wood_texture.id)
-		shaders.set_int(texture_shader, "diffuse_0", 0)
+		shaders.set_int(scene_shader, "material.diffuse_0", 0)
+		shaders.set_vec3(scene_shader, "material.specular", raw_data(&wood_specular))
+		shaders.set_float(scene_shader, "material.shininess", wood_shininess)
 		// shaders.set_bool(texture_shader, "invert_normals", true)
+
+		shaders.set_int(scene_shader, "num_point_lights", 4)
+		for &light, i in lights do render.point_light_array_set_uniform(&light, scene_shader, u32(i))
+
+		shaders.set_bool(scene_shader, "gamma", false)
+		shaders.set_vec3(scene_shader, "view_position", raw_data(&camera.position))
 
 		primitives.cube_draw()
 
@@ -172,7 +186,7 @@ exercise_06_01_hdr := types.Tableau {
 		gl.Disable(gl.DEPTH_TEST)
 		gl.BindTexture(gl.TEXTURE_2D, fb_texture)
 
-		gl.UseProgram(invert_shader)
+		gl.UseProgram(full_screen_shader)
 		primitives.full_screen_draw()
 	},
 	teardown = proc() {
