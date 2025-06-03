@@ -70,7 +70,7 @@ height_scale: f32 = 0.1
 
 exercise_05_02_parallax_mapping_steep := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.BlinnDisplacement, .Light)
+		shaders.init_shaders(.BlinnDisplacementSteep, .Light)
 		toy_box_diffuse = render.prepare_texture(
 			"textures/toy_box_diffuse.png",
 			.Diffuse,
@@ -118,7 +118,7 @@ exercise_05_02_parallax_mapping_steep := types.Tableau {
 
 		gl.Enable(gl.DEPTH_TEST)
 
-		obj_shader := shaders.shaders[.BlinnDisplacement]
+		obj_shader := shaders.shaders[.BlinnDisplacementSteep]
 		light_shader := shaders.shaders[.Light]
 
 		projection := render.camera_get_projection(&camera)
