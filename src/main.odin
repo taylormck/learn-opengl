@@ -71,7 +71,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_05_advanced_lighting.exercise_05_03_parallax_occlusion_mapping
+	current_tableau = chapter_05_advanced_lighting.exercise_06_01_hdr
 
 	if current_tableau.init != nil do current_tableau.init()
 
