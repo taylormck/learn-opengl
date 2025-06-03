@@ -12,6 +12,7 @@ struct PointLight {
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
+	vec3 emissive;
 	float constant;
 	float linear;
 	float quadratic;
@@ -22,6 +23,7 @@ in vec2 tex_coords;
 in vec3 normal;
 
 uniform bool gamma;
+uniform bool full_attenuation;
 uniform vec3 view_position;
 uniform Material material;
 
@@ -51,7 +53,14 @@ vec3 calculate_point_light(PointLight light) {
 
 	vec3 specular = light.specular * calculate_blinn_specular(norm, light_dir);
 
-	float attenuation = gamma ? 1.0 / (distance * distance) : 1.0 / distance;
+	float attenuation;
+	if (full_attenuation) {
+		float linear = light.linear * distance;
+		float quadratic = light.quadratic * (distance * distance);
+		attenuation = 1.0 / (light.constant + linear + quadratic);
+	} else {
+		attenuation = gamma ? 1.0 / (distance * distance) : 1.0 / distance;
+	}
 
 	return (ambient + diffuse + specular) * attenuation;
 }

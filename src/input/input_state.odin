@@ -19,4 +19,8 @@ KeySet :: bit_set[Keys]
 Keys :: enum {
 	B,
 	Space,
+	UpArrow,
+	DownArrow,
+	LeftArrow,
+	RightArrow,
 }

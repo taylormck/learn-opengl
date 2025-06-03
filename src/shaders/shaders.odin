@@ -66,6 +66,7 @@ Shader :: enum {
 	BlinnDisplacement,
 	BlinnDisplacementSteep,
 	BlinnParallaxOcclusionMapping,
+	HDR,
 }
 
 ShaderMap :: map[Shader]u32
@@ -496,28 +497,35 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/normal_mapped.vert"),
 				#load("../../shaders/frag/normal_map_blinn_phong_point_light.frag"),
-			) or_else panic("Failed to load the soft point light shadow shader")
+			) or_else panic("Failed to load the normal mapping shader")
 
 	case .BlinnDisplacement:
 		shaders[.BlinnDisplacement] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/normal_mapped.vert"),
 				#load("../../shaders/frag/blinn_displacement.frag"),
-			) or_else panic("Failed to load the soft point light shadow shader")
+			) or_else panic("Failed to load the blinn displacement shader")
 
 	case .BlinnDisplacementSteep:
 		shaders[.BlinnDisplacementSteep] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/normal_mapped.vert"),
 				#load("../../shaders/frag/blinn_displacement_steep.frag"),
-			) or_else panic("Failed to load the soft point light shadow shader")
+			) or_else panic("Failed to load the steep blinn displacement shader")
 
 	case .BlinnParallaxOcclusionMapping:
 		shaders[.BlinnParallaxOcclusionMapping] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/normal_mapped.vert"),
 				#load("../../shaders/frag/blinn_parallax_occlusion_mapping.frag"),
-			) or_else panic("Failed to load the soft point light shadow shader")
+			) or_else panic("Failed to load the parallax occlusion mapping shader")
+
+	case .HDR:
+		shaders[.HDR] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/hdr.frag"),
+			) or_else panic("Failed to load the HDR shader")
 
 	}
 }
