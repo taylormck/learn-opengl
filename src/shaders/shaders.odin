@@ -65,6 +65,7 @@ Shader :: enum {
 	DepthCube,
 	BlinnDisplacement,
 	BlinnDisplacementSteep,
+	BlinnParallaxOcclusionMapping,
 }
 
 ShaderMap :: map[Shader]u32
@@ -509,6 +510,13 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/normal_mapped.vert"),
 				#load("../../shaders/frag/blinn_displacement_steep.frag"),
+			) or_else panic("Failed to load the soft point light shadow shader")
+
+	case .BlinnParallaxOcclusionMapping:
+		shaders[.BlinnParallaxOcclusionMapping] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/normal_mapped.vert"),
+				#load("../../shaders/frag/blinn_parallax_occlusion_mapping.frag"),
 			) or_else panic("Failed to load the soft point light shadow shader")
 
 	}

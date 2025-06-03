@@ -68,7 +68,7 @@ toy_box_mit: types.SubTransformMatrix
 @(private = "file")
 height_scale: f32 = 0.1
 
-exercise_05_02_parallax_mapping_steep := types.Tableau {
+exercise_05_02_steep_parallax_mapping := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnDisplacementSteep, .Light)
 		toy_box_diffuse = render.prepare_texture(
