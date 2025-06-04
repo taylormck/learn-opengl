@@ -12,7 +12,7 @@ import "core:math/linalg/glsl"
 import gl "vendor:OpenGL"
 
 @(private = "file")
-background_color := types.Vec3{0.1, 0.1, 0.1}
+background_color := types.Vec3{0, 0, 0}
 
 @(private = "file")
 initial_camera_position := types.Vec3{5, -0.5, 4}
@@ -102,7 +102,13 @@ wood_texture: render.Texture
 container_diffuse, container_specular: render.Texture
 
 @(private = "file")
-hdr_fbo, hdr_fb_texture, hdr_rbo: u32
+hdr_fbo, hdr_rbo: u32
+
+@(private = "file")
+hdr_fb_textures: [2]u32
+
+@(private = "file")
+color_attachments := [?]u32{gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1}
 
 @(private = "file")
 hdr := true
@@ -138,7 +144,7 @@ cube_mits := [len(cube_models)]types.SubTransformMatrix{}
 
 exercise_07_01_bloom := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.BlinnPhongDiffuseSampledMultilights, .HDR, .Light)
+		shaders.init_shaders(.BloomLighting, .HDR, .Light)
 		wood_texture = render.prepare_texture(
 			"textures/wood.png",
 			.Diffuse,
@@ -167,18 +173,19 @@ exercise_07_01_bloom := types.Tableau {
 		gl.GenFramebuffers(1, &hdr_fbo)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, hdr_fbo)
 
-		gl.GenTextures(1, &hdr_fb_texture)
-		gl.BindTexture(gl.TEXTURE_2D, hdr_fb_texture)
+		gl.GenTextures(len(hdr_fb_textures), raw_data(hdr_fb_textures[:]))
 
-		// TODO: this needs to be updated on framebuffer resize callback
-		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+		for tex, i in hdr_fb_textures {
+			gl.BindTexture(gl.TEXTURE_2D, tex)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+			gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + u32(i), gl.TEXTURE_2D, tex, 0)
+		}
+
 		gl.BindTexture(gl.TEXTURE_2D, 0)
-
-		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, hdr_fb_texture, 0)
 
 		gl.GenRenderbuffers(1, &hdr_rbo)
 		gl.BindRenderbuffer(gl.RENDERBUFFER, hdr_rbo)
@@ -187,8 +194,11 @@ exercise_07_01_bloom := types.Tableau {
 
 		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, hdr_rbo)
 
+		gl.DrawBuffers(2, raw_data(color_attachments[:]))
+
 		if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
 
 		floor_mit = types.SubTransformMatrix(linalg.inverse_transpose(floor_model))
 
@@ -196,7 +206,7 @@ exercise_07_01_bloom := types.Tableau {
 			cube_mits[i] = types.SubTransformMatrix(linalg.inverse_transpose(model))
 		}
 
-		scene_shader := shaders.shaders[.BlinnPhongDiffuseSampledMultilights]
+		scene_shader := shaders.shaders[.BloomLighting]
 		gl.UseProgram(scene_shader)
 		shaders.set_int(scene_shader, "num_point_lights", len(lights))
 		for &light, i in lights do render.point_light_array_set_uniform(&light, scene_shader, u32(i))
@@ -206,13 +216,13 @@ exercise_07_01_bloom := types.Tableau {
 		shaders.set_float(scene_shader, "material.shininess", wood_shininess)
 		shaders.set_bool(scene_shader, "invert_normals", false)
 
-		shaders.set_bool(scene_shader, "gamma", true)
-		shaders.set_bool(scene_shader, "full_attenuation", false)
+		// shaders.set_bool(scene_shader, "gamma", false)
+		// shaders.set_bool(scene_shader, "full_attenuation", false)
 
 		full_screen_shader := shaders.shaders[.HDR]
 		gl.UseProgram(full_screen_shader)
 		shaders.set_bool(full_screen_shader, "hdr", hdr)
-		shaders.set_bool(full_screen_shader, "linearize", true)
+		shaders.set_bool(full_screen_shader, "linearize", false)
 		shaders.set_bool(full_screen_shader, "reinhard", reinhard)
 		shaders.set_float(full_screen_shader, "exposure", exposure)
 	},
@@ -252,7 +262,7 @@ exercise_07_01_bloom := types.Tableau {
 
 	},
 	draw = proc() {
-		scene_shader := shaders.shaders[.BlinnPhongDiffuseSampledMultilights]
+		scene_shader := shaders.shaders[.BloomLighting]
 		full_screen_shader := shaders.shaders[.HDR]
 		light_shader := shaders.shaders[.Light]
 
@@ -267,8 +277,7 @@ exercise_07_01_bloom := types.Tableau {
 
 		gl.UseProgram(light_shader)
 		for &light in lights {
-			model := linalg.matrix4_translate(light.position)
-			model *= linalg.matrix4_scale_f32(0.25)
+			model := linalg.matrix4_translate(light.position) * linalg.matrix4_scale_f32(0.25)
 			transform := pv * model
 
 			shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
@@ -312,7 +321,7 @@ exercise_07_01_bloom := types.Tableau {
 		gl.UseProgram(full_screen_shader)
 
 		gl.ActiveTexture(gl.TEXTURE1)
-		gl.BindTexture(gl.TEXTURE_2D, hdr_fb_texture)
+		gl.BindTexture(gl.TEXTURE_2D, hdr_fb_textures[1])
 		shaders.set_int(full_screen_shader, "hdr_buffer", 1)
 
 		primitives.full_screen_draw()
@@ -326,19 +335,25 @@ exercise_07_01_bloom := types.Tableau {
 		gl.DeleteTextures(1, &container_diffuse.id)
 		gl.DeleteTextures(1, &container_specular.id)
 
-		gl.DeleteTextures(1, &hdr_fb_texture)
+		gl.DeleteTextures(len(hdr_fb_textures), raw_data(hdr_fb_textures[:]))
 		gl.DeleteFramebuffers(1, &hdr_fbo)
 		gl.DeleteRenderbuffers(1, &hdr_rbo)
 	},
 	framebuffer_size_callback = proc() {
-		gl.BindTexture(gl.TEXTURE_2D, hdr_fb_texture)
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
-		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+		for tex, i in hdr_fb_textures {
+			gl.BindTexture(gl.TEXTURE_2D, tex)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+		}
 
 		gl.BindRenderbuffer(gl.RENDERBUFFER, hdr_rbo)
 		defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
+
+		camera.aspect_ratio = window.aspect_ratio()
 	},
 }

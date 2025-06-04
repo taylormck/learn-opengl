@@ -67,6 +67,7 @@ Shader :: enum {
 	BlinnDisplacementSteep,
 	BlinnParallaxOcclusionMapping,
 	HDR,
+	BloomLighting,
 }
 
 ShaderMap :: map[Shader]u32
@@ -526,6 +527,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/hdr.frag"),
 			) or_else panic("Failed to load the HDR shader")
+
+	case .BloomLighting:
+		shaders[.BloomLighting] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/bloom_lighting.frag"),
+			) or_else panic("Failed to load the bloom lighting shader")
 
 	}
 }
