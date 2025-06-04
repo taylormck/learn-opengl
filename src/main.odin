@@ -122,6 +122,14 @@ print_gl_errors :: proc() {
 			err_msg = "Invalid enum"
 		case gl.INVALID_VALUE:
 			err_msg = "Invalid value"
+		case gl.STACK_OVERFLOW:
+			err_msg = "Stack overflow"
+		case gl.STACK_UNDERFLOW:
+			err_msg = "Stack underflow"
+		case gl.OUT_OF_MEMORY:
+			err_msg = "Out of memory"
+		case gl.INVALID_FRAMEBUFFER_OPERATION:
+			err_msg = "Invalid framebuffer operation"
 		case:
 			err_msg = fmt.tprintf("Untranslated error: {}", err)
 		}
