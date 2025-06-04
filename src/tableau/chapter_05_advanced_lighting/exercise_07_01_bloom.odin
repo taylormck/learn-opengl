@@ -15,10 +15,10 @@ import gl "vendor:OpenGL"
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
 @(private = "file")
-initial_camera_position := types.Vec3{4, 0, 3.5}
+initial_camera_position := types.Vec3{5, -0.5, 4}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, 1, -0.5}
+initial_camera_target := types.Vec3{0, 1, 0.5}
 
 @(private = "file")
 camera := render.Camera {
@@ -114,10 +114,27 @@ reinhard := false
 exposure: f32 = 1.0
 
 @(private = "file")
-floor_model: types.TransformMatrix
+floor_model := linalg.matrix4_translate_f32({0, -0.5, 0})
 
 @(private = "file")
 floor_mit: types.SubTransformMatrix
+
+@(private = "file")
+cube_models := [?]types.TransformMatrix {
+	linalg.matrix4_translate_f32({0, 1.5, 0}) * linalg.matrix4_scale_f32(0.5),
+	linalg.matrix4_translate_f32({2, 0, 1}) * linalg.matrix4_scale_f32(0.5),
+	linalg.matrix4_translate_f32({-1, -1, 2}) *
+	linalg.matrix4_rotate(linalg.to_radians(f32(60)), linalg.normalize(types.Vec3{1, 0, 1})),
+	linalg.matrix4_translate_f32({0, 2.7, 4}) *
+	linalg.matrix4_rotate(linalg.to_radians(f32(23)), linalg.normalize(types.Vec3{1, 0, 1})) *
+	linalg.matrix4_scale_f32(1.25),
+	linalg.matrix4_translate_f32({-2, 1, -3}) *
+	linalg.matrix4_rotate(linalg.to_radians(f32(124)), linalg.normalize(types.Vec3{1, 0, 1})),
+	linalg.matrix4_translate_f32({-3, 0, 0}) * linalg.matrix4_scale_f32(0.5),
+}
+
+@(private = "file")
+cube_mits := [len(cube_models)]types.SubTransformMatrix{}
 
 exercise_07_01_bloom := types.Tableau {
 	init = proc() {
@@ -173,8 +190,11 @@ exercise_07_01_bloom := types.Tableau {
 		if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
-		floor_model = linalg.identity(types.TransformMatrix)
 		floor_mit = types.SubTransformMatrix(linalg.inverse_transpose(floor_model))
+
+		for model, i in cube_models {
+			cube_mits[i] = types.SubTransformMatrix(linalg.inverse_transpose(model))
+		}
 
 		scene_shader := shaders.shaders[.BlinnPhongDiffuseSampledMultilights]
 		gl.UseProgram(scene_shader)
@@ -257,6 +277,20 @@ exercise_07_01_bloom := types.Tableau {
 		}
 
 		gl.UseProgram(scene_shader)
+		shaders.set_vec3(scene_shader, "view_position", raw_data(&camera.position))
+
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_2D, container_diffuse.id)
+		for &model, i in cube_models {
+			transform := pv * model
+			mit := &cube_mits[i]
+
+			shaders.set_mat_4x4(scene_shader, "transform", raw_data(&transform))
+			shaders.set_mat_4x4(scene_shader, "model", raw_data(&model))
+			shaders.set_mat_3x3(scene_shader, "mit", raw_data(mit))
+			primitives.cube_draw()
+		}
+
 		// Draw the floor
 		{
 			transform := pv * floor_model
@@ -266,7 +300,6 @@ exercise_07_01_bloom := types.Tableau {
 
 			gl.ActiveTexture(gl.TEXTURE0)
 			gl.BindTexture(gl.TEXTURE_2D, wood_texture.id)
-			shaders.set_vec3(scene_shader, "view_position", raw_data(&camera.position))
 
 			primitives.plane_draw()
 		}
