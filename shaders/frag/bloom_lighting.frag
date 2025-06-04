@@ -55,15 +55,6 @@ vec3 calculate_point_light(PointLight light) {
 
 	vec3 specular = light.specular * calculate_blinn_specular(norm, light_dir);
 
-	// float attenuation;
-	// if (full_attenuation) {
-	// 	float linear = light.linear * distance;
-	// 	float quadratic = light.quadratic * (distance * distance);
-	// 	attenuation = 1.0 / (light.constant + linear + quadratic);
-	// } else {
-	// 	attenuation = gamma ? 1.0 / (distance * distance) : 1.0 / distance;
-	// }
-
 	float attenuation = 1.0 / (distance * distance);
 
 	return ambient + (diffuse + specular) * attenuation;

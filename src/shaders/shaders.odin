@@ -68,6 +68,7 @@ Shader :: enum {
 	BlinnParallaxOcclusionMapping,
 	HDR,
 	BloomLighting,
+	BlurSeparated,
 }
 
 ShaderMap :: map[Shader]u32
@@ -534,6 +535,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/bloom_lighting.frag"),
 			) or_else panic("Failed to load the bloom lighting shader")
+
+	case .BlurSeparated:
+		shaders[.BlurSeparated] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/blur_separated.frag"),
+			) or_else panic("Failed to load the blur shader")
 
 	}
 }

@@ -6,6 +6,7 @@ import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
+import "core:log"
 import "core:math"
 import "core:math/linalg"
 import "core:math/linalg/glsl"
@@ -110,6 +111,10 @@ hdr_fb_textures: [2]u32
 @(private = "file")
 color_attachments := [?]u32{gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1}
 
+
+@(private = "file")
+ping_pong_fbos, ping_pong_fbo_textures: [2]u32
+
 @(private = "file")
 hdr := true
 
@@ -144,7 +149,7 @@ cube_mits := [len(cube_models)]types.SubTransformMatrix{}
 
 exercise_07_01_bloom := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.BloomLighting, .HDR, .Light)
+		shaders.init_shaders(.BloomLighting, .HDR, .Light, .BlurSeparated)
 		wood_texture = render.prepare_texture(
 			"textures/wood.png",
 			.Diffuse,
@@ -196,9 +201,24 @@ exercise_07_01_bloom := types.Tableau {
 
 		gl.DrawBuffers(2, raw_data(color_attachments[:]))
 
-		if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
-		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
 
+		gl.GenFramebuffers(2, raw_data(ping_pong_fbos[:]))
+		gl.GenTextures(2, raw_data(ping_pong_fbo_textures[:]))
+		for tex, i in ping_pong_fbo_textures {
+			gl.BindFramebuffer(gl.FRAMEBUFFER, ping_pong_fbos[i])
+			gl.BindTexture(gl.TEXTURE_2D, tex)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+			gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, tex, 0)
+
+			ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
+		}
+
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 		floor_mit = types.SubTransformMatrix(linalg.inverse_transpose(floor_model))
 
@@ -265,6 +285,7 @@ exercise_07_01_bloom := types.Tableau {
 		scene_shader := shaders.shaders[.BloomLighting]
 		full_screen_shader := shaders.shaders[.HDR]
 		light_shader := shaders.shaders[.Light]
+		blur_shader := shaders.shaders[.BlurSeparated]
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, hdr_fbo)
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
@@ -313,6 +334,27 @@ exercise_07_01_bloom := types.Tableau {
 			primitives.plane_draw()
 		}
 
+		// Blur the bright framebuffer
+		amount :: 10
+
+		gl.UseProgram(blur_shader)
+		shaders.set_int(blur_shader, "image", 0)
+
+		for i in 0 ..< amount {
+			in_index := i % 2
+			out_index := 1 - in_index
+
+			framebuffer := ping_pong_fbos[out_index]
+			tex := ping_pong_fbo_textures[in_index]
+
+			gl.BindFramebuffer(gl.FRAMEBUFFER, framebuffer)
+			gl.BindTexture(gl.TEXTURE_2D, hdr_fb_textures[1] if i == 0 else tex)
+
+			shaders.set_bool(blur_shader, "horizontal", in_index == 0)
+
+			primitives.full_screen_draw()
+		}
+
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 		gl.ClearColor(1, 1, 1, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
@@ -321,7 +363,7 @@ exercise_07_01_bloom := types.Tableau {
 		gl.UseProgram(full_screen_shader)
 
 		gl.ActiveTexture(gl.TEXTURE1)
-		gl.BindTexture(gl.TEXTURE_2D, hdr_fb_textures[1])
+		gl.BindTexture(gl.TEXTURE_2D, ping_pong_fbo_textures[amount % 2])
 		shaders.set_int(full_screen_shader, "hdr_buffer", 1)
 
 		primitives.full_screen_draw()
