@@ -40,6 +40,7 @@ clear_input :: proc() {
 
 key_callback :: proc "cdecl" (window: glfw.WindowHandle, key, scancode, action, mods: i32) {
 	if key == glfw.KEY_B && action == glfw.PRESS do input.input_state.pressed_keys += {.B}
+	if key == glfw.KEY_V && action == glfw.PRESS do input.input_state.pressed_keys += {.V}
 	if key == glfw.KEY_SPACE && action == glfw.PRESS do input.input_state.pressed_keys += {.Space}
 	if key == glfw.KEY_UP && action == glfw.PRESS do input.input_state.pressed_keys += {.UpArrow}
 	if key == glfw.KEY_DOWN && action == glfw.PRESS do input.input_state.pressed_keys += {.DownArrow}

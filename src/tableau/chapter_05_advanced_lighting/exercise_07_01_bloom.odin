@@ -81,9 +81,9 @@ lights := [?]render.PointLight {
 	{
 		position = {3, 0.5, 1},
 		ambient = BLUE * 0.1,
-		diffuse = BLUE * 5,
-		specular = BLUE * 5,
-		emissive = BLUE * 5,
+		diffuse = BLUE * 15,
+		specular = BLUE * 15,
+		emissive = BLUE * 15,
 		constant = 1,
 		linear = 0.09,
 		quadratic = 0.032,
@@ -123,6 +123,9 @@ reinhard := false
 
 @(private = "file")
 exposure: f32 = 1.0
+
+@(private = "file")
+bloom := true
 
 @(private = "file")
 floor_model := linalg.matrix4_translate_f32({0, -0.5, 0})
@@ -182,7 +185,7 @@ exercise_07_01_bloom := types.Tableau {
 
 		for tex, i in hdr_fb_textures {
 			gl.BindTexture(gl.TEXTURE_2D, tex)
-			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, window.width, window.height, 0, gl.RGB, gl.FLOAT, nil)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -208,7 +211,7 @@ exercise_07_01_bloom := types.Tableau {
 		for tex, i in ping_pong_fbo_textures {
 			gl.BindFramebuffer(gl.FRAMEBUFFER, ping_pong_fbos[i])
 			gl.BindTexture(gl.TEXTURE_2D, tex)
-			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, window.width, window.height, 0, gl.RGB, gl.FLOAT, nil)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -245,6 +248,7 @@ exercise_07_01_bloom := types.Tableau {
 		shaders.set_bool(full_screen_shader, "linearize", false)
 		shaders.set_bool(full_screen_shader, "reinhard", reinhard)
 		shaders.set_float(full_screen_shader, "exposure", exposure)
+		shaders.set_bool(full_screen_shader, "bloom", bloom)
 	},
 	update = proc(delta: f64) {
 		camera.aspect_ratio = window.aspect_ratio()
@@ -268,6 +272,11 @@ exercise_07_01_bloom := types.Tableau {
 		if .B in input.input_state.pressed_keys {
 			reinhard = !reinhard
 			shaders.set_bool(full_screen_shader, "reinhard", reinhard)
+		}
+
+		if .V in input.input_state.pressed_keys {
+			bloom = !bloom
+			shaders.set_bool(full_screen_shader, "bloom", bloom)
 		}
 
 		if .UpArrow in input.input_state.pressed_keys {
@@ -363,8 +372,12 @@ exercise_07_01_bloom := types.Tableau {
 		gl.UseProgram(full_screen_shader)
 
 		gl.ActiveTexture(gl.TEXTURE1)
-		gl.BindTexture(gl.TEXTURE_2D, ping_pong_fbo_textures[amount % 2])
+		gl.BindTexture(gl.TEXTURE_2D, hdr_fb_textures[0])
 		shaders.set_int(full_screen_shader, "hdr_buffer", 1)
+
+		gl.ActiveTexture(gl.TEXTURE2)
+		gl.BindTexture(gl.TEXTURE_2D, ping_pong_fbo_textures[amount % 2])
+		shaders.set_int(full_screen_shader, "bright_buffer", 2)
 
 		primitives.full_screen_draw()
 	},
@@ -383,18 +396,27 @@ exercise_07_01_bloom := types.Tableau {
 	},
 	framebuffer_size_callback = proc() {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
-		for tex, i in hdr_fb_textures {
+		for tex in hdr_fb_textures {
 			gl.BindTexture(gl.TEXTURE_2D, tex)
-			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
-			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, window.width, window.height, 0, gl.RGB, gl.FLOAT, nil)
+			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 		}
 
 		gl.BindRenderbuffer(gl.RENDERBUFFER, hdr_rbo)
 		defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
+
+		for tex in ping_pong_fbo_textures {
+			gl.BindTexture(gl.TEXTURE_2D, tex)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, window.width, window.height, 0, gl.RGB, gl.FLOAT, nil)
+			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+		}
 
 		camera.aspect_ratio = window.aspect_ratio()
 	},

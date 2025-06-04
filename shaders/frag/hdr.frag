@@ -4,7 +4,9 @@ out vec4 frag_color;
 in vec2 tex_coords;
 
 uniform sampler2D hdr_buffer;
+uniform sampler2D bright_buffer;
 uniform bool hdr;
+uniform bool bloom;
 
 const float gamma = 2.2;
 uniform bool linearize;
@@ -13,6 +15,10 @@ uniform float exposure;
 
 void main() {
 	vec3 hdr_color = texture(hdr_buffer, tex_coords).rgb;
+
+	if (bloom) {
+		hdr_color += texture(bright_buffer, tex_coords).rgb;
+	}
 
 	// If the hdr_color is gamma corrected already, we need to linearize it.
 	if (linearize) {
