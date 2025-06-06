@@ -2,6 +2,7 @@ package render
 
 import "../shaders"
 import "../types"
+import "../utils"
 import "core:fmt"
 import "core:log"
 import "core:os"
@@ -139,9 +140,6 @@ mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
 }
 
 mesh_draw :: proc(mesh: ^Mesh, shader_id: u32) {
-	// mesh_set_textures(mesh, shader_id)
-	// gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), mesh.material.shininess)
-
 	gl.BindVertexArray(mesh.vao)
 	defer gl.BindVertexArray(0)
 
@@ -149,13 +147,11 @@ mesh_draw :: proc(mesh: ^Mesh, shader_id: u32) {
 }
 
 mesh_draw_instanced :: proc(mesh: ^Mesh, shader_id: u32, num_instances: i32) {
-	// mesh_set_textures(mesh, shader_id)
-	// gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), mesh.material.shininess)
-
 	gl.BindVertexArray(mesh.vao)
 	defer gl.BindVertexArray(0)
 
 	gl.DrawElementsInstanced(gl.TRIANGLES, i32(len(mesh.indices)) * 3, gl.UNSIGNED_INT, nil, num_instances)
+	// utils.print_gl_errors()
 }
 
 

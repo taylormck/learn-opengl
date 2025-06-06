@@ -102,22 +102,22 @@ exercise_10_02_asteroids := types.Tableau {
 			mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 			transform := pv * model
 
-			gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-			gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+			shaders.set_mat_4x4(planet_shader, "transform", raw_data(&transform))
+			shaders.set_mat_4x4(planet_shader, "model", raw_data(&model))
+			shaders.set_mat_3x3(planet_shader, "mit", raw_data(&mit))
 
-			render.scene_draw(&planet_model, planet_shader)
+			render.scene_draw_with_materials(&planet_model, planet_shader)
 		}
 
 		for &model in asteroid_model_transforms {
 			mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 			transform := pv * model
 
-			gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-			gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+			shaders.set_mat_4x4(planet_shader, "transform", raw_data(&transform))
+			shaders.set_mat_4x4(planet_shader, "model", raw_data(&model))
+			shaders.set_mat_3x3(planet_shader, "mit", raw_data(&mit))
 
-			render.scene_draw(&asteroid_model, planet_shader)
+			render.scene_draw_with_materials(&asteroid_model, planet_shader)
 		}
 
 	},

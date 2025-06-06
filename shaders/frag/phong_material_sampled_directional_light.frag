@@ -3,6 +3,7 @@
 struct Material {
 	sampler2D diffuse_0;
 	sampler2D specular_0;
+	sampler2D normal_0;
 	float shininess;
 };
 

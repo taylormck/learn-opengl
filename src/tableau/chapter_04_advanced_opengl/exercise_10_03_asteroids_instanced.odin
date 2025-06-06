@@ -6,6 +6,7 @@ import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
+import "../../utils"
 import "../../window"
 import "core:math"
 import "core:math/linalg"
@@ -93,26 +94,32 @@ exercise_10_03_asteroids_instanced := types.Tableau {
 		view := render.camera_get_view(&camera)
 		pv := projection * view
 
+		utils.print_gl_errors()
 		gl.UseProgram(planet_shader)
 		render.directional_light_set_uniform(&light, planet_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(planet_shader, "view_position"), 1, raw_data(&camera.position))
+		shaders.set_vec3(planet_shader, "view_position", raw_data(&camera.position))
 
 		model := linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 		transform := pv * model
 
-		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(planet_shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(planet_shader, "mit"), 1, false, raw_data(&mit))
+		utils.print_gl_errors()
+		shaders.set_mat_4x4(planet_shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(planet_shader, "model", raw_data(&model))
+		shaders.set_mat_3x3(planet_shader, "mit", raw_data(&mit))
+		utils.print_gl_errors()
 
-		render.scene_draw(&planet_model, planet_shader)
+		render.scene_draw_with_materials(&planet_model, planet_shader)
+		utils.print_gl_errors()
 
 		gl.UseProgram(asteroid_shader)
 		render.directional_light_set_uniform(&light, asteroid_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(asteroid_shader, "view_position"), 1, raw_data(&camera.position))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(asteroid_shader, "pv"), 1, false, raw_data(&pv))
+		shaders.set_vec3(asteroid_shader, "view_position", raw_data(&camera.position))
+		shaders.set_mat_4x4(asteroid_shader, "pv", raw_data(&pv))
+		utils.print_gl_errors()
 
-		render.scene_draw_instanced(&asteroid_model, asteroid_shader, NUM_ASTEROIDS)
+		render.scene_draw_instanced_with_materials(&asteroid_model, asteroid_shader, NUM_ASTEROIDS)
+		utils.print_gl_errors()
 	},
 	teardown = proc() {
 		render.scene_clear_from_gpu(&planet_model)
