@@ -74,13 +74,18 @@ exercise_09_02_geometry_shader_exploding := types.Tableau {
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
 		gl.UseProgram(mesh_shader)
-		gl.Uniform1f(gl.GetUniformLocation(mesh_shader, "time"), f32(time))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
-		gl.Uniform3fv(gl.GetUniformLocation(mesh_shader, "view_position"), 1, raw_data(&camera.position))
 
-		render.scene_draw(&backpack_model, mesh_shader)
+		shaders.set_float(mesh_shader, "time", f32(time))
+		shaders.set_mat_4x4(mesh_shader, "transform", raw_data(&transform))
+
+		// We want to set up some of the textures, but not all of them.
+		// Therefore, we use our own custom draw setup here.
+		for _, &mesh in backpack_model.meshes {
+			texture := mesh.textures[0]
+			gl.BindTexture(gl.TEXTURE_2D, texture.id)
+			shaders.set_int(mesh_shader, "diffuse_0", 0)
+			render.mesh_draw(&mesh, mesh_shader)
+		}
 	},
 	teardown = proc() {
 		render.scene_clear_from_gpu(&backpack_model)

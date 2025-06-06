@@ -72,7 +72,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_04_advanced_opengl.exercise_06_03_cubemaps_environment_mapping_refract
+	current_tableau = chapter_04_advanced_opengl.exercise_09_03_geometry_shader_normals
 
 	if current_tableau.init != nil do current_tableau.init()
 

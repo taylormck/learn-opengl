@@ -72,17 +72,24 @@ exercise_09_03_geometry_shader_normals := types.Tableau {
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
 		gl.UseProgram(mesh_shader)
-		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
-		gl.Uniform3fv(gl.GetUniformLocation(mesh_shader, "view_position"), 1, raw_data(&camera.position))
+		shaders.set_mat_4x4(mesh_shader, "transform", raw_data(&transform))
 
 		render.scene_draw(&backpack_model, mesh_shader)
 
+		// We want to set up some of the textures, but not all of them.
+		// Therefore, we use our own custom draw setup here.
+		for _, &mesh in backpack_model.meshes {
+			texture := mesh.textures[0]
+			gl.BindTexture(gl.TEXTURE_2D, texture.id)
+			shaders.set_int(mesh_shader, "diffuse_0", 0)
+			render.mesh_draw(&mesh, mesh_shader)
+		}
+
 		gl.UseProgram(normal_shader)
-		gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "view_model"), 1, false, raw_data(&view_model))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(normal_shader, "projection"), 1, false, raw_data(&projection))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(normal_shader, "mit"), 1, false, raw_data(&mit))
+
+		shaders.set_mat_4x4(normal_shader, "view_model", raw_data(&view_model))
+		shaders.set_mat_4x4(normal_shader, "projection", raw_data(&projection))
+		shaders.set_mat_3x3(normal_shader, "mit", raw_data(&mit))
 
 		render.scene_draw(&backpack_model, normal_shader)
 	},
