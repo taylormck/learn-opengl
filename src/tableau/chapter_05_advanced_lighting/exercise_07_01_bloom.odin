@@ -53,7 +53,7 @@ lights := [?]render.PointLight {
 		ambient = WHITE * 0.5,
 		diffuse = WHITE * 5,
 		specular = WHITE * 5,
-		emissive = WHITE * 5,
+		emissive = WHITE * 6,
 		constant = 1,
 		linear = 0.09,
 		quadratic = 0.032,
@@ -63,7 +63,7 @@ lights := [?]render.PointLight {
 		ambient = RED * 1,
 		diffuse = RED * 10,
 		specular = RED * 10,
-		emissive = RED * 10,
+		emissive = RED * 10 + WHITE,
 		constant = 1,
 		linear = 0.09,
 		quadratic = 0.032,
@@ -73,7 +73,7 @@ lights := [?]render.PointLight {
 		ambient = GREEN * 0.1,
 		diffuse = GREEN * 5,
 		specular = GREEN * 5,
-		emissive = GREEN * 5,
+		emissive = GREEN * 5 + WHITE,
 		constant = 1,
 		linear = 0.09,
 		quadratic = 0.032,
@@ -83,7 +83,7 @@ lights := [?]render.PointLight {
 		ambient = BLUE * 0.1,
 		diffuse = BLUE * 15,
 		specular = BLUE * 15,
-		emissive = BLUE * 15,
+		emissive = BLUE * 15 + WHITE,
 		constant = 1,
 		linear = 0.09,
 		quadratic = 0.032,
@@ -110,7 +110,6 @@ hdr_fb_textures: [2]u32
 
 @(private = "file")
 color_attachments := [?]u32{gl.COLOR_ATTACHMENT0, gl.COLOR_ATTACHMENT1}
-
 
 @(private = "file")
 ping_pong_fbos, ping_pong_fbo_textures: [2]u32
@@ -150,6 +149,9 @@ cube_models := [?]types.TransformMatrix {
 @(private = "file")
 cube_mits := [len(cube_models)]types.SubTransformMatrix{}
 
+// Blur the bright framebuffer
+BLUR_AMOUNT :: 10
+
 exercise_07_01_bloom := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BloomLighting, .HDR, .Light, .BlurSeparated)
@@ -185,7 +187,7 @@ exercise_07_01_bloom := types.Tableau {
 
 		for tex, i in hdr_fb_textures {
 			gl.BindTexture(gl.TEXTURE_2D, tex)
-			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, window.width, window.height, 0, gl.RGB, gl.FLOAT, nil)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -211,7 +213,7 @@ exercise_07_01_bloom := types.Tableau {
 		for tex, i in ping_pong_fbo_textures {
 			gl.BindFramebuffer(gl.FRAMEBUFFER, ping_pong_fbos[i])
 			gl.BindTexture(gl.TEXTURE_2D, tex)
-			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, window.width, window.height, 0, gl.RGB, gl.FLOAT, nil)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -343,13 +345,10 @@ exercise_07_01_bloom := types.Tableau {
 			primitives.plane_draw()
 		}
 
-		// Blur the bright framebuffer
-		amount :: 10
-
 		gl.UseProgram(blur_shader)
 		shaders.set_int(blur_shader, "image", 0)
 
-		for i in 0 ..< amount {
+		for i in 0 ..< BLUR_AMOUNT {
 			in_index := i % 2
 			out_index := 1 - in_index
 
@@ -376,7 +375,7 @@ exercise_07_01_bloom := types.Tableau {
 		shaders.set_int(full_screen_shader, "hdr_buffer", 1)
 
 		gl.ActiveTexture(gl.TEXTURE2)
-		gl.BindTexture(gl.TEXTURE_2D, ping_pong_fbo_textures[amount % 2])
+		gl.BindTexture(gl.TEXTURE_2D, ping_pong_fbo_textures[BLUR_AMOUNT % 2])
 		shaders.set_int(full_screen_shader, "bright_buffer", 2)
 
 		primitives.full_screen_draw()
@@ -398,7 +397,7 @@ exercise_07_01_bloom := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 		for tex in hdr_fb_textures {
 			gl.BindTexture(gl.TEXTURE_2D, tex)
-			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, window.width, window.height, 0, gl.RGB, gl.FLOAT, nil)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
 			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
@@ -411,7 +410,7 @@ exercise_07_01_bloom := types.Tableau {
 
 		for tex in ping_pong_fbo_textures {
 			gl.BindTexture(gl.TEXTURE_2D, tex)
-			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, window.width, window.height, 0, gl.RGB, gl.FLOAT, nil)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
 			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 			// gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
