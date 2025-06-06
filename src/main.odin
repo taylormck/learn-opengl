@@ -72,7 +72,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_05_advanced_lighting.exercise_07_01_bloom
+	current_tableau = chapter_04_advanced_opengl.exercise_06_03_cubemaps_environment_mapping_refract
 
 	if current_tableau.init != nil do current_tableau.init()
 

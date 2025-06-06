@@ -3,6 +3,7 @@
 struct Material {
 	sampler2D diffuse_0;
 	sampler2D specular_0;
+	sampler2D normal_0;
 	float shininess;
 };
 
@@ -11,6 +12,7 @@ struct PointLight {
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
+	vec3 emissive;
 	float constant;
 	float linear;
 	float quadratic;

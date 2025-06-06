@@ -166,7 +166,7 @@ exercise_01_01_model := types.Tableau {
 		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
 		gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
 
-		render.scene_draw(&backpack_model, mesh_shader)
+		render.scene_draw_with_materials(&backpack_model, mesh_shader)
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()

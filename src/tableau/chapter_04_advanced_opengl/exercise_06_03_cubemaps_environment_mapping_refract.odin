@@ -63,9 +63,6 @@ exercise_06_03_cubemaps_environment_mapping_refract := types.Tableau {
 		mesh_shader := shaders.shaders[.SkyboxRefract]
 		skybox_shader := shaders.shaders[.Skybox]
 
-		gl.ActiveTexture(gl.TEXTURE0)
-		gl.Uniform1i(gl.GetUniformLocation(mesh_shader, "diffuse_0"), 0)
-
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
@@ -79,10 +76,11 @@ exercise_06_03_cubemaps_environment_mapping_refract := types.Tableau {
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
 		gl.UseProgram(mesh_shader)
-		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
-		gl.Uniform3fv(gl.GetUniformLocation(mesh_shader, "view_position"), 1, raw_data(&camera.position))
+
+		shaders.set_mat_4x4(mesh_shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(mesh_shader, "model", raw_data(&model))
+		shaders.set_mat_3x3(mesh_shader, "mit", raw_data(&mit))
+		shaders.set_vec3(mesh_shader, "view_position", raw_data(&camera.position))
 
 		render.scene_draw(&backpack_model, mesh_shader)
 
@@ -91,7 +89,7 @@ exercise_06_03_cubemaps_environment_mapping_refract := types.Tableau {
 
 		cubemap_view := types.TransformMatrix(types.SubTransformMatrix(view))
 		cubemap_pv := projection * cubemap_view
-		gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_shader, "projection_view"), 1, false, raw_data(&cubemap_pv))
+		shaders.set_mat_4x4(skybox_shader, "projection_view", raw_data(&cubemap_pv))
 		primitives.cubemap_draw(&cubemap)
 
 		gl.DepthFunc(gl.LESS)

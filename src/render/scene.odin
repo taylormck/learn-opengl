@@ -19,6 +19,13 @@ scene_clear_from_gpu :: proc(scene: ^Scene) {
 	for _, &mesh in scene.meshes do mesh_gpu_free(&mesh)
 }
 
+scene_draw_with_materials :: proc(scene: ^Scene, shader: u32) {
+	for _, &mesh in scene.meshes {
+		mesh_set_material(&mesh, shader)
+		mesh_draw(&mesh, shader)
+	}
+}
+
 scene_draw :: proc(scene: ^Scene, shader: u32) {
 	for _, &mesh in scene.meshes do mesh_draw(&mesh, shader)
 }

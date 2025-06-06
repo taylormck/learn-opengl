@@ -1,5 +1,6 @@
 package render
 
+import "../shaders"
 import "../types"
 import "core:fmt"
 import "core:log"
@@ -89,6 +90,11 @@ mesh_send_transforms_to_gpu :: proc(mesh: ^Mesh, transforms: []types.TransformMa
 	}
 }
 
+mesh_set_material :: proc(mesh: ^Mesh, shader_id: u32) {
+	mesh_set_textures(mesh, shader_id)
+	shaders.set_float(shader_id, "material.shininess", mesh.material.shininess)
+}
+
 mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
 	diffuse_count, specular_count, normal_count, emissive_count, displacement_count: u32
 
@@ -125,7 +131,7 @@ mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
 		texture_name := fmt.caprintf("material.{}_{}", texture_type, number)
 		defer delete(texture_name)
 
-		gl.Uniform1i(gl.GetUniformLocation(shader_id, texture_name), i)
+		shaders.set_int(shader_id, texture_name, i)
 		gl.BindTexture(gl.TEXTURE_2D, texture.id)
 	}
 
@@ -133,8 +139,8 @@ mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
 }
 
 mesh_draw :: proc(mesh: ^Mesh, shader_id: u32) {
-	mesh_set_textures(mesh, shader_id)
-	gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), mesh.material.shininess)
+	// mesh_set_textures(mesh, shader_id)
+	// gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), mesh.material.shininess)
 
 	gl.BindVertexArray(mesh.vao)
 	defer gl.BindVertexArray(0)
@@ -143,8 +149,8 @@ mesh_draw :: proc(mesh: ^Mesh, shader_id: u32) {
 }
 
 mesh_draw_instanced :: proc(mesh: ^Mesh, shader_id: u32, num_instances: i32) {
-	mesh_set_textures(mesh, shader_id)
-	gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), mesh.material.shininess)
+	// mesh_set_textures(mesh, shader_id)
+	// gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), mesh.material.shininess)
 
 	gl.BindVertexArray(mesh.vao)
 	defer gl.BindVertexArray(0)
