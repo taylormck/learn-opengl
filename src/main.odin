@@ -12,6 +12,7 @@ import "primitives"
 import "render"
 import "shaders"
 import "types"
+import "utils"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 import "window"
@@ -75,7 +76,7 @@ main :: proc() {
 
 	if current_tableau.init != nil do current_tableau.init()
 
-	print_gl_errors()
+	utils.print_gl_errors()
 
 	defer if current_tableau.teardown != nil do current_tableau.teardown()
 	defer shaders.delete_shaders()
@@ -94,7 +95,7 @@ main :: proc() {
 		clear_input()
 
 		current_tableau.draw()
-		print_gl_errors()
+		utils.print_gl_errors()
 
 		glfw.SwapBuffers(window_handle)
 		prev_time = new_time
@@ -109,31 +110,4 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 	gl.Viewport(0, 0, width, height)
 
 	if current_tableau.framebuffer_size_callback != nil do current_tableau.framebuffer_size_callback()
-}
-
-print_gl_errors :: proc() {
-	for err := gl.GetError(); err != gl.NO_ERROR; err = gl.GetError() {
-		err_msg: string
-
-		switch (err) {
-		case gl.INVALID_OPERATION:
-			err_msg = "Invalid operation"
-		case gl.INVALID_ENUM:
-			err_msg = "Invalid enum"
-		case gl.INVALID_VALUE:
-			err_msg = "Invalid value"
-		case gl.STACK_OVERFLOW:
-			err_msg = "Stack overflow"
-		case gl.STACK_UNDERFLOW:
-			err_msg = "Stack underflow"
-		case gl.OUT_OF_MEMORY:
-			err_msg = "Out of memory"
-		case gl.INVALID_FRAMEBUFFER_OPERATION:
-			err_msg = "Invalid framebuffer operation"
-		case:
-			err_msg = fmt.tprintf("Untranslated error: {}", err)
-		}
-
-		log.errorf("OpenGL Error: {}", err_msg)
-	}
 }
