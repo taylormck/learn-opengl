@@ -72,7 +72,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_04_advanced_opengl.exercise_10_03_asteroids_instanced
+	current_tableau = chapter_05_advanced_lighting.exercise_08_01_deferred_shading
 
 	if current_tableau.init != nil do current_tableau.init()
 
