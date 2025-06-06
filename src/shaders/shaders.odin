@@ -69,6 +69,7 @@ Shader :: enum {
 	HDR,
 	BloomLighting,
 	BlurSeparated,
+	GBuffer,
 }
 
 ShaderMap :: map[Shader]u32
@@ -542,6 +543,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/blur_separated.frag"),
 			) or_else panic("Failed to load the blur shader")
+
+	case .GBuffer:
+		shaders[.GBuffer] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/g_buffer.frag"),
+			) or_else panic("Failed to load the g-buffer shader")
 
 	}
 }

@@ -40,27 +40,6 @@ NUM_POINT_LIGHTS :: 4
 @(private = "file")
 point_lights: [NUM_POINT_LIGHTS]render.PointLight
 
-// TODO: remove these lights when the new shader is put in place
-@(private = "file")
-directional_light := render.DirectionalLight {
-	direction = {-0.2, -1, -0.3},
-	ambient   = {0, 0, 0},
-	diffuse   = {0, 0, 0},
-	specular  = {0, 0, 0},
-}
-
-@(private = "file")
-spot_light := render.SpotLight {
-	ambient      = {0, 0, 0},
-	diffuse      = {0, 0, 0},
-	specular     = {0, 0, 0},
-	inner_cutoff = math.cos(linalg.to_radians(f32(12.5))),
-	outer_cutoff = math.cos(linalg.to_radians(f32(17.5))),
-	constant     = 1,
-	linear       = 0.09,
-	quadratic    = 0.032,
-}
-
 @(private = "file")
 backpack_model: render.Scene
 
@@ -80,9 +59,27 @@ backpack_transforms := [?]types.TransformMatrix {
 @(private = "file")
 backpack_mits: [len(backpack_transforms)]types.SubTransformMatrix
 
+@(private = "file")
+NUM_G_BUFFERS :: 3
+
+@(private = "file")
+g_buffers: [NUM_G_BUFFERS]u32
+
+@(private = "file")
+attachments: [NUM_G_BUFFERS]u32
+
+@(private = "file")
+gbuffer_fbo, rbo: u32
+
+@(private = "file")
+draw_debug := true
+
+@(private = "file")
+debug_texture_index := 0
+
 exercise_08_01_deferred_shading := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.Light, .PhongMultiLight)
+		shaders.init_shaders(.Light, .GBuffer, .Texture)
 
 		backpack_model =
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
@@ -97,6 +94,37 @@ exercise_08_01_deferred_shading := types.Tableau {
 		for &light in point_lights {
 			light = generate_random_point_light()
 		}
+
+		gl.GenFramebuffers(1, &gbuffer_fbo)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, gbuffer_fbo)
+
+		gl.GenTextures(NUM_G_BUFFERS, raw_data(g_buffers[:]))
+
+		for i in 0 ..< NUM_G_BUFFERS {
+			i := u32(i)
+			gl.BindTexture(gl.TEXTURE_2D, g_buffers[i])
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+			gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, g_buffers[i], 0)
+
+			attachments[i] = gl.COLOR_ATTACHMENT0 + i
+		}
+		gl.BindTexture(gl.TEXTURE_2D, 0)
+
+		gl.DrawBuffers(3, raw_data(attachments[:]))
+
+		gl.GenRenderbuffers(1, &rbo)
+		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
+		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
+		gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+
+		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
+
+		if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+		primitives.full_screen_send_to_gpu()
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -107,45 +135,30 @@ exercise_08_01_deferred_shading := types.Tableau {
 			linalg.to_radians(f32(1)),
 			linalg.to_radians(f32(45)),
 		)
+
+		if .Space in input.input_state.pressed_keys do draw_debug = !draw_debug
+
+		if .UpArrow in input.input_state.pressed_keys do debug_texture_index = (debug_texture_index + 1) % NUM_G_BUFFERS
+		if .DownArrow in input.input_state.pressed_keys do debug_texture_index = (debug_texture_index + NUM_G_BUFFERS - 1) % NUM_G_BUFFERS
 	},
 	draw = proc() {
-		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
-		gl.Enable(gl.DEPTH_TEST)
-		defer gl.Disable(gl.DEPTH_TEST)
-
 		light_shader := shaders.shaders[.Light]
-		mesh_shader := shaders.shaders[.PhongMultiLight]
+		mesh_shader := shaders.shaders[.GBuffer]
+		debug_shader := shaders.shaders[.Texture]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
 		pv := projection * view
 
-		gl.UseProgram(light_shader)
-		for &point_light in point_lights {
-			model := linalg.matrix4_translate(point_light.position)
-			model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
-			transform := pv * model
-
-			gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
-			gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&point_light.emissive))
-			primitives.cube_draw()
-		}
+		// Render the scene into the G-buffer
+		gl.BindFramebuffer(gl.FRAMEBUFFER, gbuffer_fbo)
+		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		gl.Enable(gl.DEPTH_TEST)
 
 		gl.UseProgram(mesh_shader)
 
-		spot_light.position = camera.position
-		spot_light.direction = camera.direction
-		render.spot_light_set_uniform(&spot_light, mesh_shader)
-		render.directional_light_set_uniform(&directional_light, mesh_shader)
-
-		gl.Uniform1i(gl.GetUniformLocation(mesh_shader, "num_point_lights"), len(point_lights))
-		for &point_light, i in point_lights {
-			render.point_light_array_set_uniform(&point_light, mesh_shader, u32(i))
-		}
-
-		shaders.set_vec3(mesh_shader, "view_position", raw_data(&camera.position))
+		// shaders.set_vec3(mesh_shader, "view_position", raw_data(&camera.position))
 
 		for &model, i in backpack_transforms {
 			transform := pv * model
@@ -157,8 +170,41 @@ exercise_08_01_deferred_shading := types.Tableau {
 
 			render.scene_draw_with_materials(&backpack_model, mesh_shader)
 		}
+
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		gl.Disable(gl.DEPTH_TEST)
+
+		if draw_debug {
+			gl.UseProgram(debug_shader)
+			gl.ActiveTexture(gl.TEXTURE0)
+			gl.BindTexture(gl.TEXTURE_2D, g_buffers[debug_texture_index])
+			shaders.set_int(debug_shader, "diffuse_0", 0)
+
+			primitives.full_screen_draw()
+			return
+		}
+
+		// Do the lighting pass
+		// shaders.set_int(mesh_shader, "num_point_lights", NUM_POINT_LIGHTS)
+		// for &point_light, i in point_lights {
+		// 	render.point_light_array_set_uniform(&point_light, mesh_shader, u32(i))
+		// }
+
+		// Draw the lights
+		// gl.UseProgram(light_shader)
+		// for &point_light in point_lights {
+		// 	model := linalg.matrix4_translate(point_light.position)
+		// 	model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
+		// 	transform := pv * model
+		//
+		// 	gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+		// 	gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&point_light.emissive))
+		// 	primitives.cube_draw()
+		// }
 	},
 	teardown = proc() {
+		primitives.full_screen_clear_from_gpu()
 		primitives.cube_clear_from_gpu()
 		render.scene_clear_from_gpu(&backpack_model)
 		render.scene_destroy(&backpack_model)
