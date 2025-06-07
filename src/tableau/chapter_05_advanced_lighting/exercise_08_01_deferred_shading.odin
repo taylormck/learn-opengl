@@ -35,10 +35,13 @@ camera := render.Camera {
 }
 
 @(private = "file")
-NUM_POINT_LIGHTS :: 4
+NUM_POINT_LIGHTS :: 32
 
 @(private = "file")
 point_lights: [NUM_POINT_LIGHTS]render.PointLight
+
+@(private = "file")
+point_light_transform := linalg.matrix4_translate_f32({-4, -1, -4}) * linalg.matrix4_scale_f32({8, 2, 8})
 
 @(private = "file")
 backpack_model: render.Scene
@@ -72,14 +75,14 @@ attachments: [NUM_G_BUFFERS]u32
 gbuffer_fbo, rbo: u32
 
 @(private = "file")
-draw_debug := true
+draw_debug := false
 
 @(private = "file")
 debug_texture_index := 0
 
 exercise_08_01_deferred_shading := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.Light, .GBuffer, .Texture)
+		shaders.init_shaders(.Light, .GBuffer, .Texture, .DeferredShading)
 
 		backpack_model =
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
@@ -144,6 +147,7 @@ exercise_08_01_deferred_shading := types.Tableau {
 		light_shader := shaders.shaders[.Light]
 		mesh_shader := shaders.shaders[.GBuffer]
 		debug_shader := shaders.shaders[.Texture]
+		lighting_shader := shaders.shaders[.DeferredShading]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -169,6 +173,7 @@ exercise_08_01_deferred_shading := types.Tableau {
 		}
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		gl.ClearColor(background_color.r, background_color.g, background_color.b, 1.0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Disable(gl.DEPTH_TEST)
 
@@ -183,10 +188,23 @@ exercise_08_01_deferred_shading := types.Tableau {
 		}
 
 		// Do the lighting pass
-		// shaders.set_int(mesh_shader, "num_point_lights", NUM_POINT_LIGHTS)
-		// for &point_light, i in point_lights {
-		// 	render.point_light_array_set_uniform(&point_light, mesh_shader, u32(i))
-		// }
+		gl.UseProgram(lighting_shader)
+		shaders.set_int(lighting_shader, "num_point_lights", NUM_POINT_LIGHTS)
+		for &point_light, i in point_lights {
+			render.point_light_array_set_uniform(&point_light, lighting_shader, u32(i))
+		}
+
+		for i in 0 ..< NUM_G_BUFFERS {
+			gl.ActiveTexture(gl.TEXTURE0 + u32(i))
+			gl.BindTexture(gl.TEXTURE_2D, g_buffers[i])
+		}
+		shaders.set_int(lighting_shader, "g_position", 0)
+		shaders.set_int(lighting_shader, "g_normal", 1)
+		shaders.set_int(lighting_shader, "g_albedo_spec", 2)
+
+		shaders.set_vec3(lighting_shader, "view_position", raw_data(&camera.position))
+
+		primitives.full_screen_draw()
 
 		// Draw the lights
 		// gl.UseProgram(light_shader)
@@ -195,8 +213,9 @@ exercise_08_01_deferred_shading := types.Tableau {
 		// 	model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
 		// 	transform := pv * model
 		//
-		// 	gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
-		// 	gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&point_light.emissive))
+		// 	shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
+		// 	shaders.set_vec3(light_shader, "light_color", raw_data(&point_light.emissive))
+		//
 		// 	primitives.cube_draw()
 		// }
 	},
@@ -221,17 +240,19 @@ exercise_08_01_deferred_shading := types.Tableau {
 }
 
 generate_random_point_light :: proc() -> render.PointLight {
-	position := types.Vec3{rand.float32(), rand.float32(), rand.float32()} * 6 - 3
+	position := point_light_transform * types.Vec4{rand.float32(), rand.float32(), rand.float32(), 1.0}
 	color := types.Vec3{rand.float32(), rand.float32(), rand.float32()} * 0.5 + 0.5
 
 	return render.PointLight {
-		position = position,
-		ambient = color * 0.1,
-		diffuse = color,
-		emissive = color,
-		specular = color,
-		constant = 1,
-		linear = 0.09,
-		quadratic = 0.032,
+		position  = position.xyz,
+		ambient   = color * 0.1,
+		diffuse   = color,
+		emissive  = color,
+		specular  = color,
+		constant  = 1,
+		// linear = 0.09,
+		// quadratic = 0.032,
+		linear    = 0.6,
+		quadratic = 0.2,
 	}
 }
