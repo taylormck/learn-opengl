@@ -251,6 +251,7 @@ exercise_08_01_deferred_shading := types.Tableau {
 
 		gl.DeleteTextures(NUM_G_BUFFERS, raw_data(g_buffers[:]))
 		gl.DeleteRenderbuffers(1, &rbo)
+		gl.DeleteFramebuffers(1, &gbuffer_fbo)
 	},
 	framebuffer_size_callback = proc() {
 		for i in 0 ..< NUM_G_BUFFERS {

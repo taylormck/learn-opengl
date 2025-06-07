@@ -73,7 +73,10 @@ Shader :: enum {
 	GBufferDebug,
 	DeferredShading,
 	DeferredShadingVolumes,
-	SSAO,
+	SSAOGeometry,
+	SSAOLighting,
+	SSAODepth,
+	SingleColorTex,
 }
 
 ShaderMap :: map[Shader]u32
@@ -576,12 +579,33 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/deferred_shading_volumes.frag"),
 			) or_else panic("Failed to load the deferred shading shader")
 
-	case .SSAO:
-		shaders[.SSAO] =
+	case .SSAOGeometry:
+		shaders[.SSAOGeometry] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_normal_transform.vert"),
-				#load("../../shaders/frag/ssao.frag"),
-			) or_else panic("Failed to load the deferred shading shader")
+				#load("../../shaders/frag/ssao_geometry.frag"),
+			) or_else panic("Failed to load the SSAO Geometry shader")
+
+	case .SSAODepth:
+		shaders[.SSAODepth] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/ssao_depth.frag"),
+			) or_else panic("Failed to load the SSAO Depth shader")
+
+	case .SSAOLighting:
+		shaders[.SSAOLighting] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/ssao_lighting.frag"),
+			) or_else panic("Failed to load the SSAO Lighting shader")
+
+	case .SingleColorTex:
+		shaders[.SingleColorTex] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/single_color_tex.frag"),
+			) or_else panic("Failed to load the single color texture shader")
 
 	}
 }

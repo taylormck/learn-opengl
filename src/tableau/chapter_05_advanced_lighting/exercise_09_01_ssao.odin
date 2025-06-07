@@ -11,6 +11,7 @@ import "core:fmt"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
+import "core:math/rand"
 import gl "vendor:OpenGL"
 
 @(private = "file")
@@ -83,14 +84,29 @@ g_buffers: [NUM_G_BUFFERS]u32
 attachments: [NUM_G_BUFFERS]u32
 
 @(private = "file")
-draw_debug := true
+draw_debug := false
 
 @(private = "file")
 debug_channel: i32 = 0
 
+@(private = "file")
+NUM_SAMPLES :: 64
+
+@(private = "file")
+sample_offsets: [NUM_SAMPLES]types.Vec3
+
+@(private = "file")
+sample_rotation_noise: [16]types.Vec3
+
+@(private = "file")
+noise_texture: u32
+
+@(private = "file")
+ssao_fbo, ssao_color_buffer: u32
+
 exercise_09_01_ssao := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.SSAO, .GBufferDebug)
+		shaders.init_shaders(.SSAOGeometry, .GBufferDebug, .SSAOLighting, .SSAODepth, .SingleColorTex)
 
 		primitives.cube_send_to_gpu()
 		primitives.full_screen_send_to_gpu()
@@ -101,6 +117,9 @@ exercise_09_01_ssao := types.Tableau {
 
 		backpack_mit = types.SubTransformMatrix(linalg.inverse_transpose(backpack_transform))
 		cube_mit = types.SubTransformMatrix(linalg.inverse_transpose(cube_transform))
+
+		for i in 0 ..< NUM_SAMPLES do sample_offsets[i] = generate_sample_offset(i)
+		for &noise_vector in sample_rotation_noise do noise_vector = generate_noise_vector()
 
 		gl.GenFramebuffers(1, &g_buffer_fbo)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, g_buffer_fbo)
@@ -113,11 +132,12 @@ exercise_09_01_ssao := types.Tableau {
 			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 			gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0 + i, gl.TEXTURE_2D, g_buffers[i], 0)
 
 			attachments[i] = gl.COLOR_ATTACHMENT0 + i
 		}
-		gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		gl.DrawBuffers(NUM_G_BUFFERS, raw_data(attachments[:]))
 
@@ -129,7 +149,30 @@ exercise_09_01_ssao := types.Tableau {
 		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
 
 		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
+
+		gl.GenFramebuffers(1, &ssao_fbo)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, ssao_fbo)
+
+		gl.GenTextures(1, &ssao_color_buffer)
+		gl.BindTexture(gl.TEXTURE_2D, ssao_color_buffer)
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RED, window.width, window.height, 0, gl.RED, gl.FLOAT, nil)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, ssao_color_buffer, 0)
+
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+		gl.GenTextures(1, &noise_texture)
+		gl.BindTexture(gl.TEXTURE_2D, noise_texture)
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, 4, 4, 0, gl.RGB, gl.FLOAT, raw_data(sample_rotation_noise[:]))
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+
+		gl.BindTexture(gl.TEXTURE_2D, 0)
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -148,8 +191,11 @@ exercise_09_01_ssao := types.Tableau {
 		}
 	},
 	draw = proc() {
-		scene_shader := shaders.shaders[.SSAO]
+		geometry_pass_shader := shaders.shaders[.SSAOGeometry]
 		debug_shader := shaders.shaders[.GBufferDebug]
+		depth_shader := shaders.shaders[.SSAODepth]
+		lighting_shader := shaders.shaders[.SSAOLighting]
+		texture_shader := shaders.shaders[.SingleColorTex]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -163,18 +209,18 @@ exercise_09_01_ssao := types.Tableau {
 		gl.ClearColor(0, 0, 0, 0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-		gl.UseProgram(scene_shader)
+		gl.UseProgram(geometry_pass_shader)
 
 		// Render the backpack
 		{
 			transform := pv * backpack_transform
 
-			shaders.set_mat_4x4(scene_shader, "transform", raw_data(&transform))
-			shaders.set_mat_4x4(scene_shader, "model", raw_data(&backpack_transform))
-			shaders.set_mat_3x3(scene_shader, "mit", raw_data(&backpack_mit))
-			shaders.set_bool(scene_shader, "invert_normals", false)
+			shaders.set_mat_4x4(geometry_pass_shader, "transform", raw_data(&transform))
+			shaders.set_mat_4x4(geometry_pass_shader, "model", raw_data(&backpack_transform))
+			shaders.set_mat_3x3(geometry_pass_shader, "mit", raw_data(&backpack_mit))
+			shaders.set_bool(geometry_pass_shader, "invert_normals", false)
 
-			render.scene_draw(&backpack_model, scene_shader)
+			render.scene_draw(&backpack_model, geometry_pass_shader)
 		}
 
 		// Render outside cube
@@ -182,16 +228,14 @@ exercise_09_01_ssao := types.Tableau {
 			gl.CullFace(gl.FRONT)
 			transform := pv * cube_transform
 
-			shaders.set_mat_4x4(scene_shader, "transform", raw_data(&transform))
-			shaders.set_mat_4x4(scene_shader, "model", raw_data(&cube_transform))
-			shaders.set_mat_3x3(scene_shader, "mit", raw_data(&cube_mit))
-			shaders.set_bool(scene_shader, "invert_normals", true)
+			shaders.set_mat_4x4(geometry_pass_shader, "transform", raw_data(&transform))
+			shaders.set_mat_4x4(geometry_pass_shader, "model", raw_data(&cube_transform))
+			shaders.set_mat_3x3(geometry_pass_shader, "mit", raw_data(&cube_mit))
+			shaders.set_bool(geometry_pass_shader, "invert_normals", true)
 
 			primitives.cube_draw()
 			gl.CullFace(gl.BACK)
 		}
-
-		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 		gl.Disable(gl.DEPTH_TEST)
 
@@ -201,6 +245,7 @@ exercise_09_01_ssao := types.Tableau {
 		}
 
 		if draw_debug {
+			gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 			gl.UseProgram(debug_shader)
 			gl.ClearColor(0, 0, 0, 0)
 			gl.Clear(gl.COLOR_BUFFER_BIT)
@@ -215,10 +260,52 @@ exercise_09_01_ssao := types.Tableau {
 			return
 		}
 
-		// TODO: draw the scene
-
-		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+		// draw the depth
+		gl.BindFramebuffer(gl.FRAMEBUFFER, ssao_fbo)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
+		for i in 0 ..< 2 {
+			gl.ActiveTexture(gl.TEXTURE0 + u32(i))
+			gl.BindTexture(gl.TEXTURE_2D, g_buffers[i])
+		}
+
+		gl.ActiveTexture(gl.TEXTURE2)
+		gl.BindTexture(gl.TEXTURE_2D, noise_texture)
+
+		gl.UseProgram(depth_shader)
+		shaders.set_int(depth_shader, "g_position", 0)
+		shaders.set_int(depth_shader, "g_normal", 1)
+		shaders.set_int(depth_shader, "noise", 2)
+		shaders.set_int(depth_shader, "kernel_size", NUM_SAMPLES)
+		shaders.set_float(depth_shader, "radius", 0.5)
+		shaders.set_float(depth_shader, "bias", 0.01)
+
+		for &sample, i in sample_offsets {
+			shaders.set_vec3(depth_shader, fmt.ctprintf("samples[{}]", i), raw_data(sample[:]))
+		}
+
+		shaders.set_mat_4x4(depth_shader, "projection", raw_data(&projection))
+		shaders.set_float(depth_shader, "window_width", f32(window.width))
+		shaders.set_float(depth_shader, "window_height", f32(window.height))
+
+		primitives.full_screen_draw()
+
+		{
+			gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+			gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+			gl.Clear(gl.COLOR_BUFFER_BIT)
+			gl.ActiveTexture(gl.TEXTURE0)
+			gl.BindTexture(gl.TEXTURE_2D, ssao_color_buffer)
+
+			gl.UseProgram(texture_shader)
+			shaders.set_int(texture_shader, "diffuse_0", 0)
+
+			primitives.full_screen_draw()
+		}
+
+		// lighting pass
+		// gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		// gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+		// gl.UseProgram(lighting_shader)
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
@@ -226,17 +313,45 @@ exercise_09_01_ssao := types.Tableau {
 		render.scene_clear_from_gpu(&backpack_model)
 
 		gl.DeleteTextures(NUM_G_BUFFERS, raw_data(g_buffers[:]))
+		gl.DeleteTextures(1, &ssao_color_buffer)
+		gl.DeleteTextures(1, &noise_texture)
 		gl.DeleteRenderbuffers(1, &rbo)
+		gl.DeleteFramebuffers(1, &g_buffer_fbo)
+		gl.DeleteFramebuffers(1, &ssao_fbo)
 	},
 	framebuffer_size_callback = proc() {
 		for i in 0 ..< NUM_G_BUFFERS {
 			gl.BindTexture(gl.TEXTURE_2D, g_buffers[i])
 			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
 		}
+
+		gl.BindTexture(gl.TEXTURE_2D, ssao_color_buffer)
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RED, window.width, window.height, 0, gl.RED, gl.FLOAT, nil)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
 		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
 		gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 	},
+}
+
+@(private = "file")
+generate_sample_offset :: proc(i: int) -> (sample: types.Vec3) {
+	sample.x = rand.float32() * 2 - 1
+	sample.y = rand.float32() * 2 - 1
+	sample.z = rand.float32()
+
+	sample = linalg.normalize(sample)
+	scale := f32(i) / NUM_SAMPLES
+	scale = math.lerp(f32(0.1), f32(1.0), scale * scale)
+	sample *= scale
+	return
+}
+
+@(private = "file")
+generate_noise_vector :: proc() -> (noise: types.Vec3) {
+	noise.x = rand.float32() * 2 - 1
+	noise.y = rand.float32() * 2 - 1
+	noise.z = rand.float32()
+	return
 }
