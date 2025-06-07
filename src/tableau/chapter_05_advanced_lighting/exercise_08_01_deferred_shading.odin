@@ -206,18 +206,36 @@ exercise_08_01_deferred_shading := types.Tableau {
 
 		primitives.full_screen_draw()
 
+		// Update the depth buffer
+		gl.BindFramebuffer(gl.READ_FRAMEBUFFER, gbuffer_fbo)
+		gl.BindFramebuffer(gl.DRAW_FRAMEBUFFER, 0)
+		gl.BlitFramebuffer(
+			0,
+			0,
+			window.width,
+			window.height,
+			0,
+			0,
+			window.width,
+			window.height,
+			gl.DEPTH_BUFFER_BIT,
+			gl.NEAREST,
+		)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		gl.Enable(gl.DEPTH_TEST)
+
 		// Draw the lights
-		// gl.UseProgram(light_shader)
-		// for &point_light in point_lights {
-		// 	model := linalg.matrix4_translate(point_light.position)
-		// 	model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
-		// 	transform := pv * model
-		//
-		// 	shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
-		// 	shaders.set_vec3(light_shader, "light_color", raw_data(&point_light.emissive))
-		//
-		// 	primitives.cube_draw()
-		// }
+		gl.UseProgram(light_shader)
+		for &point_light in point_lights {
+			model := linalg.matrix4_translate(point_light.position)
+			model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
+			transform := pv * model
+
+			shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
+			shaders.set_vec3(light_shader, "light_color", raw_data(&point_light.emissive))
+
+			primitives.cube_draw()
+		}
 	},
 	teardown = proc() {
 		primitives.full_screen_clear_from_gpu()
