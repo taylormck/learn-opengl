@@ -7,6 +7,7 @@ import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
+import "core:fmt"
 import "core:math"
 import "core:math/linalg"
 import "core:math/rand"
@@ -42,6 +43,9 @@ point_lights: [NUM_POINT_LIGHTS]render.PointLight
 
 @(private = "file")
 point_light_transform := linalg.matrix4_translate_f32({-4, -1, -4}) * linalg.matrix4_scale_f32({8, 2, 8})
+
+@(private = "file")
+point_light_radii: [NUM_POINT_LIGHTS]f32
 
 @(private = "file")
 backpack_model: render.Scene
@@ -83,9 +87,9 @@ debug_channel: i32 = 0
 @(private = "file")
 NUM_DEBUG_CHANNELS :: 5
 
-exercise_08_01_deferred_shading := types.Tableau {
+exercise_08_02_deferred_shading_volumes := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.Light, .GBuffer, .GBufferDebug, .DeferredShading)
+		shaders.init_shaders(.Light, .GBuffer, .GBufferDebug, .DeferredShadingVolumes)
 
 		backpack_model =
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
@@ -98,8 +102,10 @@ exercise_08_01_deferred_shading := types.Tableau {
 			backpack_mits[i] = types.SubTransformMatrix(linalg.inverse_transpose(transform))
 		}
 
-		for &light in point_lights {
-			light = generate_random_point_light()
+		for i in 0 ..< NUM_POINT_LIGHTS {
+			light, radius := generate_random_point_light()
+			point_lights[i] = light
+			point_light_radii[i] = radius
 		}
 
 		gl.GenFramebuffers(1, &gbuffer_fbo)
@@ -150,7 +156,7 @@ exercise_08_01_deferred_shading := types.Tableau {
 		light_shader := shaders.shaders[.Light]
 		mesh_shader := shaders.shaders[.GBuffer]
 		debug_shader := shaders.shaders[.GBufferDebug]
-		lighting_shader := shaders.shaders[.DeferredShading]
+		lighting_shader := shaders.shaders[.DeferredShadingVolumes]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -203,6 +209,7 @@ exercise_08_01_deferred_shading := types.Tableau {
 		shaders.set_int(lighting_shader, "num_point_lights", NUM_POINT_LIGHTS)
 		for &point_light, i in point_lights {
 			render.point_light_array_set_uniform(&point_light, lighting_shader, u32(i))
+			shaders.set_float(lighting_shader, fmt.ctprintf("point_lights[{}].radius", i), point_light_radii[i])
 		}
 
 		shaders.set_int(lighting_shader, "g_position", 0)
@@ -265,18 +272,30 @@ exercise_08_01_deferred_shading := types.Tableau {
 }
 
 @(private = "file")
-generate_random_point_light :: proc() -> render.PointLight {
+generate_random_point_light :: proc() -> (point_light: render.PointLight, radius: f32) {
 	position := point_light_transform * types.Vec4{rand.float32(), rand.float32(), rand.float32(), 1.0}
 	color := types.Vec3{rand.float32(), rand.float32(), rand.float32()} * 0.5 + 0.5
 
-	return render.PointLight {
-		position = position.xyz,
-		ambient = color * 0.1,
-		diffuse = color,
-		emissive = color,
-		specular = color,
-		constant = 1,
-		linear = 0.8,
-		quadratic = 0.4,
+	constant: f32 : 1.0
+	linear: f32 : 0.7
+	quadratic: f32 : 1.8
+
+	light_max: f32 = max(color.r, color.g, color.b)
+	determinant: f32 = linear * linear - 4 * quadratic * (constant - (256.0 / 5.0) * light_max)
+	denominator: f32 = 2 * quadratic
+
+	radius = (-linear + math.sqrt(determinant)) / denominator
+
+	point_light = render.PointLight {
+		position  = position.xyz,
+		ambient   = color * 0.1,
+		diffuse   = color,
+		emissive  = color,
+		specular  = color,
+		constant  = constant,
+		linear    = linear,
+		quadratic = quadratic,
 	}
+
+	return
 }
