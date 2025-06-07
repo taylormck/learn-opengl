@@ -24,7 +24,14 @@ void main() {
 		frag_color.rgb = texture(g_position, tex_coords).rgb;
 		break;
 	case NORMAL:
-		frag_color.rgb = texture(g_normal, tex_coords).rgb;
+		vec3 normal = texture(g_normal, tex_coords).rgb;
+
+		if (normal.x == 0 && normal.y == 0 && normal.z == 0) {
+			discard;
+		}
+
+		normal = normal * 0.5 + 0.5;
+		frag_color.rgb = normal;
 		break;
 	case DIFFUSE:
 		frag_color.rgb = texture(g_albedo_spec, tex_coords).rgb;

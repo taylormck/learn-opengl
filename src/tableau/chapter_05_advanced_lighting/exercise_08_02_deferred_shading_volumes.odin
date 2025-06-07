@@ -256,6 +256,9 @@ exercise_08_02_deferred_shading_volumes := types.Tableau {
 		primitives.cube_clear_from_gpu()
 		render.scene_clear_from_gpu(&backpack_model)
 		render.scene_destroy(&backpack_model)
+
+		gl.DeleteTextures(NUM_G_BUFFERS, raw_data(g_buffers[:]))
+		gl.DeleteRenderbuffers(1, &rbo)
 	},
 	framebuffer_size_callback = proc() {
 		for i in 0 ..< NUM_G_BUFFERS {
@@ -263,7 +266,6 @@ exercise_08_02_deferred_shading_volumes := types.Tableau {
 			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
 		}
 		gl.BindTexture(gl.TEXTURE_2D, 0)
-
 
 		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
 		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)

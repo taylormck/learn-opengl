@@ -73,6 +73,7 @@ Shader :: enum {
 	GBufferDebug,
 	DeferredShading,
 	DeferredShadingVolumes,
+	SSAO,
 }
 
 ShaderMap :: map[Shader]u32
@@ -573,6 +574,13 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/deferred_shading_volumes.frag"),
+			) or_else panic("Failed to load the deferred shading shader")
+
+	case .SSAO:
+		shaders[.SSAO] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_normal_transform.vert"),
+				#load("../../shaders/frag/ssao.frag"),
 			) or_else panic("Failed to load the deferred shading shader")
 
 	}

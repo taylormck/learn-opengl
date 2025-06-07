@@ -142,7 +142,6 @@ exercise_08_01_deferred_shading := types.Tableau {
 		)
 
 		if .Space in input.input_state.pressed_keys do draw_debug = !draw_debug
-
 		if .UpArrow in input.input_state.pressed_keys do debug_channel = (debug_channel + 1) % NUM_DEBUG_CHANNELS
 		if .DownArrow in input.input_state.pressed_keys do debug_channel = (debug_channel + NUM_DEBUG_CHANNELS - 1) % NUM_DEBUG_CHANNELS
 	},
@@ -249,6 +248,9 @@ exercise_08_01_deferred_shading := types.Tableau {
 		primitives.cube_clear_from_gpu()
 		render.scene_clear_from_gpu(&backpack_model)
 		render.scene_destroy(&backpack_model)
+
+		gl.DeleteTextures(NUM_G_BUFFERS, raw_data(g_buffers[:]))
+		gl.DeleteRenderbuffers(1, &rbo)
 	},
 	framebuffer_size_callback = proc() {
 		for i in 0 ..< NUM_G_BUFFERS {
@@ -257,10 +259,10 @@ exercise_08_01_deferred_shading := types.Tableau {
 		}
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 
-
 		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
 		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
 		gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+
 	},
 }
 

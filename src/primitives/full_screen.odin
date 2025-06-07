@@ -14,8 +14,8 @@ FullScreenVertex :: struct {
 
 FULL_SCREEN_VERTICES := [NUM_FULL_SCREEN_VERTICES]FullScreenVertex {
 	{position = {-1, -1, 0}, texture_coords = {0, 0}}, // bottom left
-	{position = {-1, 3, 0}, texture_coords = {0, 2}}, // top left
 	{position = {3, -1, 0}, texture_coords = {2, 0}}, // bottom right
+	{position = {-1, 3, 0}, texture_coords = {0, 2}}, // top left
 }
 
 full_screen_vao, full_screen_vbo: u32
