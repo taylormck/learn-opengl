@@ -135,7 +135,7 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_as_color.vert"),
 				#load("../../shaders/frag/vert_color.frag"),
-			) or_else panic("Failed to load the upside down shader")
+			) or_else panic("Failed to load the position as color shader")
 
 	case .Texture:
 		shaders[.Texture] =
