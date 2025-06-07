@@ -86,6 +86,7 @@ exercise_08_01_deferred_shading := types.Tableau {
 		render.scene_send_to_gpu(&backpack_model)
 
 		primitives.cube_send_to_gpu()
+		primitives.full_screen_send_to_gpu()
 
 		for transform, i in backpack_transforms {
 			backpack_mits[i] = types.SubTransformMatrix(linalg.inverse_transpose(transform))
@@ -112,7 +113,7 @@ exercise_08_01_deferred_shading := types.Tableau {
 		}
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 
-		gl.DrawBuffers(3, raw_data(attachments[:]))
+		gl.DrawBuffers(NUM_G_BUFFERS, raw_data(attachments[:]))
 
 		gl.GenRenderbuffers(1, &rbo)
 		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
@@ -121,10 +122,8 @@ exercise_08_01_deferred_shading := types.Tableau {
 
 		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
 
-		if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
+		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-
-		primitives.full_screen_send_to_gpu()
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -152,13 +151,11 @@ exercise_08_01_deferred_shading := types.Tableau {
 
 		// Render the scene into the G-buffer
 		gl.BindFramebuffer(gl.FRAMEBUFFER, gbuffer_fbo)
-		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+		gl.ClearColor(0, 0, 0, 0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
 
 		gl.UseProgram(mesh_shader)
-
-		// shaders.set_vec3(mesh_shader, "view_position", raw_data(&camera.position))
 
 		for &model, i in backpack_transforms {
 			transform := pv * model
@@ -208,6 +205,18 @@ exercise_08_01_deferred_shading := types.Tableau {
 		primitives.cube_clear_from_gpu()
 		render.scene_clear_from_gpu(&backpack_model)
 		render.scene_destroy(&backpack_model)
+	},
+	framebuffer_size_callback = proc() {
+		for i in 0 ..< NUM_G_BUFFERS {
+			gl.BindTexture(gl.TEXTURE_2D, g_buffers[i])
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, window.width, window.height, 0, gl.RGBA, gl.FLOAT, nil)
+		}
+		gl.BindTexture(gl.TEXTURE_2D, 0)
+
+
+		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
+		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
+		gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 	},
 }
 
