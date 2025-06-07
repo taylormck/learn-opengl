@@ -41,8 +41,8 @@ NUM_POINT_LIGHTS :: 32
 @(private = "file")
 point_lights: [NUM_POINT_LIGHTS]render.PointLight
 
-@(private = "file")
-point_light_transform := linalg.matrix4_translate_f32({-4, -1, -4}) * linalg.matrix4_scale_f32({8, 2, 8})
+// @(private = "file")
+// point_light_transform := linalg.matrix4_translate_f32({-4, -1, -4}) * linalg.matrix4_scale_f32({8, 2, 8})
 
 @(private = "file")
 point_light_radii: [NUM_POINT_LIGHTS]f32
@@ -273,7 +273,14 @@ exercise_08_02_deferred_shading_volumes := types.Tableau {
 
 @(private = "file")
 generate_random_point_light :: proc() -> (point_light: render.PointLight, radius: f32) {
-	position := point_light_transform * types.Vec4{rand.float32(), rand.float32(), rand.float32(), 1.0}
+	theta := rand.float32() * math.TAU
+	position_radius := math.sqrt(rand.float32()) * 5
+	position := types.Vec4 {
+		math.sin(theta) * position_radius,
+		rand.float32() * 2 - 1,
+		math.cos(theta) * position_radius,
+		1.0,
+	}
 	color := types.Vec3{rand.float32(), rand.float32(), rand.float32()} * 0.5 + 0.5
 
 	constant: f32 : 1.0
