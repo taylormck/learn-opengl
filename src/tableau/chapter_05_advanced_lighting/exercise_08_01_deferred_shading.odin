@@ -78,11 +78,14 @@ gbuffer_fbo, rbo: u32
 draw_debug := false
 
 @(private = "file")
-debug_texture_index := 0
+debug_channel: i32 = 0
+
+@(private = "file")
+NUM_DEBUG_CHANNELS :: 5
 
 exercise_08_01_deferred_shading := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.Light, .GBuffer, .Texture, .DeferredShading)
+		shaders.init_shaders(.Light, .GBuffer, .GBufferDebug, .DeferredShading)
 
 		backpack_model =
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
@@ -140,13 +143,13 @@ exercise_08_01_deferred_shading := types.Tableau {
 
 		if .Space in input.input_state.pressed_keys do draw_debug = !draw_debug
 
-		if .UpArrow in input.input_state.pressed_keys do debug_texture_index = (debug_texture_index + 1) % NUM_G_BUFFERS
-		if .DownArrow in input.input_state.pressed_keys do debug_texture_index = (debug_texture_index + NUM_G_BUFFERS - 1) % NUM_G_BUFFERS
+		if .UpArrow in input.input_state.pressed_keys do debug_channel = (debug_channel + 1) % NUM_DEBUG_CHANNELS
+		if .DownArrow in input.input_state.pressed_keys do debug_channel = (debug_channel + NUM_DEBUG_CHANNELS - 1) % NUM_DEBUG_CHANNELS
 	},
 	draw = proc() {
 		light_shader := shaders.shaders[.Light]
 		mesh_shader := shaders.shaders[.GBuffer]
-		debug_shader := shaders.shaders[.Texture]
+		debug_shader := shaders.shaders[.GBufferDebug]
 		lighting_shader := shaders.shaders[.DeferredShading]
 
 		projection := render.camera_get_projection(&camera)
@@ -177,11 +180,19 @@ exercise_08_01_deferred_shading := types.Tableau {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Disable(gl.DEPTH_TEST)
 
+		for i in 0 ..< NUM_G_BUFFERS {
+			gl.ActiveTexture(gl.TEXTURE0 + u32(i))
+			gl.BindTexture(gl.TEXTURE_2D, g_buffers[i])
+		}
+
 		if draw_debug {
 			gl.UseProgram(debug_shader)
-			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_2D, g_buffers[debug_texture_index])
-			shaders.set_int(debug_shader, "diffuse_0", 0)
+
+			shaders.set_int(debug_shader, "g_position", 0)
+			shaders.set_int(debug_shader, "g_normal", 1)
+			shaders.set_int(debug_shader, "g_albedo_spec", 2)
+
+			shaders.set_int(debug_shader, "channel", debug_channel)
 
 			primitives.full_screen_draw()
 			return
@@ -194,10 +205,6 @@ exercise_08_01_deferred_shading := types.Tableau {
 			render.point_light_array_set_uniform(&point_light, lighting_shader, u32(i))
 		}
 
-		for i in 0 ..< NUM_G_BUFFERS {
-			gl.ActiveTexture(gl.TEXTURE0 + u32(i))
-			gl.BindTexture(gl.TEXTURE_2D, g_buffers[i])
-		}
 		shaders.set_int(lighting_shader, "g_position", 0)
 		shaders.set_int(lighting_shader, "g_normal", 1)
 		shaders.set_int(lighting_shader, "g_albedo_spec", 2)
@@ -262,15 +269,13 @@ generate_random_point_light :: proc() -> render.PointLight {
 	color := types.Vec3{rand.float32(), rand.float32(), rand.float32()} * 0.5 + 0.5
 
 	return render.PointLight {
-		position  = position.xyz,
-		ambient   = color * 0.1,
-		diffuse   = color,
-		emissive  = color,
-		specular  = color,
-		constant  = 1,
-		// linear = 0.09,
-		// quadratic = 0.032,
-		linear    = 0.6,
-		quadratic = 0.2,
+		position = position.xyz,
+		ambient = color * 0.1,
+		diffuse = color,
+		emissive = color,
+		specular = color,
+		constant = 1,
+		linear = 0.8,
+		quadratic = 0.4,
 	}
 }

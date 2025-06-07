@@ -70,6 +70,7 @@ Shader :: enum {
 	BloomLighting,
 	BlurSeparated,
 	GBuffer,
+	GBufferDebug,
 	DeferredShading,
 }
 
@@ -550,6 +551,13 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/g_buffer.frag"),
+			) or_else panic("Failed to load the g-buffer shader")
+
+	case .GBufferDebug:
+		shaders[.GBufferDebug] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/g_buffer_debug.frag"),
 			) or_else panic("Failed to load the g-buffer shader")
 
 	case .DeferredShading:
