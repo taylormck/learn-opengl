@@ -6,6 +6,7 @@ import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
+import "../../utils"
 import "../../window"
 import "core:fmt"
 import "core:log"
@@ -46,13 +47,7 @@ backpack_transform :=
 	linalg.matrix4_rotate_f32(linalg.to_radians(f32(-90)), {1, 0, 0})
 
 @(private = "file")
-backpack_mit: types.SubTransformMatrix
-
-@(private = "file")
 cube_transform := linalg.matrix4_translate_f32({0, 2.5, 0}) * linalg.matrix4_scale_f32(15)
-
-@(private = "file")
-cube_mit: types.SubTransformMatrix
 
 @(private = "file")
 ambient := types.Vec3{0.5, 0.5, 0.5}
@@ -115,9 +110,6 @@ exercise_09_01_ssao := types.Tableau {
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 		render.scene_send_to_gpu(&backpack_model)
 
-		backpack_mit = types.SubTransformMatrix(linalg.inverse_transpose(backpack_transform))
-		cube_mit = types.SubTransformMatrix(linalg.inverse_transpose(cube_transform))
-
 		for i in 0 ..< NUM_SAMPLES do sample_offsets[i] = generate_sample_offset(i)
 		for &noise_vector in sample_rotation_noise do noise_vector = generate_noise_vector()
 
@@ -144,7 +136,6 @@ exercise_09_01_ssao := types.Tableau {
 		gl.GenRenderbuffers(1, &rbo)
 		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)
 		gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH24_STENCIL8, window.width, window.height)
-		gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 
 		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
 
@@ -162,11 +153,14 @@ exercise_09_01_ssao := types.Tableau {
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, ssao_color_buffer, 0)
 
+		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
+		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
+
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 		gl.GenTextures(1, &noise_texture)
 		gl.BindTexture(gl.TEXTURE_2D, noise_texture)
-		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA16F, 4, 4, 0, gl.RGB, gl.FLOAT, raw_data(sample_rotation_noise[:]))
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA32F, 4, 4, 0, gl.RGB, gl.FLOAT, raw_data(sample_rotation_noise[:]))
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
@@ -210,14 +204,15 @@ exercise_09_01_ssao := types.Tableau {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		gl.UseProgram(geometry_pass_shader)
+		shaders.set_mat_4x4(geometry_pass_shader, "projection", raw_data(&projection))
 
 		// Render the backpack
 		{
-			transform := pv * backpack_transform
+			model_view := view * backpack_transform
+			model_view_it := types.SubTransformMatrix(linalg.inverse_transpose(model_view))
 
-			shaders.set_mat_4x4(geometry_pass_shader, "transform", raw_data(&transform))
-			shaders.set_mat_4x4(geometry_pass_shader, "model", raw_data(&backpack_transform))
-			shaders.set_mat_3x3(geometry_pass_shader, "mit", raw_data(&backpack_mit))
+			shaders.set_mat_4x4(geometry_pass_shader, "model_view", raw_data(&model_view))
+			shaders.set_mat_3x3(geometry_pass_shader, "model_view_it", raw_data(&model_view_it))
 			shaders.set_bool(geometry_pass_shader, "invert_normals", false)
 
 			render.scene_draw(&backpack_model, geometry_pass_shader)
@@ -226,11 +221,11 @@ exercise_09_01_ssao := types.Tableau {
 		// Render outside cube
 		{
 			gl.CullFace(gl.FRONT)
-			transform := pv * cube_transform
+			model_view := view * cube_transform
+			model_view_it := types.SubTransformMatrix(linalg.inverse_transpose(model_view))
 
-			shaders.set_mat_4x4(geometry_pass_shader, "transform", raw_data(&transform))
-			shaders.set_mat_4x4(geometry_pass_shader, "model", raw_data(&cube_transform))
-			shaders.set_mat_3x3(geometry_pass_shader, "mit", raw_data(&cube_mit))
+			shaders.set_mat_4x4(geometry_pass_shader, "model_view", raw_data(&model_view))
+			shaders.set_mat_3x3(geometry_pass_shader, "model_view_it", raw_data(&model_view_it))
 			shaders.set_bool(geometry_pass_shader, "invert_normals", true)
 
 			primitives.cube_draw()
@@ -342,6 +337,7 @@ generate_sample_offset :: proc(i: int) -> (sample: types.Vec3) {
 	sample.z = rand.float32()
 
 	sample = linalg.normalize(sample)
+	sample *= rand.float32()
 	scale := f32(i) / NUM_SAMPLES
 	scale = math.lerp(f32(0.1), f32(1.0), scale * scale)
 	sample *= scale
@@ -352,6 +348,6 @@ generate_sample_offset :: proc(i: int) -> (sample: types.Vec3) {
 generate_noise_vector :: proc() -> (noise: types.Vec3) {
 	noise.x = rand.float32() * 2 - 1
 	noise.y = rand.float32() * 2 - 1
-	noise.z = rand.float32()
+	noise.z = 0
 	return
 }

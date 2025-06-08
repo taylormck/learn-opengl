@@ -582,7 +582,7 @@ init_shader :: proc(shader: Shader) {
 	case .SSAOGeometry:
 		shaders[.SSAOGeometry] =
 			gl.load_shaders_source(
-				#load("../../shaders/vert/pos_normal_transform.vert"),
+				#load("../../shaders/vert/ssao_geometry.vert"),
 				#load("../../shaders/frag/ssao_geometry.frag"),
 			) or_else panic("Failed to load the SSAO Geometry shader")
 

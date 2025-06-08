@@ -23,8 +23,12 @@ void main() {
 	vec2 noise_scale = vec2(window_width / 4.0, window_height / 4.0);
 
 	vec3 frag_pos = texture(g_position, tex_coords).xyz;
+
 	vec3 normal = texture(g_normal, tex_coords).xyz;
+	normal = normalize(normal);
+
 	vec3 random_vec = texture(noise, tex_coords * noise_scale).xyz;
+	random_vec = normalize(random_vec);
 
 	vec3 tangent = normalize(random_vec - normal * dot(random_vec, normal));
 	vec3 bitangent = cross(normal, tangent);
@@ -32,6 +36,8 @@ void main() {
 
 	float occlusion = 0.0;
 	int kernel_size = clamp(kernel_size, 0, MAX_KERNAL_SIZE);
+	float radius = clamp(radius, 0.1, 2.0);
+	float bias = clamp(bias, 0.01, 0.1);
 
 	for (int i = 0; i < kernel_size; i += 1) {
 		vec3 sample_pos = tbn * samples[i];
