@@ -48,7 +48,6 @@ vec3 calculate_point_light(PointLight light, GData g_data) {
 	float distance = length(light_diff);
 
 	vec3 ambient = light.ambient * g_data.material.diffuse * g_data.occlusion;
-	// vec3 ambient = light.ambient * g_data.material.diffuse;
 
 	vec3 light_dir = normalize(light_diff);
 
@@ -81,7 +80,7 @@ void main() {
 
 	float occlusion = texture(ssao, tex_coords).r;
 
-	GData g_data = GData(Material(g_albedo_data.rgb, 1.0, 8.0), frag_position, normal, occlusion);
+	GData g_data = GData(Material(g_albedo_data.rgb, 0.5, 8.0), frag_position, normal, occlusion);
 
 	vec3 result = calculate_point_light(point_light, g_data);
 
