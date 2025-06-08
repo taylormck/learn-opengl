@@ -57,13 +57,14 @@ diffuse := types.Vec3{1.0, 1.0, 1.0}
 
 @(private = "file")
 light := render.PointLight {
-	position  = types.Vec3{0, 0, 0},
-	ambient   = {1, 1, 1},
-	diffuse   = {1, 1, 1},
+	position  = {2, 4, -2},
+	ambient   = 0.3 * {0.2, 0.2, 0.7},
+	diffuse   = {0.2, 0.2, 0.7},
 	specular  = {0, 0, 0},
+	emissive  = {0, 0, 0},
 	constant  = 1,
-	linear    = 0.09,
-	quadratic = 0.032,
+	linear    = 0.04,
+	quadratic = 0.012,
 }
 
 @(private = "file")
@@ -101,7 +102,7 @@ ssao_fbo, ssao_color_buffer, ssao_blur_fbo, ssao_blur_texture: u32
 
 exercise_09_01_ssao := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.SSAOGeometry, .GBufferDebug, .SSAOLighting, .SSAODepth, .SingleColorTex, .SSAOBlur)
+		shaders.init_shaders(.SSAOGeometry, .GBufferDebug, .SSAOLighting, .SSAODepth, .SSAOBlur)
 
 		primitives.cube_send_to_gpu()
 		primitives.full_screen_send_to_gpu()
@@ -205,7 +206,6 @@ exercise_09_01_ssao := types.Tableau {
 		depth_shader := shaders.shaders[.SSAODepth]
 		blur_shader := shaders.shaders[.SSAOBlur]
 		lighting_shader := shaders.shaders[.SSAOLighting]
-		texture_shader := shaders.shaders[.SingleColorTex]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -312,23 +312,28 @@ exercise_09_01_ssao := types.Tableau {
 
 		primitives.full_screen_draw()
 
-		// Draw the texture to the screen
+		// lighting pass
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
-		gl.ActiveTexture(gl.TEXTURE0)
+		for i in 0 ..< NUM_G_BUFFERS {
+			gl.ActiveTexture(gl.TEXTURE0 + u32(i))
+			gl.BindTexture(gl.TEXTURE_2D, g_buffers[i])
+		}
+
+		gl.ActiveTexture(gl.TEXTURE3)
 		gl.BindTexture(gl.TEXTURE_2D, ssao_blur_texture)
 
-		gl.UseProgram(texture_shader)
-		shaders.set_int(texture_shader, "diffuse_0", 0)
+		gl.UseProgram(lighting_shader)
+		shaders.set_int(lighting_shader, "g_position", 0)
+		shaders.set_int(lighting_shader, "g_normal", 1)
+		shaders.set_int(lighting_shader, "g_albedo", 2)
+		shaders.set_int(lighting_shader, "ssao", 3)
+		render.point_light_set_uniform(&light, lighting_shader)
+		// shaders.set_vec3(lighting_shader, "view_position", raw_data(&camera.position))
 
 		primitives.full_screen_draw()
-
-		// lighting pass
-		// gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-		// gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
-		// gl.UseProgram(lighting_shader)
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
