@@ -97,11 +97,11 @@ sample_rotation_noise: [16]types.Vec3
 noise_texture: u32
 
 @(private = "file")
-ssao_fbo, ssao_color_buffer: u32
+ssao_fbo, ssao_color_buffer, ssao_blur_fbo, ssao_blur_texture: u32
 
 exercise_09_01_ssao := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.SSAOGeometry, .GBufferDebug, .SSAOLighting, .SSAODepth, .SingleColorTex)
+		shaders.init_shaders(.SSAOGeometry, .GBufferDebug, .SSAOLighting, .SSAODepth, .SingleColorTex, .SSAOBlur)
 
 		primitives.cube_send_to_gpu()
 		primitives.full_screen_send_to_gpu()
@@ -156,6 +156,21 @@ exercise_09_01_ssao := types.Tableau {
 		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
 		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
 
+		gl.GenFramebuffers(1, &ssao_blur_fbo)
+		gl.BindFramebuffer(gl.FRAMEBUFFER, ssao_blur_fbo)
+
+		gl.GenTextures(1, &ssao_blur_texture)
+		gl.BindTexture(gl.TEXTURE_2D, ssao_blur_texture)
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RED, window.width, window.height, 0, gl.RED, gl.FLOAT, nil)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, ssao_blur_texture, 0)
+
+		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
+		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
+
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 		gl.GenTextures(1, &noise_texture)
@@ -188,6 +203,7 @@ exercise_09_01_ssao := types.Tableau {
 		geometry_pass_shader := shaders.shaders[.SSAOGeometry]
 		debug_shader := shaders.shaders[.GBufferDebug]
 		depth_shader := shaders.shaders[.SSAODepth]
+		blur_shader := shaders.shaders[.SSAOBlur]
 		lighting_shader := shaders.shaders[.SSAOLighting]
 		texture_shader := shaders.shaders[.SingleColorTex]
 
@@ -272,7 +288,7 @@ exercise_09_01_ssao := types.Tableau {
 		shaders.set_int(depth_shader, "noise", 2)
 		shaders.set_int(depth_shader, "kernel_size", NUM_SAMPLES)
 		shaders.set_float(depth_shader, "radius", 0.5)
-		shaders.set_float(depth_shader, "bias", 0.01)
+		shaders.set_float(depth_shader, "bias", 0.025)
 
 		for &sample, i in sample_offsets {
 			shaders.set_vec3(depth_shader, fmt.ctprintf("samples[{}]", i), raw_data(sample[:]))
@@ -284,18 +300,30 @@ exercise_09_01_ssao := types.Tableau {
 
 		primitives.full_screen_draw()
 
-		{
-			gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
-			gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
-			gl.Clear(gl.COLOR_BUFFER_BIT)
-			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_2D, ssao_color_buffer)
+		// Blur the SSAO output
+		gl.BindFramebuffer(gl.FRAMEBUFFER, ssao_blur_fbo)
+		gl.Clear(gl.COLOR_BUFFER_BIT)
 
-			gl.UseProgram(texture_shader)
-			shaders.set_int(texture_shader, "diffuse_0", 0)
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_2D, ssao_color_buffer)
 
-			primitives.full_screen_draw()
-		}
+		gl.UseProgram(blur_shader)
+		shaders.set_int(blur_shader, "ssao_input", 0)
+
+		primitives.full_screen_draw()
+
+		// Draw the texture to the screen
+		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_2D, ssao_blur_texture)
+
+		gl.UseProgram(texture_shader)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
+
+		primitives.full_screen_draw()
 
 		// lighting pass
 		// gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
@@ -322,6 +350,10 @@ exercise_09_01_ssao := types.Tableau {
 
 		gl.BindTexture(gl.TEXTURE_2D, ssao_color_buffer)
 		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RED, window.width, window.height, 0, gl.RED, gl.FLOAT, nil)
+
+		gl.BindTexture(gl.TEXTURE_2D, ssao_blur_texture)
+		gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RED, window.width, window.height, 0, gl.RED, gl.FLOAT, nil)
+
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		gl.BindRenderbuffer(gl.RENDERBUFFER, rbo)

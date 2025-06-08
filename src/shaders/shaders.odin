@@ -76,6 +76,7 @@ Shader :: enum {
 	SSAOGeometry,
 	SSAOLighting,
 	SSAODepth,
+	SSAOBlur,
 	SingleColorTex,
 }
 
@@ -592,6 +593,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/ssao_depth.frag"),
 			) or_else panic("Failed to load the SSAO Depth shader")
+
+	case .SSAOBlur:
+		shaders[.SSAOBlur] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/ssao_blur.frag"),
+			) or_else panic("Failed to load the SSAO Blur shader")
 
 	case .SSAOLighting:
 		shaders[.SSAOLighting] =
