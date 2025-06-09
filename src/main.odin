@@ -22,6 +22,7 @@ import "tableau/chapter_02_lighting"
 import "tableau/chapter_03_model_loading"
 import "tableau/chapter_04_advanced_opengl"
 import "tableau/chapter_05_advanced_lighting"
+import "tableau/chapter_06_pbr"
 
 INITIAL_WIDTH :: 800
 INITIAL_HEIGHT :: 600
@@ -72,7 +73,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_05_advanced_lighting.exercise_09_01_ssao
+	current_tableau = chapter_06_pbr.exercise_01_01_lighting
 
 	if current_tableau.init != nil do current_tableau.init()
 
