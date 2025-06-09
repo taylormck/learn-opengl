@@ -97,7 +97,8 @@ mesh_set_material :: proc(mesh: ^Mesh, shader_id: u32) {
 }
 
 mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
-	diffuse_count, specular_count, normal_count, emissive_count, displacement_count: u32
+	diffuse_count, specular_count, normal_count, emissive_count: u32
+	metallic_count, roughness_count, ao_count, displacement_count: u32
 
 	for texture, i in mesh.textures {
 		i := i32(i)
@@ -122,10 +123,21 @@ mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
 			texture_type = "emissive"
 			number = emissive_count
 			emissive_count += 1
-
+		case .Metallic:
+			texture_type = "metallic"
+			number = metallic_count
+			displacement_count += 1
+		case .Roughness:
+			texture_type = "roughness"
+			number = roughness_count
+			displacement_count += 1
 		case .Displacement:
 			texture_type = "displacement"
 			number = displacement_count
+			displacement_count += 1
+		case .AO:
+			texture_type = "ao"
+			number = ao_count
 			displacement_count += 1
 		}
 
@@ -151,7 +163,6 @@ mesh_draw_instanced :: proc(mesh: ^Mesh, shader_id: u32, num_instances: i32) {
 	defer gl.BindVertexArray(0)
 
 	gl.DrawElementsInstanced(gl.TRIANGLES, i32(len(mesh.indices)) * 3, gl.UNSIGNED_INT, nil, num_instances)
-	// utils.print_gl_errors()
 }
 
 

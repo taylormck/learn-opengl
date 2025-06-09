@@ -18,6 +18,9 @@ TextureType :: enum {
 	Normal,
 	Emissive,
 	Displacement,
+	Metallic,
+	Roughness,
+	AO,
 }
 
 Image :: struct {

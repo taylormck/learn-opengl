@@ -57,5 +57,5 @@ camera_move :: proc(camera: ^Camera, direction: types.Vec3, delta: f32) {
 		movement += direction.x * right
 	}
 
-	camera.position += movement * delta
+	camera.position += movement * camera.speed * delta
 }

@@ -73,7 +73,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_06_pbr.exercise_01_01_lighting
+	current_tableau = chapter_06_pbr.exercise_01_02_lighting_textured
 
 	if current_tableau.init != nil do current_tableau.init()
 
