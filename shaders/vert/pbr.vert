@@ -14,15 +14,10 @@ vs_out;
 uniform mat4 transform;
 uniform mat4 model;
 uniform mat3 mit;
-uniform bool reverse_normals;
 
 void main() {
 	gl_Position = transform * vec4(aPos, 1.0);
 	vs_out.frag_position = vec3(model * vec4(aPos, 1.0));
 	vs_out.tex_coords = aTexCoord;
 	vs_out.normal = mit * aNormal;
-
-	if (reverse_normals) {
-		vs_out.normal = -vs_out.
-	}
 }

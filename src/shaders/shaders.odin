@@ -78,6 +78,7 @@ Shader :: enum {
 	SSAODepth,
 	SSAOBlur,
 	SingleColorTex,
+	PBR,
 }
 
 ShaderMap :: map[Shader]u32
@@ -614,6 +615,12 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex.vert"),
 				#load("../../shaders/frag/single_color_tex.frag"),
 			) or_else panic("Failed to load the single color texture shader")
+
+	case .PBR:
+		shaders[.PBR] =
+			gl.load_shaders_source(#load("../../shaders/vert/pbr.vert"), #load("../../shaders/frag/pbr.frag")) or_else panic(
+				"Failed to load the PBR shader",
+			)
 
 	}
 }
