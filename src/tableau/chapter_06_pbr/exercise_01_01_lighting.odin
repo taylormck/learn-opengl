@@ -5,7 +5,11 @@ import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
+import "../../utils"
 import "../../window"
+import "core:fmt"
+import "core:log"
+import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
@@ -46,9 +50,21 @@ camera := render.Camera {
 	speed        = 5,
 }
 
+@(private = "file")
+NUM_POINT_LIGHTS :: 4
+
+@(private = "file")
+light_positions := [NUM_POINT_LIGHTS]types.Vec3{{-10, 10, 10}, {10, 10, 10}, {-10, -10, 10}, {10, -10, 10}}
+
+@(private = "file")
+light_colors := [NUM_POINT_LIGHTS]types.Vec3{{300, 300, 300}, {300, 300, 300}, {300, 300, 300}, {300, 300, 300}}
+
+@(private = "file")
+albedo := types.Vec3{0.5, 0, 0}
+
 exercise_01_01_lighting := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.PBR)
+		shaders.init_shaders(.PBR, .Light)
 		primitives.sphere_init()
 		primitives.sphere_send_to_gpu()
 
@@ -63,6 +79,11 @@ exercise_01_01_lighting := types.Tableau {
 				mits[index] = types.SubTransformMatrix(linalg.inverse_transpose(transforms[index]))
 			}
 		}
+
+		pbr_shader := shaders.shaders[.PBR]
+		gl.UseProgram(pbr_shader)
+		shaders.set_float(pbr_shader, "ao", 1)
+		shaders.set_vec3(pbr_shader, "albedo", raw_data(&albedo))
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -76,6 +97,7 @@ exercise_01_01_lighting := types.Tableau {
 	},
 	draw = proc() {
 		pbr_shader := shaders.shaders[.PBR]
+		light_shader := shaders.shaders[.Light]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -87,8 +109,21 @@ exercise_01_01_lighting := types.Tableau {
 
 		gl.UseProgram(pbr_shader)
 
+		shaders.set_int(pbr_shader, "num_point_lights", NUM_POINT_LIGHTS)
+		shaders.set_vec3(pbr_shader, "view_position", raw_data(&camera.position))
+
+		for i in 0 ..< NUM_POINT_LIGHTS {
+			shaders.set_vec3(pbr_shader, fmt.ctprintf("point_light_positions[{}]", i), raw_data(&light_positions[i]))
+			shaders.set_vec3(pbr_shader, fmt.ctprintf("point_light_colors[{}]", i), raw_data(&light_colors[i]))
+		}
+
 		for row in 0 ..< NUM_ROWS {
+			shaders.set_float(pbr_shader, "metallic", f32(row) / f32(NUM_ROWS))
+
 			for column in 0 ..< NUM_COLUMNS {
+				roughness := math.lerp(f32(0.5), f32(1.0), f32(column) / f32(NUM_COLUMNS))
+				shaders.set_float(pbr_shader, "roughness", roughness)
+
 				index := row * NUM_COLUMNS + column
 
 				model := &transforms[index]
@@ -101,6 +136,18 @@ exercise_01_01_lighting := types.Tableau {
 
 				primitives.sphere_draw()
 			}
+		}
+
+		gl.UseProgram(light_shader)
+
+		for i in 0 ..< NUM_POINT_LIGHTS {
+			model := linalg.matrix4_translate_f32(light_positions[i])
+			transform := pv * model
+
+			shaders.set_mat_4x4(pbr_shader, "transform", raw_data(&transform))
+			shaders.set_vec3(light_shader, "light_color", raw_data(&light_colors[i]))
+
+			primitives.sphere_draw()
 		}
 	},
 	teardown = proc() {
