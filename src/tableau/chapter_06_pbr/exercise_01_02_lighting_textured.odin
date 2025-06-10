@@ -57,7 +57,7 @@ NUM_POINT_LIGHTS :: 4
 light_positions := [NUM_POINT_LIGHTS]types.Vec3{{-10, 10, 10}, {10, 10, 10}, {-10, -10, 10}, {10, -10, 10}}
 
 @(private = "file")
-light_colors := [NUM_POINT_LIGHTS]types.Vec3{{300, 300, 300}, {300, 300, 300}, {300, 300, 300}, {300, 300, 300}}
+light_colors := [NUM_POINT_LIGHTS]types.Vec3{{700, 300, 300}, {300, 700, 300}, {300, 300, 700}, {700, 300, 700}}
 
 @(private = "file")
 pbr_material :: "rusted_iron"
@@ -188,8 +188,10 @@ exercise_01_02_lighting_textured := types.Tableau {
 			model := linalg.matrix4_translate_f32(light_positions[i])
 			transform := pv * model
 
-			shaders.set_mat_4x4(pbr_shader, "transform", raw_data(&transform))
+			shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
 			shaders.set_vec3(light_shader, "light_color", raw_data(&light_colors[i]))
+			shaders.set_bool(light_shader, "hdr", true)
+			shaders.set_float(light_shader, "hdr_exposure", 0.005)
 
 			primitives.sphere_draw()
 		}
