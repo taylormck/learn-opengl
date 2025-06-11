@@ -100,9 +100,6 @@ sphere_init :: proc() {
 			// Use the normal color for debugging
 			vertex.color = vertex.normal * 0.5 + 0.5
 
-			// Use the texture coordinates for debugging
-			// vertex.color = types.Vec3{vertex.texture_coords.x, vertex.texture_coords.y, 0}
-
 			// TODO: calculate the bitangent and tangent
 		}
 	}

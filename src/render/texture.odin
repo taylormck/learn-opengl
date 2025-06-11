@@ -28,6 +28,11 @@ Image :: struct {
 	buffer:                  [^]u8,
 }
 
+HDRImage :: struct {
+	width, height, channels: i32,
+	buffer:                  [^]f32,
+}
+
 load_texture_2d :: proc(
 	path: cstring,
 	desired_channels: i32 = 0,
@@ -89,6 +94,39 @@ prepare_texture :: proc(
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+	return t
+}
+
+prepare_hdr_texture :: proc(
+	path: cstring,
+	texture_type: TextureType,
+	flip_vertically: bool = false,
+	gamma_correction: bool = false,
+	desired_channels: i32 = 0,
+) -> (
+	t: Texture,
+) {
+	img: HDRImage
+
+	stbi.set_flip_vertically_on_load(1 if flip_vertically else 0)
+	img.buffer = stbi.loadf(path, &img.width, &img.height, &img.channels, desired_channels)
+	fmt.ensuref(img.buffer != nil, "Failed to load HDR texture: {}", path)
+
+	defer stbi.image_free(img.buffer)
+
+	t.type = texture_type
+	gl.GenTextures(1, &t.id)
+	gl.BindTexture(gl.TEXTURE_2D, t.id)
+
+	log.infof("Generating texture for image: {} - {}", path, img)
+
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, img.width, img.height, 0, gl.RGB, gl.FLOAT, img.buffer)
+
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
 	return t
