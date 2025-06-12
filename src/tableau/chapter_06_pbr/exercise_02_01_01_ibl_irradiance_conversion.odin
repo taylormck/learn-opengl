@@ -67,9 +67,10 @@ albedo_map, normal_map, metallic_map, roughness_map, ao_map, ibl_map: render.Tex
 
 exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.PBRTexture, .Light)
+		shaders.init_shaders(.PBRTexture, .Light, .EquirectangularTexture)
 		primitives.sphere_init()
 		primitives.sphere_send_to_gpu()
+		primitives.cube_send_to_gpu()
 
 		for row in 0 ..< NUM_ROWS {
 			for column in 0 ..< NUM_COLUMNS {
@@ -133,6 +134,7 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 	draw = proc() {
 		pbr_shader := shaders.shaders[.PBRTexture]
 		light_shader := shaders.shaders[.Light]
+		cubemap_shader := shaders.shaders[.EquirectangularTexture]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -197,8 +199,17 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 
 			primitives.sphere_draw()
 		}
+
+		gl.UseProgram(cubemap_shader)
+		shaders.set_mat_4x4(cubemap_shader, "projection_view", raw_data(&pv))
+
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_2D, ibl_map.id)
+
+		primitives.cube_draw()
 	},
 	teardown = proc() {
+		primitives.cube_clear_from_gpu()
 		primitives.sphere_clear_from_gpu()
 		primitives.sphere_destroy()
 

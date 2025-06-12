@@ -80,6 +80,7 @@ Shader :: enum {
 	SingleColorTex,
 	PBR,
 	PBRTexture,
+	EquirectangularTexture,
 }
 
 ShaderMap :: map[Shader]u32
@@ -629,6 +630,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pbr.vert"),
 				#load("../../shaders/frag/pbr_texture.frag"),
 			) or_else panic("Failed to load the PBR texture shader")
+
+	case .EquirectangularTexture:
+		shaders[.EquirectangularTexture] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/world_position.vert"),
+				#load("../../shaders/frag/equirectangluar_to_cubemap.frag"),
+			) or_else panic("Failed to load the texture shader")
 
 	}
 }
