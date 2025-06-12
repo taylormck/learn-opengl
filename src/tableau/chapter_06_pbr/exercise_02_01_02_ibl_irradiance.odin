@@ -95,7 +95,7 @@ display_irradiance := false
 
 exercise_02_01_02_ibl_irradiance := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.PBR, .Light, .EquirectangularTexture, .SkyboxHDR, .CubemapConvolution)
+		shaders.init_shaders(.PBRIrradiance, .Light, .EquirectangularTexture, .SkyboxHDR, .CubemapConvolution)
 		primitives.sphere_init()
 		primitives.sphere_send_to_gpu()
 		primitives.cubemap_send_to_gpu(&env_cube_map)
@@ -117,7 +117,7 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 			}
 		}
 
-		pbr_shader := shaders.shaders[.PBR]
+		pbr_shader := shaders.shaders[.PBRIrradiance]
 		gl.UseProgram(pbr_shader)
 		shaders.set_float(pbr_shader, "ao", 1)
 		shaders.set_vec3(pbr_shader, "albedo", raw_data(&albedo))
@@ -257,7 +257,7 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 		if .Space in input.input_state.pressed_keys do display_irradiance = !display_irradiance
 	},
 	draw = proc() {
-		pbr_shader := shaders.shaders[.PBR]
+		pbr_shader := shaders.shaders[.PBRIrradiance]
 		light_shader := shaders.shaders[.Light]
 		cubemap_shader := shaders.shaders[.EquirectangularTexture]
 		skybox_shader := shaders.shaders[.SkyboxHDR]
@@ -275,6 +275,10 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 
 		shaders.set_int(pbr_shader, "num_point_lights", NUM_POINT_LIGHTS)
 		shaders.set_vec3(pbr_shader, "view_position", raw_data(&camera.position))
+
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map.texture_id)
+		shaders.set_int(pbr_shader, "irradiance_map", 0)
 
 		for i in 0 ..< NUM_POINT_LIGHTS {
 			shaders.set_vec3(pbr_shader, fmt.ctprintf("point_light_positions[{}]", i), raw_data(&light_positions[i]))
