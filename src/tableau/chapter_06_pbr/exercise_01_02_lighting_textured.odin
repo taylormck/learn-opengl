@@ -162,11 +162,8 @@ exercise_01_02_lighting_textured := types.Tableau {
 		}
 
 		for row in 0 ..< NUM_ROWS {
-			// shaders.set_float(pbr_shader, "metallic", f32(row) / f32(NUM_ROWS))
-
 			for column in 0 ..< NUM_COLUMNS {
 				roughness := math.lerp(f32(0.5), f32(1.0), f32(column) / f32(NUM_COLUMNS))
-				// shaders.set_float(pbr_shader, "roughness", roughness)
 
 				index := row * NUM_COLUMNS + column
 

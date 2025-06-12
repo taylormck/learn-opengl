@@ -32,7 +32,7 @@ mits: [NUM_ROWS * NUM_COLUMNS]types.SubTransformMatrix
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
 @(private = "file")
-initial_camera_position := types.Vec3{-1, -1, 22}
+initial_camera_position := types.Vec3{11, 2, 17}
 
 @(private = "file")
 initial_camera_target := types.Vec3{-1, -1, 0}
@@ -60,16 +60,44 @@ light_positions := [NUM_POINT_LIGHTS]types.Vec3{{-10, 10, 10}, {10, 10, 10}, {-1
 light_colors := [NUM_POINT_LIGHTS]types.Vec3{{700, 300, 300}, {300, 700, 300}, {300, 300, 700}, {700, 300, 700}}
 
 @(private = "file")
-pbr_material :: "rusted_iron"
+pbr_material :: "plastic"
 
 @(private = "file")
-albedo_map, normal_map, metallic_map, roughness_map, ao_map, ibl_map: render.Texture
+env_cube_map: primitives.Cubemap
+
+@(private = "file")
+env_capture_projection := linalg.matrix4_perspective_f32(
+	fovy = linalg.to_radians(f32(90.0)),
+	aspect = 1,
+	near = 0.1,
+	far = 10,
+)
+
+@(private = "file")
+CENTER :: types.Vec3{0, 0, 0}
+
+@(private = "file")
+env_capture_views := [6]types.TransformMatrix {
+	linalg.matrix4_look_at_f32(CENTER, {1, 0, 0}, {0, -1, 0}),
+	linalg.matrix4_look_at_f32(CENTER, {-1, 0, 0}, {0, -1, 0}),
+	linalg.matrix4_look_at_f32(CENTER, {0, 1, 0}, {0, 0, 1}),
+	linalg.matrix4_look_at_f32(CENTER, {0, -1, 0}, {0, 0, -1}),
+	linalg.matrix4_look_at_f32(CENTER, {0, 0, 1}, {0, -1, 0}),
+	linalg.matrix4_look_at_f32(CENTER, {0, 0, -1}, {0, -1, 0}),
+}
+
+@(private = "file")
+env_capture_fbo, env_capture_rbo: u32
+
+@(private = "file")
+albedo := types.Vec3{0.5, 0, 0}
 
 exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 	init = proc() {
-		shaders.init_shaders(.PBRTexture, .Light, .EquirectangularTexture)
+		shaders.init_shaders(.PBR, .Light, .EquirectangularTexture, .SkyboxHDR)
 		primitives.sphere_init()
 		primitives.sphere_send_to_gpu()
+		primitives.cubemap_send_to_gpu(&env_cube_map)
 		primitives.cube_send_to_gpu()
 
 		for row in 0 ..< NUM_ROWS {
@@ -84,42 +112,74 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 			}
 		}
 
-		albedo_map = render.prepare_texture(
-			fmt.ctprintf("textures/pbr/{}/albedo.png", pbr_material),
-			.Diffuse,
-			flip_vertically = true,
-			gamma_correction = true,
-		)
-
-		normal_map = render.prepare_texture(
-			fmt.ctprintf("textures/pbr/{}/normal.png", pbr_material),
-			.Normal,
-			flip_vertically = true,
-		)
-
-		metallic_map = render.prepare_texture(
-			fmt.ctprintf("textures/pbr/{}/metallic.png", pbr_material),
-			.Metallic,
-			flip_vertically = true,
-		)
-
-		roughness_map = render.prepare_texture(
-			fmt.ctprintf("textures/pbr/{}/roughness.png", pbr_material),
-			.Roughness,
-			flip_vertically = true,
-		)
-
-		ao_map = render.prepare_texture(fmt.ctprintf("textures/pbr/{}/ao.png", pbr_material), .AO, flip_vertically = true)
-
-		ibl_map = render.prepare_hdr_texture("textures/hdr/newport_loft.hdr", .Diffuse, flip_vertically = true)
-
-		pbr_shader := shaders.shaders[.PBRTexture]
+		pbr_shader := shaders.shaders[.PBR]
 		gl.UseProgram(pbr_shader)
-		shaders.set_int(pbr_shader, "albedo_map", 0)
-		shaders.set_int(pbr_shader, "normal_map", 1)
-		shaders.set_int(pbr_shader, "metallic_map", 2)
-		shaders.set_int(pbr_shader, "roughness_map", 3)
-		shaders.set_int(pbr_shader, "ao_map", 4)
+		shaders.set_float(pbr_shader, "ao", 1)
+		shaders.set_vec3(pbr_shader, "albedo", raw_data(&albedo))
+
+		ibl_map := render.prepare_hdr_texture("textures/hdr/newport_loft.hdr", .Diffuse, flip_vertically = true)
+		defer gl.DeleteTextures(1, &ibl_map.id)
+
+		{
+			gl.GenFramebuffers(1, &env_capture_fbo)
+			defer gl.DeleteFramebuffers(1, &env_capture_fbo)
+
+			gl.GenRenderbuffers(1, &env_capture_rbo)
+			defer gl.DeleteRenderbuffers(1, &env_capture_rbo)
+
+			gl.BindFramebuffer(gl.FRAMEBUFFER, env_capture_fbo)
+			defer gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+			gl.BindRenderbuffer(gl.RENDERBUFFER, env_capture_rbo)
+			defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
+
+			gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, 512, 512)
+			gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, env_capture_rbo)
+
+			// Create cube map textures.
+			gl.GenTextures(1, &env_cube_map.texture_id)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map.texture_id)
+
+			for i in 0 ..< 6 {
+				gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i), 0, gl.RGB16F, 512, 512, 0, gl.RGB, gl.FLOAT, nil)
+			}
+
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+			// Convert the equirectangular env map a cube map.
+			cubemap_shader := shaders.shaders[.EquirectangularTexture]
+
+			gl.UseProgram(cubemap_shader)
+
+			gl.ActiveTexture(gl.TEXTURE0)
+			gl.BindTexture(gl.TEXTURE_2D, ibl_map.id)
+			shaders.set_int(cubemap_shader, "equirectangular_map", 0)
+
+			gl.Viewport(0, 0, 512, 512)
+			defer gl.Viewport(0, 0, window.width, window.height)
+
+			gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+			for i in 0 ..< 6 {
+				pv := env_capture_projection * env_capture_views[i]
+				shaders.set_mat_4x4(cubemap_shader, "projection_view", raw_data(&pv))
+
+				gl.FramebufferTexture2D(
+					gl.FRAMEBUFFER,
+					gl.COLOR_ATTACHMENT0,
+					gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i),
+					env_cube_map.texture_id,
+					0,
+				)
+
+				gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+				primitives.cube_draw()
+			}
+		}
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -132,9 +192,10 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 		)
 	},
 	draw = proc() {
-		pbr_shader := shaders.shaders[.PBRTexture]
+		pbr_shader := shaders.shaders[.PBR]
 		light_shader := shaders.shaders[.Light]
 		cubemap_shader := shaders.shaders[.EquirectangularTexture]
+		skybox_shader := shaders.shaders[.SkyboxHDR]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -143,17 +204,7 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
-
-		gl.ActiveTexture(gl.TEXTURE0)
-		gl.BindTexture(gl.TEXTURE_2D, albedo_map.id)
-		gl.ActiveTexture(gl.TEXTURE1)
-		gl.BindTexture(gl.TEXTURE_2D, normal_map.id)
-		gl.ActiveTexture(gl.TEXTURE2)
-		gl.BindTexture(gl.TEXTURE_2D, metallic_map.id)
-		gl.ActiveTexture(gl.TEXTURE3)
-		gl.BindTexture(gl.TEXTURE_2D, roughness_map.id)
-		gl.ActiveTexture(gl.TEXTURE4)
-		gl.BindTexture(gl.TEXTURE_2D, ao_map.id)
+		gl.DepthFunc(gl.LEQUAL)
 
 		gl.UseProgram(pbr_shader)
 
@@ -166,11 +217,11 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 		}
 
 		for row in 0 ..< NUM_ROWS {
-			// shaders.set_float(pbr_shader, "metallic", f32(row) / f32(NUM_ROWS))
+			shaders.set_float(pbr_shader, "metallic", f32(row) / f32(NUM_ROWS))
 
 			for column in 0 ..< NUM_COLUMNS {
-				roughness := math.lerp(f32(0.5), f32(1.0), f32(column) / f32(NUM_COLUMNS))
-				// shaders.set_float(pbr_shader, "roughness", roughness)
+				roughness := math.lerp(f32(0.1), f32(1.0), f32(column) / f32(NUM_COLUMNS))
+				shaders.set_float(pbr_shader, "roughness", roughness)
 
 				index := row * NUM_COLUMNS + column
 
@@ -200,23 +251,21 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 			primitives.sphere_draw()
 		}
 
-		gl.UseProgram(cubemap_shader)
-		shaders.set_mat_4x4(cubemap_shader, "projection_view", raw_data(&pv))
+		// Draw the skybox
+		rot_view := types.TransformMatrix(types.SubTransformMatrix(view))
+		projection_rot_view := projection * rot_view
 
-		gl.ActiveTexture(gl.TEXTURE0)
-		gl.BindTexture(gl.TEXTURE_2D, ibl_map.id)
+		gl.UseProgram(skybox_shader)
+		shaders.set_mat_4x4(skybox_shader, "projection_view", raw_data(&projection_rot_view))
+		shaders.set_int(skybox_shader, "skybox", 0)
 
-		primitives.cube_draw()
+		primitives.cubemap_draw(&env_cube_map)
 	},
 	teardown = proc() {
-		primitives.cube_clear_from_gpu()
+		primitives.cube_send_to_gpu()
+		primitives.cubemap_clear_from_gpu(&env_cube_map)
+		primitives.cubemap_destroy_texture(&env_cube_map)
 		primitives.sphere_clear_from_gpu()
 		primitives.sphere_destroy()
-
-		gl.DeleteTextures(1, &albedo_map.id)
-		gl.DeleteTextures(1, &normal_map.id)
-		gl.DeleteTextures(1, &metallic_map.id)
-		gl.DeleteTextures(1, &roughness_map.id)
-		gl.DeleteTextures(1, &ao_map.id)
 	},
 }

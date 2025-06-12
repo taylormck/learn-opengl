@@ -43,7 +43,8 @@ backpack_model: render.Scene
 exercise_06_03_cubemaps_environment_mapping_refract := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.SkyboxRefract, .Skybox)
-		cubemap = primitives.cubemap_load("textures/skybox")
+		primitives.cubemap_send_to_gpu(&cubemap)
+		primitives.cubemap_load(&cubemap, "textures/skybox")
 		backpack_model =
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 		render.scene_send_to_gpu(&backpack_model)
@@ -98,6 +99,7 @@ exercise_06_03_cubemaps_environment_mapping_refract := types.Tableau {
 	teardown = proc() {
 		render.scene_clear_from_gpu(&backpack_model)
 		render.scene_destroy(&backpack_model)
-		primitives.cubemap_free(&cubemap)
+		primitives.cubemap_destroy_texture(&cubemap)
+		primitives.cubemap_clear_from_gpu(&cubemap)
 	},
 }

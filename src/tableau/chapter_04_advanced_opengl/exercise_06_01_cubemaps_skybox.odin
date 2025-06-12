@@ -42,7 +42,8 @@ exercise_06_01_cubemaps_skybox := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformTexture, .Skybox)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
-		cubemap = primitives.cubemap_load("textures/skybox")
+		primitives.cubemap_send_to_gpu(&cubemap)
+		primitives.cubemap_load(&cubemap, "textures/skybox")
 		primitives.cube_send_to_gpu()
 	},
 	update = proc(delta: f64) {
@@ -96,7 +97,8 @@ exercise_06_01_cubemaps_skybox := types.Tableau {
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.cubemap_free(&cubemap)
+		primitives.cubemap_destroy_texture(&cubemap)
+		primitives.cubemap_clear_from_gpu(&cubemap)
 		gl.DeleteTextures(1, &container_texture.id)
 	},
 }

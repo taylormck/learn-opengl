@@ -60,7 +60,20 @@ Cubemap :: struct {
 	vao, vbo, texture_id: u32,
 }
 
-cubemap_load :: proc(path: string, flip_vertically: bool = false) -> (cubemap: Cubemap) {
+cubemap_send_to_gpu :: proc(cubemap: ^Cubemap) {
+	gl.GenVertexArrays(1, &cubemap.vao)
+	gl.GenBuffers(1, &cubemap.vbo)
+
+	gl.BindVertexArray(cubemap.vao)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, cubemap.vbo)
+	gl.BufferData(gl.ARRAY_BUFFER, size_of(types.Vec3) * len(CUBEMAP_VERTICES), &CUBEMAP_VERTICES, gl.STATIC_DRAW)
+
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), 0)
+	gl.EnableVertexAttribArray(0)
+}
+
+cubemap_load :: proc(cubemap: ^Cubemap, path: string, flip_vertically: bool = false) {
 	stbi.set_flip_vertically_on_load(1 if flip_vertically else 0)
 
 	gl.GenTextures(1, &cubemap.texture_id)
@@ -90,29 +103,21 @@ cubemap_load :: proc(path: string, flip_vertically: bool = false) -> (cubemap: C
 	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
-
-	gl.GenVertexArrays(1, &cubemap.vao)
-	gl.GenBuffers(1, &cubemap.vbo)
-
-	gl.BindVertexArray(cubemap.vao)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, cubemap.vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, size_of(types.Vec3) * len(CUBEMAP_VERTICES), &CUBEMAP_VERTICES, gl.STATIC_DRAW)
-
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(types.Vec3), 0)
-	gl.EnableVertexAttribArray(0)
-
-	return cubemap
 }
 
-cubemap_free :: proc(cubemap: ^Cubemap) {
+cubemap_destroy_texture :: proc(cubemap: ^Cubemap) {
 	gl.DeleteTextures(1, &cubemap.texture_id)
+}
+
+cubemap_clear_from_gpu :: proc(cubemap: ^Cubemap) {
 	gl.DeleteBuffers(1, &cubemap.vbo)
 	gl.DeleteVertexArrays(1, &cubemap.vao)
 }
 
 cubemap_draw :: proc(cubemap: ^Cubemap) {
 	gl.BindVertexArray(cubemap.vao)
+
+	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap.texture_id)
 	defer gl.BindTexture(gl.TEXTURE_CUBE_MAP, 0)
 
