@@ -60,9 +60,6 @@ light_positions := [NUM_POINT_LIGHTS]types.Vec3{{-10, 10, 10}, {10, 10, 10}, {-1
 light_colors := [NUM_POINT_LIGHTS]types.Vec3{{700, 300, 300}, {300, 700, 300}, {300, 300, 700}, {700, 300, 700}}
 
 @(private = "file")
-pbr_material :: "plastic"
-
-@(private = "file")
 env_cube_map, irradiance_map: primitives.Cubemap
 
 @(private = "file")
@@ -88,7 +85,7 @@ env_capture_views := [6]types.TransformMatrix {
 
 
 @(private = "file")
-albedo := types.Vec3{0.5, 0, 0}
+albedo := types.Vec3{0.7, 0.3, 0.5}
 
 @(private = "file")
 display_irradiance := false
@@ -122,7 +119,8 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 		shaders.set_float(pbr_shader, "ao", 1)
 		shaders.set_vec3(pbr_shader, "albedo", raw_data(&albedo))
 
-		ibl_map := render.prepare_hdr_texture("textures/hdr/newport_loft.hdr", .Diffuse, flip_vertically = true)
+		// ibl_map := render.prepare_hdr_texture("textures/hdr/newport_loft.hdr", .Diffuse, flip_vertically = true)
+		ibl_map := render.prepare_hdr_texture("textures/hdr/citrus_orchard_puresky.hdr", .Diffuse, flip_vertically = true)
 		defer gl.DeleteTextures(1, &ibl_map.id)
 
 		env_capture_fbo, env_capture_rbo: u32

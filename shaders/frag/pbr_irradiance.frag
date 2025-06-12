@@ -111,6 +111,7 @@ void main() {
 
 	vec3 kS = fresnel_schlick_roughness(max(dot(n, v), 0.0), f0, roughness);
 	vec3 kD = 1.0 - kS;
+	kD *= 1.0 - metallic;
 
 	vec3 irradiance = texture(irradiance_map, n).rgb;
 	vec3 diffuse = irradiance * albedo;
