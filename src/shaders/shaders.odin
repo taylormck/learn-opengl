@@ -82,6 +82,7 @@ Shader :: enum {
 	PBRTexture,
 	EquirectangularTexture,
 	SkyboxHDR,
+	CubemapConvolution,
 }
 
 ShaderMap :: map[Shader]u32
@@ -644,6 +645,13 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_pv.vert"),
 				#load("../../shaders/frag/skybox_hdr.frag"),
+			) or_else panic("Failed to load the SkyboxHDR shader")
+
+	case .CubemapConvolution:
+		shaders[.CubemapConvolution] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/world_position.vert"),
+				#load("../../shaders/frag/convolute_skybox.frag"),
 			) or_else panic("Failed to load the SkyboxHDR shader")
 
 	}

@@ -73,7 +73,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_06_pbr.exercise_02_01_01_ibl_irradiance_conversion
+	current_tableau = chapter_06_pbr.exercise_02_01_02_ibl_irradiance
 
 	if current_tableau.init != nil do current_tableau.init()
 
