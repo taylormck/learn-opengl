@@ -84,6 +84,7 @@ Shader :: enum {
 	SkyboxHDR,
 	CubemapConvolution,
 	PBRIrradiance,
+	CubemapPrefilter,
 }
 
 ShaderMap :: map[Shader]u32
@@ -661,6 +662,14 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pbr.vert"),
 				#load("../../shaders/frag/pbr_irradiance.frag"),
 			) or_else panic("Failed to load the PBR Irradiance shader")
+
+	case .CubemapPrefilter:
+		shaders[.CubemapPrefilter] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/world_position.vert"),
+				#load("../../shaders/frag/prefilter_skybox.frag"),
+			) or_else panic("Failed to load the Cubemap Prefilter shader")
+
 	}
 }
 
