@@ -119,8 +119,8 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 		shaders.set_float(pbr_shader, "ao", 1)
 		shaders.set_vec3(pbr_shader, "albedo", raw_data(&albedo))
 
-		// ibl_map := render.prepare_hdr_texture("textures/hdr/newport_loft.hdr", .Diffuse, flip_vertically = true)
-		ibl_map := render.prepare_hdr_texture("textures/hdr/citrus_orchard_puresky.hdr", .Diffuse, flip_vertically = true)
+		ibl_map := render.prepare_hdr_texture("textures/hdr/newport_loft.hdr", .Diffuse, flip_vertically = true)
+		// ibl_map := render.prepare_hdr_texture("textures/hdr/citrus_orchard_puresky.hdr", .Diffuse, flip_vertically = true)
 		defer gl.DeleteTextures(1, &ibl_map.id)
 
 		env_capture_fbo, env_capture_rbo: u32
