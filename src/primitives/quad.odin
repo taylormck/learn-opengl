@@ -50,7 +50,11 @@ QUAD_INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
 
 quad_vao, quad_vbo, quad_ebo: u32
 
-quad_send_to_gpu :: proc() {
+quad_send_to_gpu :: proc(location := #caller_location) {
+	ensure(quad_vao == 0, "attempted to send quad to GPU twice.")
+	ensure(quad_vbo == 0, "attempted to send quad to GPU twice.")
+	ensure(quad_ebo == 0, "attempted to send quad to GPU twice.")
+	log.info("Sending quad data to the GPU", location = location)
 	gl.GenVertexArrays(1, &quad_vao)
 	gl.GenBuffers(1, &quad_vbo)
 	gl.GenBuffers(1, &quad_ebo)
@@ -85,7 +89,12 @@ quad_send_to_gpu :: proc() {
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(QUAD_INDICES), &QUAD_INDICES, gl.STATIC_DRAW)
 }
 
-quad_clear_from_gpu :: proc() {
+quad_clear_from_gpu :: proc(location := #caller_location) {
+	ensure(quad_vao != 0, "attempted to clear quad from GPU twice.")
+	ensure(quad_vbo != 0, "attempted to clear quad from GPU twice.")
+	ensure(quad_ebo != 0, "attempted to clear quad from GPU twice.")
+	log.info("Clearing quad data from the GPU", location = location)
+
 	gl.DeleteBuffers(1, &quad_vbo)
 	gl.DeleteBuffers(1, &quad_ebo)
 	gl.DeleteVertexArrays(1, &quad_vao)
