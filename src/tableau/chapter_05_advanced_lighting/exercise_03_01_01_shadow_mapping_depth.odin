@@ -88,7 +88,8 @@ exercise_03_01_01_shadow_mapping_depth := types.Tableau {
 		gl.DrawBuffer(gl.NONE)
 		gl.ReadBuffer(gl.NONE)
 
-		// if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
+		// NOTE: we're not running this ensure because this framebuffer is actually incomplete.
+		// ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	},
 	update = proc(delta: f64) {},

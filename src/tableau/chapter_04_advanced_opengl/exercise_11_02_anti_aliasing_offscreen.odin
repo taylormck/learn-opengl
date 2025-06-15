@@ -70,7 +70,7 @@ exercise_11_02_anti_aliasing_offscreen := types.Tableau {
 
 		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, ms_rbo)
 
-		if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Multisample Framebuffer incomplete!")
+		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Multisample Framebuffer incomplete!")
 
 		gl.GenFramebuffers(1, &fbo)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
@@ -95,7 +95,7 @@ exercise_11_02_anti_aliasing_offscreen := types.Tableau {
 
 		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
 
-		if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
+		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	},
 	update = proc(delta: f64) {

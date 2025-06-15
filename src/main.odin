@@ -27,8 +27,8 @@ import "tableau/chapter_06_pbr"
 INITIAL_WIDTH :: 800
 INITIAL_HEIGHT :: 600
 
-GL_MAJOR_VERSION :: 4
-GL_MINOR_VERSION :: 5
+GL_MAJOR_VERSION :: 3
+GL_MINOR_VERSION :: 3
 NUM_SAMPLES :: 4
 
 current_tableau: types.Tableau
@@ -41,9 +41,7 @@ main :: proc() {
 	}
 	defer log.destroy_console_logger(context.logger)
 
-	if !bool(glfw.Init()) {
-		panic("GLFW failed to init.")
-	}
+	ensure(bool(glfw.Init()), "GLFW failed to init.")
 	defer glfw.Terminate()
 
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, GL_MAJOR_VERSION)
@@ -55,9 +53,7 @@ main :: proc() {
 	window_handle := glfw.CreateWindow(INITIAL_WIDTH, INITIAL_HEIGHT, "Renderer", nil, nil)
 	defer glfw.DestroyWindow(window_handle)
 
-	if window_handle == nil {
-		panic("GLFW failed to open the window.")
-	}
+	ensure(window_handle != nil, "GLFW failed to open the window.")
 
 	glfw.MakeContextCurrent(window_handle)
 	gl.load_up_to(GL_MAJOR_VERSION, GL_MINOR_VERSION, glfw.gl_set_proc_address)

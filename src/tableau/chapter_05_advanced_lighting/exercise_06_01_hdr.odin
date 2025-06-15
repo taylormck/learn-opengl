@@ -143,7 +143,7 @@ exercise_06_01_hdr := types.Tableau {
 
 		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
 
-		if gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE do panic("Framebuffer incomplete!")
+		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 
 		tunnel_model = linalg.matrix4_translate_f32({0, 0, 25}) * linalg.matrix4_scale_f32({5, 5, 53})
