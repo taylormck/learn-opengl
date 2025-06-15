@@ -87,6 +87,7 @@ Shader :: enum {
 	CubemapPrefilter,
 	BRDFIntegration,
 	PBRFull,
+	PBRFullTextured,
 }
 
 ShaderMap :: map[Shader]u32
@@ -684,7 +685,14 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pbr.vert"),
 				#load("../../shaders/frag/pbr_full.frag"),
-			) or_else panic("Failed to load the PBR Irradiance shader")
+			) or_else panic("Failed to load the PBR Full shader")
+
+	case .PBRFullTextured:
+		shaders[.PBRFullTextured] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pbr.vert"),
+				#load("../../shaders/frag/pbr_full_textured.frag"),
+			) or_else panic("Failed to load the PBR Full Textured shader")
 
 	}
 }

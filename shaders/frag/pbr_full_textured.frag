@@ -16,12 +16,17 @@ uniform sampler2D metallic_map;
 uniform sampler2D roughness_map;
 uniform sampler2D ao_map;
 
+uniform samplerCube irradiance_map;
+uniform samplerCube prefilter_map;
+uniform sampler2D brdf_lut;
+
 #define MAX_NUM_POINT_LIGHTS 4
 uniform int num_point_lights;
 uniform vec3 point_light_positions[MAX_NUM_POINT_LIGHTS];
 uniform vec3 point_light_colors[MAX_NUM_POINT_LIGHTS];
 
 const float PI = 3.14159265359;
+const float MAX_REFLECTION_LOD = 4.0;
 
 float distribution_ggx(vec3 h, vec3 n, float roughness) {
 	float a = roughness * roughness;
@@ -60,13 +65,17 @@ vec3 fresnel_schlick(float cos_theta, vec3 f0) {
 	return f0 + (1.0 - f0) * pow(clamp(1.0 - cos_theta, 0.0, 1.0), 5.0);
 }
 
+vec3 fresnel_schlick_roughness(float cos_theta, vec3 f0, float roughness) {
+	return f0 + (max(vec3(1.0 - roughness), f0) - f0) * pow(clamp(1.0 - cos_theta, 0.0, 1.0), 5.0);
+}
+
 vec3 calculate_point_light_radiance(
 	vec3 n,
 	vec3 v,
 	vec3 f0,
 	vec3 albedo,
-	float roughness,
 	float metallic,
+	float roughness,
 	int light_index
 ) {
 	vec3 light_diff = point_light_positions[light_index] - fs_in.world_position;
@@ -85,7 +94,7 @@ vec3 calculate_point_light_radiance(
 
 	float ndf = distribution_ggx(n, h, roughness);
 	float g = geometry_smith(n, v, l, roughness);
-	vec3 f = fresnel_schlick(clamp(dot(h, v), 0.0, 1.0), f0);
+	vec3 f = fresnel_schlick_roughness(clamp(dot(h, v), 0.0, 1.0), f0, roughness);
 
 	vec3 numerator = ndf * g * f;
 	float denominator = 4.0 * n_dot_v * n_dot_l + 0.00001;
@@ -122,6 +131,7 @@ void main() {
 
 	vec3 n = calculate_tangent_space_normal();
 	vec3 v = normalize(view_position - fs_in.world_position);
+	vec3 r = reflect(-v, n);
 
 	// f0 is "reflectance at normal incidence".
 	// Dielectric materials use a flat 0.04 value, metals use their albedo.
@@ -130,11 +140,22 @@ void main() {
 	int num_point_lights = clamp(num_point_lights, 0, MAX_NUM_POINT_LIGHTS);
 	vec3 Lo = vec3(0.0);
 	for (int i = 0; i < num_point_lights; i += 1) {
-		Lo += calculate_point_light_radiance(n, v, f0, albedo, roughness, metallic, i);
+		Lo += calculate_point_light_radiance(n, v, f0, albedo, metallic, roughness, i);
 	}
 
-	// Fake ambient value, to be replaced with environment mapping.
-	vec3 ambient = vec3(0.03) * albedo * ao;
+	vec3 f = fresnel_schlick_roughness(max(dot(n, v), 0.0), f0, roughness);
+	vec3 kS = f;
+	vec3 kD = 1.0 - kS;
+	kD *= 1.0 - metallic;
+
+	vec3 irradiance = texture(irradiance_map, n).rgb;
+	vec3 diffuse = irradiance * albedo;
+
+	vec3 prefiltered_color = textureLod(prefilter_map, r, roughness * MAX_REFLECTION_LOD).rgb;
+	vec2 brdf = texture(brdf_lut, vec2(max(dot(n, v), 0.0), roughness)).rg;
+	vec3 specular = prefiltered_color * (f * brdf.x + brdf.y);
+
+	vec3 ambient = (kD * diffuse + specular) * ao;
 
 	vec3 color = ambient + Lo;
 
