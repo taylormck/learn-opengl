@@ -93,6 +93,11 @@ AO :: 1
 ALBEDO := types.Vec3{0.7, 0.3, 0.5}
 
 @(private = "file")
+brdf_lut_texture := render.Texture {
+	type = .Normal,
+}
+
+@(private = "file")
 display_irradiance := false
 
 exercise_02_02_01_ibl_specular := types.Tableau {
@@ -115,6 +120,8 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 		primitives.cubemap_send_to_gpu(&irradiance_map)
 		primitives.cubemap_send_to_gpu(&prefilter_map)
 		primitives.cube_send_to_gpu()
+
+		primitives.full_screen_send_to_gpu()
 
 		defer gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 		defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
@@ -332,7 +339,29 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 
 		{
 			log.info("Generating BRDF integration map")
+			integration_shader := shaders.shaders[.BRDFIntegration]
+			gl.UseProgram(integration_shader)
 
+			gl.GenTextures(1, &brdf_lut_texture.id)
+			gl.BindTexture(gl.TEXTURE_2D, brdf_lut_texture.id)
+			gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RG16F, CUBE_MAP_RESOLUTION, CUBE_MAP_RESOLUTION, 0, gl.RG, gl.FLOAT, nil)
+
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+			gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+			gl.BindFramebuffer(gl.FRAMEBUFFER, env_capture_fbo)
+			gl.BindRenderbuffer(gl.RENDERBUFFER, env_capture_rbo)
+			gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, CUBE_MAP_RESOLUTION, CUBE_MAP_RESOLUTION)
+			log.infof("texture id: {}", brdf_lut_texture.id)
+			gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, brdf_lut_texture.id, 0)
+			utils.print_gl_errors()
+
+			gl.Viewport(0, 0, CUBE_MAP_RESOLUTION, CUBE_MAP_RESOLUTION)
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+			primitives.full_screen_draw()
 		}
 	},
 	update = proc(delta: f64) {
@@ -422,6 +451,9 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 		if display_irradiance {primitives.cubemap_draw(&prefilter_map)} else {primitives.cubemap_draw(&env_cube_map)}
 	},
 	teardown = proc() {
+		gl.DeleteTextures(1, &brdf_lut_texture.id)
+		primitives.full_screen_clear_from_gpu()
+
 		primitives.cubemap_clear_from_gpu(&env_cube_map)
 		primitives.cubemap_destroy_texture(&env_cube_map)
 		primitives.cubemap_clear_from_gpu(&irradiance_map)
