@@ -103,7 +103,7 @@ display_irradiance := false
 exercise_02_02_01_ibl_specular := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(
-			.PBRIrradiance,
+			.PBRFull,
 			.Light,
 			.EquirectangularTexture,
 			.SkyboxHDR,
@@ -144,7 +144,7 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 		log.debugf("Sphere MITs: {}", mits[:])
 
 		log.infof("Initializing constant PBR uniforms: ao: {}, albedo: {}", AO, ALBEDO)
-		pbr_shader := shaders.shaders[.PBRIrradiance]
+		pbr_shader := shaders.shaders[.PBRFull]
 		gl.UseProgram(pbr_shader)
 		shaders.set_float(pbr_shader, "ao", AO)
 		shaders.set_vec3(pbr_shader, "albedo", raw_data(&ALBEDO))
@@ -354,9 +354,7 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 			gl.BindFramebuffer(gl.FRAMEBUFFER, env_capture_fbo)
 			gl.BindRenderbuffer(gl.RENDERBUFFER, env_capture_rbo)
 			gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, CUBE_MAP_RESOLUTION, CUBE_MAP_RESOLUTION)
-			log.infof("texture id: {}", brdf_lut_texture.id)
 			gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, gl.TEXTURE_2D, brdf_lut_texture.id, 0)
-			utils.print_gl_errors()
 
 			gl.Viewport(0, 0, CUBE_MAP_RESOLUTION, CUBE_MAP_RESOLUTION)
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -377,9 +375,8 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 		if .Space in input.input_state.pressed_keys do display_irradiance = !display_irradiance
 	},
 	draw = proc() {
-		pbr_shader := shaders.shaders[.PBRIrradiance]
+		pbr_shader := shaders.shaders[.PBRFull]
 		light_shader := shaders.shaders[.Light]
-		cubemap_shader := shaders.shaders[.EquirectangularTexture]
 		skybox_shader := shaders.shaders[.SkyboxHDR]
 
 		projection := render.camera_get_projection(&camera)
@@ -399,6 +396,14 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map.texture_id)
 		shaders.set_int(pbr_shader, "irradiance_map", 0)
+
+		gl.ActiveTexture(gl.TEXTURE1)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, prefilter_map.texture_id)
+		shaders.set_int(pbr_shader, "prefilter_map", 1)
+
+		gl.ActiveTexture(gl.TEXTURE2)
+		gl.BindTexture(gl.TEXTURE_2D, brdf_lut_texture.id)
+		shaders.set_int(pbr_shader, "brdf_lut", 2)
 
 		for i in 0 ..< NUM_POINT_LIGHTS {
 			shaders.set_vec3(pbr_shader, fmt.ctprintf("point_light_positions[{}]", i), raw_data(&light_positions[i]))
