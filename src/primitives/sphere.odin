@@ -24,10 +24,11 @@ sphere_indices: [dynamic]u32
 @(private = "file")
 sphere_vao, sphere_vbo, sphere_ebo: u32
 
-sphere_send_to_gpu :: proc() {
+sphere_send_to_gpu :: proc(location := #caller_location) {
 	assert(sphere_vao == 0, "attempted to send sphere to GPU twice.")
 	assert(sphere_vbo == 0, "attempted to send sphere to GPU twice.")
 	assert(len(sphere_vertices) > 0, "attempted to send sphere to GPU before initializing")
+	log.info("Sending sphere data to the GPU", location = location)
 
 	gl.GenVertexArrays(1, &sphere_vao)
 
@@ -62,7 +63,8 @@ sphere_send_to_gpu :: proc() {
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(u32) * len(sphere_indices), raw_data(sphere_indices), gl.STATIC_DRAW)
 }
 
-sphere_clear_from_gpu :: proc() {
+sphere_clear_from_gpu :: proc(location := #caller_location) {
+	log.info("Clearing sphere data from the GPU", location = location)
 	gl.DeleteBuffers(1, &sphere_vbo)
 	gl.DeleteBuffers(1, &sphere_ebo)
 	gl.DeleteVertexArrays(1, &sphere_vao)
@@ -75,7 +77,8 @@ sphere_draw :: proc() {
 	gl.DrawElements(gl.TRIANGLES, i32(len(sphere_indices)), gl.UNSIGNED_INT, nil)
 }
 
-sphere_init :: proc() {
+sphere_init :: proc(location := #caller_location) {
+	log.info("Initializing sphere", location = location)
 	sphere_vertices = make([dynamic]render.Vertex, NUM_VERTICES)
 	sphere_indices = make([dynamic]u32, NUM_INDICES)
 
@@ -120,7 +123,8 @@ sphere_init :: proc() {
 	}
 }
 
-sphere_destroy :: proc() {
+sphere_destroy :: proc(location := #caller_location) {
+	log.info("Destorying the sphere data", location = location)
 	delete(sphere_vertices)
 	delete(sphere_indices)
 }

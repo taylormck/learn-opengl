@@ -54,6 +54,7 @@ prepare_texture :: proc(
 	flip_vertically: bool = false,
 	gamma_correction: bool = false,
 	desired_channels: i32 = 0,
+	location := #caller_location,
 ) -> (
 	t: Texture,
 ) {
@@ -86,7 +87,7 @@ prepare_texture :: proc(
 		fmt.panicf("Unsupported number of channels: {}", num_channels)
 	}
 
-	log.infof("Generating texture for image: {} - {}", path, img)
+	log.infof("Generating texture for image: {} - {}", path, img, location = location)
 
 	gl.TexImage2D(gl.TEXTURE_2D, 0, internal_format, img.width, img.height, 0, data_format, gl.UNSIGNED_BYTE, img.buffer)
 	gl.GenerateMipmap(gl.TEXTURE_2D)
@@ -105,6 +106,7 @@ prepare_hdr_texture :: proc(
 	flip_vertically: bool = false,
 	gamma_correction: bool = false,
 	desired_channels: i32 = 0,
+	location := #caller_location,
 ) -> (
 	t: Texture,
 ) {
@@ -112,7 +114,7 @@ prepare_hdr_texture :: proc(
 
 	stbi.set_flip_vertically_on_load(1 if flip_vertically else 0)
 	img.buffer = stbi.loadf(path, &img.width, &img.height, &img.channels, desired_channels)
-	fmt.ensuref(img.buffer != nil, "Failed to load HDR texture: {}", path)
+	fmt.ensuref(img.buffer != nil, "Failed to load HDR texture: {}", path, loc = location)
 
 	defer stbi.image_free(img.buffer)
 
@@ -120,7 +122,7 @@ prepare_hdr_texture :: proc(
 	gl.GenTextures(1, &t.id)
 	gl.BindTexture(gl.TEXTURE_2D, t.id)
 
-	log.infof("Generating texture for image: {} - {}", path, img)
+	log.infof("Generating texture for image: {} - {}", path, img, location = location)
 
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, img.width, img.height, 0, gl.RGB, gl.FLOAT, img.buffer)
 

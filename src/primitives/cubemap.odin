@@ -3,6 +3,7 @@ package primitives
 import "../render"
 import "../types"
 import "core:fmt"
+import "core:log"
 import gl "vendor:OpenGL"
 import stbi "vendor:stb/image"
 
@@ -60,7 +61,8 @@ Cubemap :: struct {
 	vao, vbo, texture_id: u32,
 }
 
-cubemap_send_to_gpu :: proc(cubemap: ^Cubemap) {
+cubemap_send_to_gpu :: proc(cubemap: ^Cubemap, location := #caller_location) {
+	log.info("Sending cubemap data to the GPU", location = location)
 	gl.GenVertexArrays(1, &cubemap.vao)
 	gl.GenBuffers(1, &cubemap.vbo)
 
@@ -73,7 +75,8 @@ cubemap_send_to_gpu :: proc(cubemap: ^Cubemap) {
 	gl.EnableVertexAttribArray(0)
 }
 
-cubemap_load :: proc(cubemap: ^Cubemap, path: string, flip_vertically: bool = false) {
+cubemap_load :: proc(cubemap: ^Cubemap, path: string, flip_vertically: bool = false, location := #caller_location) {
+	log.infof("Loading cubemap from file: {}", path, location = location)
 	stbi.set_flip_vertically_on_load(1 if flip_vertically else 0)
 
 	gl.GenTextures(1, &cubemap.texture_id)
@@ -105,11 +108,13 @@ cubemap_load :: proc(cubemap: ^Cubemap, path: string, flip_vertically: bool = fa
 	gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
 }
 
-cubemap_destroy_texture :: proc(cubemap: ^Cubemap) {
+cubemap_destroy_texture :: proc(cubemap: ^Cubemap, location := #caller_location) {
+	log.infof("Clearing cubemap texture data from the GPU: {}", cubemap.texture_id, location = location)
 	gl.DeleteTextures(1, &cubemap.texture_id)
 }
 
-cubemap_clear_from_gpu :: proc(cubemap: ^Cubemap) {
+cubemap_clear_from_gpu :: proc(cubemap: ^Cubemap, location := #caller_location) {
+	log.infof("Clearing cubemap data from the GPU: vao: {}, vbo: {}", cubemap.vao, cubemap.vbo, location = location)
 	gl.DeleteBuffers(1, &cubemap.vbo)
 	gl.DeleteVertexArrays(1, &cubemap.vao)
 }

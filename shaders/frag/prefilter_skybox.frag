@@ -5,6 +5,7 @@ in vec3 world_position;
 
 uniform samplerCube environment_map;
 uniform float roughness;
+uniform float cube_map_resolution;
 
 const float PI = 3.14159265359;
 const uint SAMPLE_COUNT = 1024u;
@@ -39,6 +40,19 @@ vec3 importance_sample_ggx(vec2 xi, vec3 n, float roughness) {
 	return normalize(sample_vec);
 }
 
+float distribution_ggx(float n_dot_h, float roughness) {
+	float a = roughness * roughness;
+	float a2 = a * a;
+
+	float n_dot_h_2 = n_dot_h * n_dot_h;
+
+	float nom = a2;
+	float denom = n_dot_h_2 * (a2 - 1.0) + 1.0;
+	denom = PI * denom * denom;
+
+	return nom / denom;
+}
+
 void main() {
 	vec3 n = normalize(world_position);
 	vec3 r = n;
@@ -55,7 +69,18 @@ void main() {
 		float n_dot_l = max(dot(n, l), 0.0);
 
 		if (n_dot_l > 0.0) {
-			prefiltered_color += texture(environment_map, l).rgb * n_dot_l;
+			float n_dot_h = max(dot(n, h), 0.0);
+			float h_dot_v = max(dot(h, v), 0.0);
+
+			float d = distribution_ggx(n_dot_h, roughness);
+			float pdf = d * n_dot_h / (4.0 * h_dot_v) + 0.0001;
+
+			float sa_texel = 4.0 * PI / (6.0 * cube_map_resolution * cube_map_resolution);
+			float sa_sample = 1.0 / (float(SAMPLE_COUNT) * pdf + 0.0001);
+
+			float mip_level = roughness == 0.0 ? 0.0 : 0.5 * log2(sa_sample / sa_texel);
+
+			prefiltered_color += texture(environment_map, l, mip_level).rgb * n_dot_l;
 			total_weight += n_dot_l;
 		}
 	}

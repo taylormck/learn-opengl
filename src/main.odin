@@ -34,7 +34,11 @@ NUM_SAMPLES :: 4
 current_tableau: types.Tableau
 
 main :: proc() {
-	context.logger = log.create_console_logger()
+	when ODIN_DEBUG {
+		context.logger = log.create_console_logger(.Debug)
+	} else {
+		context.logger = log.create_console_logger(.Info)
+	}
 	defer log.destroy_console_logger(context.logger)
 
 	if !bool(glfw.Init()) {

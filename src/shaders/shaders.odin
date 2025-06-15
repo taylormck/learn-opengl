@@ -85,6 +85,7 @@ Shader :: enum {
 	CubemapConvolution,
 	PBRIrradiance,
 	CubemapPrefilter,
+	BRDFIntegration,
 }
 
 ShaderMap :: map[Shader]u32
@@ -669,6 +670,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/world_position.vert"),
 				#load("../../shaders/frag/prefilter_skybox.frag"),
 			) or_else panic("Failed to load the Cubemap Prefilter shader")
+
+	case .BRDFIntegration:
+		shaders[.BRDFIntegration] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex.vert"),
+				#load("../../shaders/frag/brdf_integration.frag"),
+			) or_else panic("Failed to load the BRDF Integration shader")
 
 	}
 }

@@ -20,7 +20,8 @@ FULL_SCREEN_VERTICES := [NUM_FULL_SCREEN_VERTICES]FullScreenVertex {
 
 full_screen_vao, full_screen_vbo: u32
 
-full_screen_send_to_gpu :: proc() {
+full_screen_send_to_gpu :: proc(location := #caller_location) {
+	log.info("Sending full screen triangle data to the GPU", location = location)
 	gl.GenVertexArrays(1, &full_screen_vao)
 	gl.GenBuffers(1, &full_screen_vbo)
 
@@ -44,7 +45,8 @@ full_screen_send_to_gpu :: proc() {
 	gl.EnableVertexAttribArray(1)
 }
 
-full_screen_clear_from_gpu :: proc() {
+full_screen_clear_from_gpu :: proc(location := #caller_location) {
+	log.info("Clearing full screen triangle data from the GPU", location = location)
 	gl.DeleteBuffers(1, &full_screen_vbo)
 	gl.DeleteVertexArrays(1, &full_screen_vao)
 }

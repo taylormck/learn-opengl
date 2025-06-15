@@ -23,18 +23,21 @@ NUM_COLUMNS :: 7
 SPACING :: 2.5
 
 @(private = "file")
+CUBE_MAP_RESOLUTION :: 512
+
+@(private = "file")
 transforms: [NUM_ROWS * NUM_COLUMNS]types.TransformMatrix
 
 @(private = "file")
 mits: [NUM_ROWS * NUM_COLUMNS]types.SubTransformMatrix
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
-@(private = "file")
+@(private = "file", rodata)
 initial_camera_position := types.Vec3{11, 2, 17}
 
-@(private = "file")
+@(private = "file", rodata)
 initial_camera_target := types.Vec3{-1, -1, 0}
 
 @(private = "file")
@@ -83,9 +86,11 @@ env_capture_views := [6]types.TransformMatrix {
 	linalg.matrix4_look_at_f32(CENTER, {0, 0, -1}, {0, -1, 0}),
 }
 
-
 @(private = "file")
-albedo := types.Vec3{0.7, 0.3, 0.5}
+AO :: 1
+
+@(private = "file", rodata)
+ALBEDO := types.Vec3{0.7, 0.3, 0.5}
 
 @(private = "file")
 display_irradiance := false
@@ -99,6 +104,7 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 			.SkyboxHDR,
 			.CubemapConvolution,
 			.CubemapPrefilter,
+			.BRDFIntegration,
 		)
 
 		primitives.sphere_init()
@@ -114,6 +120,7 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 		defer gl.BindRenderbuffer(gl.RENDERBUFFER, 0)
 		defer gl.Viewport(0, 0, window.width, window.height)
 
+		log.info("Initializing sphere positions")
 		for row in 0 ..< NUM_ROWS {
 			for column in 0 ..< NUM_COLUMNS {
 				index := row * NUM_COLUMNS + column
@@ -126,12 +133,17 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 			}
 		}
 
+		log.debugf("Sphere positions: {}", transforms[:])
+		log.debugf("Sphere MITs: {}", mits[:])
+
+		log.infof("Initializing constant PBR uniforms: ao: {}, albedo: {}", AO, ALBEDO)
 		pbr_shader := shaders.shaders[.PBRIrradiance]
 		gl.UseProgram(pbr_shader)
-		shaders.set_float(pbr_shader, "ao", 1)
-		shaders.set_vec3(pbr_shader, "albedo", raw_data(&albedo))
+		shaders.set_float(pbr_shader, "ao", AO)
+		shaders.set_vec3(pbr_shader, "albedo", raw_data(&ALBEDO))
 
 		ibl_map := render.prepare_hdr_texture("textures/hdr/newport_loft.hdr", .Diffuse, flip_vertically = true)
+		// ibl_map := render.prepare_hdr_texture("textures/hdr/warm_restaurant_night.hdr", .Diffuse, flip_vertically = true)
 		// ibl_map := render.prepare_hdr_texture("textures/hdr/citrus_orchard_puresky.hdr", .Diffuse, flip_vertically = true)
 		defer gl.DeleteTextures(1, &ibl_map.id)
 
@@ -143,27 +155,37 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 		defer gl.DeleteRenderbuffers(1, &env_capture_rbo)
 
 		{
+			log.info("Converting equirectangular environment map into cube map")
+
 			gl.BindFramebuffer(gl.FRAMEBUFFER, env_capture_fbo)
 			gl.BindRenderbuffer(gl.RENDERBUFFER, env_capture_rbo)
 
-			gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, 512, 512)
+			gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, CUBE_MAP_RESOLUTION, CUBE_MAP_RESOLUTION)
 			gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, env_capture_rbo)
 
-			// Create cube map textures.
 			gl.GenTextures(1, &env_cube_map.texture_id)
 			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map.texture_id)
 
 			for i in 0 ..< 6 {
-				gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i), 0, gl.RGB16F, 512, 512, 0, gl.RGB, gl.FLOAT, nil)
+				gl.TexImage2D(
+					gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i),
+					0,
+					gl.RGB16F,
+					CUBE_MAP_RESOLUTION,
+					CUBE_MAP_RESOLUTION,
+					0,
+					gl.RGB,
+					gl.FLOAT,
+					nil,
+				)
 			}
 
 			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
-			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR_MIPMAP_LINEAR)
 			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
-			// Convert the equirectangular env map a cube map.
 			cubemap_shader := shaders.shaders[.EquirectangularTexture]
 
 			gl.UseProgram(cubemap_shader)
@@ -172,7 +194,7 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 			gl.BindTexture(gl.TEXTURE_2D, ibl_map.id)
 			shaders.set_int(cubemap_shader, "equirectangular_map", 0)
 
-			gl.Viewport(0, 0, 512, 512)
+			gl.Viewport(0, 0, CUBE_MAP_RESOLUTION, CUBE_MAP_RESOLUTION)
 
 			gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 			for i in 0 ..< 6 {
@@ -191,16 +213,18 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 
 				primitives.cube_draw()
 			}
+			gl.GenerateMipmap(gl.TEXTURE_CUBE_MAP)
 		}
 
 		{
+			log.info("Genereating convoluted environment map")
+
 			gl.BindFramebuffer(gl.FRAMEBUFFER, env_capture_fbo)
 			gl.BindRenderbuffer(gl.RENDERBUFFER, env_capture_rbo)
 
 			gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, 32, 32)
 			gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, env_capture_rbo)
 
-			// Create cube map textures.
 			gl.GenTextures(1, &irradiance_map.texture_id)
 			gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map.texture_id)
 
@@ -214,7 +238,6 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
 			gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 
-			// Convert the equirectangular env map a cube map.
 			convolution_shader := shaders.shaders[.CubemapConvolution]
 
 			gl.UseProgram(convolution_shader)
@@ -246,7 +269,8 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 		}
 
 		{
-			// Generate the prefilter map
+			log.info("Generating prefiltered environment map")
+
 			gl.BindFramebuffer(gl.FRAMEBUFFER, env_capture_fbo)
 			gl.BindRenderbuffer(gl.RENDERBUFFER, env_capture_rbo)
 
@@ -266,6 +290,8 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 
 			prefilter_shader := shaders.shaders[.CubemapPrefilter]
 			gl.UseProgram(prefilter_shader)
+
+			shaders.set_float(prefilter_shader, "cube_map_resolution", CUBE_MAP_RESOLUTION)
 
 			gl.ActiveTexture(gl.TEXTURE0)
 			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map.texture_id)
@@ -302,6 +328,10 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 					primitives.cube_draw()
 				}
 			}
+		}
+
+		{
+			log.info("Generating BRDF integration map")
 
 		}
 	},
