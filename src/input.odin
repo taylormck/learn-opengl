@@ -1,6 +1,7 @@
 package main
 
 import "base:runtime"
+import "core:log"
 import "core:math/linalg"
 import "input"
 import "render"
@@ -11,6 +12,7 @@ import glfw "vendor:glfw"
 MOUSE_SENSITIVITY :: 0.01
 
 init_input :: proc() {
+	log.info("Initializing input state")
 	input.input_state = input.InputState {
 		mouse = {position = {INITIAL_WIDTH / 2, INITIAL_HEIGHT / 2}},
 	}

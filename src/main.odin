@@ -41,15 +41,24 @@ main :: proc() {
 	}
 	defer log.destroy_console_logger(context.logger)
 
+	log.info("Initializing GLFW context")
 	ensure(bool(glfw.Init()), "GLFW failed to init.")
 	defer glfw.Terminate()
 
+	log.infof("Setting OpenGL version: {}.{} - Core Profile", GL_MAJOR_VERSION, GL_MINOR_VERSION)
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MAJOR, GL_MAJOR_VERSION)
 	glfw.WindowHint(glfw.CONTEXT_VERSION_MINOR, GL_MINOR_VERSION)
 	glfw.WindowHint(glfw.OPENGL_PROFILE, glfw.OPENGL_CORE_PROFILE)
-	glfw.WindowHint(glfw.OPENGL_FORWARD_COMPAT, gl.TRUE)
+
+	when ODIN_OS == .Darwin {
+		log.info("Dawrin detected. Setting forward compatibility.")
+		glfw.WindowHint(glfw.OPENGL_FORWARD_COMPAT, gl.TRUE)
+	}
+
+	log.infof("Setting number of samples per pixel: {}", NUM_SAMPLES)
 	glfw.WindowHint(glfw.SAMPLES, NUM_SAMPLES)
 
+	log.infof("Creating window: width: {}, height: {}", INITIAL_WIDTH, INITIAL_HEIGHT)
 	window_handle := glfw.CreateWindow(INITIAL_WIDTH, INITIAL_HEIGHT, "Renderer", nil, nil)
 	defer glfw.DestroyWindow(window_handle)
 
@@ -75,7 +84,10 @@ main :: proc() {
 
 	current_tableau = chapter_06_pbr.exercise_02_02_02_ibl_specular_textured
 
-	if current_tableau.init != nil do current_tableau.init()
+	if current_tableau.init != nil {
+		log.info("Initializing tableau")
+		current_tableau.init()
+	}
 
 	utils.print_gl_errors()
 
@@ -84,6 +96,7 @@ main :: proc() {
 
 	prev_time := glfw.GetTime()
 
+	log.info("Entering main loop")
 	for !glfw.WindowShouldClose(window_handle) {
 		new_time := glfw.GetTime()
 		delta := new_time - prev_time
@@ -101,6 +114,7 @@ main :: proc() {
 		glfw.SwapBuffers(window_handle)
 		prev_time = new_time
 	}
+	log.info("Exiting main loop")
 }
 
 framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, width, height: i32) {
