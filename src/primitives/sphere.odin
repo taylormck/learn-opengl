@@ -23,60 +23,7 @@ sphere_vertices: [dynamic]render.Vertex
 sphere_indices: [dynamic]u32
 
 @(private = "file")
-sphere_vao, sphere_vbo, sphere_ebo: u32
-
-sphere_send_to_gpu :: proc(location := #caller_location) {
-	assert(sphere_vao == 0, "attempted to send sphere to GPU twice.")
-	assert(sphere_vbo == 0, "attempted to send sphere to GPU twice.")
-	assert(len(sphere_vertices) > 0, "attempted to send sphere to GPU before initializing")
-	log.info("Sending sphere data to the GPU", location = location)
-
-	gl.GenVertexArrays(1, &sphere_vao)
-
-	gl.BindVertexArray(sphere_vao)
-	defer gl.BindVertexArray(0)
-
-	gl.GenBuffers(1, &sphere_vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, sphere_vbo)
-	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
-
-	gl.BufferData(
-		gl.ARRAY_BUFFER,
-		size_of(render.Vertex) * len(sphere_vertices),
-		raw_data(sphere_vertices),
-		gl.STATIC_DRAW,
-	)
-
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, position))
-	gl.EnableVertexAttribArray(0)
-
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, texture_coords))
-	gl.EnableVertexAttribArray(1)
-
-	gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, normal))
-	gl.EnableVertexAttribArray(2)
-
-	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, color))
-	gl.EnableVertexAttribArray(3)
-
-	gl.GenBuffers(1, &sphere_ebo)
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, sphere_ebo)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(u32) * len(sphere_indices), raw_data(sphere_indices), gl.STATIC_DRAW)
-}
-
-sphere_clear_from_gpu :: proc(location := #caller_location) {
-	log.info("Clearing sphere data from the GPU", location = location)
-	gl.DeleteBuffers(1, &sphere_vbo)
-	gl.DeleteBuffers(1, &sphere_ebo)
-	gl.DeleteVertexArrays(1, &sphere_vao)
-}
-
-sphere_draw :: proc() {
-	gl.BindVertexArray(sphere_vao)
-	defer gl.BindVertexArray(0)
-
-	gl.DrawElements(gl.TRIANGLES, i32(len(sphere_indices)), gl.UNSIGNED_INT, nil)
-}
+vao, vbo, ebo: u32
 
 sphere_init :: proc(location := #caller_location) {
 	log.info("Initializing sphere", location = location)
@@ -128,4 +75,62 @@ sphere_destroy :: proc(location := #caller_location) {
 	log.info("Destorying the sphere data", location = location)
 	delete(sphere_vertices)
 	delete(sphere_indices)
+}
+
+sphere_send_to_gpu :: proc(location := #caller_location) {
+	ensure(vao == 0, "attempted to send sphere to GPU twice.")
+	ensure(vbo == 0, "attempted to send sphere to GPU twice.")
+	ensure(ebo == 0, "attempted to send sphere to GPU twice.")
+	ensure(len(sphere_vertices) > 0, "attempted to send sphere to GPU before initializing")
+	log.info("Sending sphere data to the GPU", location = location)
+
+	gl.GenVertexArrays(1, &vao)
+
+	gl.BindVertexArray(vao)
+	defer gl.BindVertexArray(0)
+
+	gl.GenBuffers(1, &vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+
+	gl.BufferData(
+		gl.ARRAY_BUFFER,
+		size_of(render.Vertex) * len(sphere_vertices),
+		raw_data(sphere_vertices),
+		gl.STATIC_DRAW,
+	)
+
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, position))
+	gl.EnableVertexAttribArray(0)
+
+	gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, texture_coords))
+	gl.EnableVertexAttribArray(1)
+
+	gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, normal))
+	gl.EnableVertexAttribArray(2)
+
+	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, color))
+	gl.EnableVertexAttribArray(3)
+
+	gl.GenBuffers(1, &ebo)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(u32) * len(sphere_indices), raw_data(sphere_indices), gl.STATIC_DRAW)
+}
+
+sphere_clear_from_gpu :: proc(location := #caller_location) {
+	ensure(vao != 0, "attempted to remove sphere from GPU but was already removed.")
+	ensure(vbo != 0, "attempted to remove sphere from GPU but was already removed.")
+	ensure(ebo != 0, "attempted to remove sphere from GPU but was already removed.")
+	log.info("Clearing sphere data from the GPU", location = location)
+
+	gl.DeleteBuffers(1, &vbo)
+	gl.DeleteBuffers(1, &ebo)
+	gl.DeleteVertexArrays(1, &vao)
+}
+
+sphere_draw :: proc() {
+	gl.BindVertexArray(vao)
+	defer gl.BindVertexArray(0)
+
+	gl.DrawElements(gl.TRIANGLES, i32(len(sphere_indices)), gl.UNSIGNED_INT, nil)
 }

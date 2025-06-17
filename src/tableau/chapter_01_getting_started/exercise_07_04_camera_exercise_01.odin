@@ -5,6 +5,7 @@ import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
+import "../../utils"
 import "../../window"
 import "core:math"
 import "core:math/linalg"
@@ -86,6 +87,7 @@ exercise_07_04_camera_exercise_01 := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		texture_shader := shaders.shaders[.TransformDoubleTexture]
+		gl.UseProgram(texture_shader)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -97,7 +99,6 @@ exercise_07_04_camera_exercise_01 := types.Tableau {
 			transform := projection * view * model
 			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
 
-			gl.UseProgram(texture_shader)
 			primitives.cube_draw()
 		}
 	},
