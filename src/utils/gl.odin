@@ -30,3 +30,17 @@ print_gl_errors :: proc(location := #caller_location) {
 		log.errorf("OpenGL Error: {}", err_msg, location = location)
 	}
 }
+
+get_current_vao :: proc() -> i32 {
+	vao: i32 = ---
+	gl.GetIntegerv(gl.VERTEX_ARRAY_BINDING, &vao)
+
+	return vao
+}
+
+get_current_vbo :: proc() -> i32 {
+	vbo: i32 = ---
+	gl.GetIntegerv(gl.ARRAY_BUFFER_BINDING, &vbo)
+
+	return vbo
+}

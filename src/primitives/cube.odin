@@ -65,19 +65,10 @@ cube_send_to_gpu :: proc(location := #caller_location) {
 	gl.GenBuffers(1, &vbo)
 
 	gl.BindVertexArray(vao)
-	vertex_data := VERTICES
-
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, size_of(render.Vertex) * len(vertex_data), &vertex_data, gl.STATIC_DRAW)
 
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, position))
-	gl.EnableVertexAttribArray(0)
-
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, texture_coords))
-	gl.EnableVertexAttribArray(1)
-
-	gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, normal))
-	gl.EnableVertexAttribArray(2)
+	vertices := VERTICES
+	render.send_vertices_to_gpu(vertices[:])
 }
 
 cube_clear_from_gpu :: proc(location := #caller_location) {
