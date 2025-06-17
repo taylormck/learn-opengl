@@ -65,6 +65,9 @@ exercise_01_01_advanced_lighting := types.Tableau {
 		shaders.init_shaders(.PhongDiffuseSampled, .BlinnPhongDiffuseSampled)
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
 		primitives.plane_send_to_gpu()
+
+		if use_blinn do log.info("Enabling Blinn-Phong lighting.")
+		else do log.info("Disabling Blinn-Phong lighting")
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -76,7 +79,12 @@ exercise_01_01_advanced_lighting := types.Tableau {
 			linalg.to_radians(f32(45)),
 		)
 
-		if .B in input.input_state.pressed_keys do use_blinn = !use_blinn
+		if .B in input.input_state.pressed_keys {
+			use_blinn = !use_blinn
+
+			if use_blinn do log.info("Enabling Blinn-Phong lighting.")
+			else do log.info("Disabling Blinn-Phong lighting")
+		}
 	},
 	draw = proc() {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
