@@ -103,6 +103,9 @@ exercise_02_01_gamma_correction := types.Tableau {
 			gamma_correction = true,
 		)
 		primitives.plane_send_to_gpu()
+
+		if gamma do log.info("Enabling gamma correction.")
+		else do log.info("Disabling gamma correction")
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))
@@ -114,7 +117,12 @@ exercise_02_01_gamma_correction := types.Tableau {
 			linalg.to_radians(f32(45)),
 		)
 
-		if .Space in input.input_state.pressed_keys do gamma = !gamma
+		if .Space in input.input_state.pressed_keys {
+			gamma = !gamma
+
+			if gamma do log.info("Enabling gamma correction.")
+			else do log.info("Disabling gamma correction")
+		}
 	},
 	draw = proc() {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)

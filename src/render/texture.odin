@@ -87,7 +87,15 @@ prepare_texture :: proc(
 		fmt.panicf("Unsupported number of channels: {}", num_channels)
 	}
 
-	log.infof("Generating texture for image: {} - {}", path, img, location = location)
+	log.infof(
+		"Generating texture for image {}: gamma correction: {}, width: {}, height: {}, channels: {}",
+		path,
+		gamma_correction,
+		img.width,
+		img.height,
+		img.channels,
+		location = location,
+	)
 
 	gl.TexImage2D(gl.TEXTURE_2D, 0, internal_format, img.width, img.height, 0, data_format, gl.UNSIGNED_BYTE, img.buffer)
 	gl.GenerateMipmap(gl.TEXTURE_2D)
@@ -122,7 +130,15 @@ prepare_hdr_texture :: proc(
 	gl.GenTextures(1, &t.id)
 	gl.BindTexture(gl.TEXTURE_2D, t.id)
 
-	log.infof("Generating texture for image: {} - {}", path, img, location = location)
+	log.infof(
+		"Generating HDR texture for image {}: gamma correction: {}, width: {}, height: {}, channels: {}",
+		path,
+		gamma_correction,
+		img.width,
+		img.height,
+		img.channels,
+		location = location,
+	)
 
 	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGB16F, img.width, img.height, 0, gl.RGB, gl.FLOAT, img.buffer)
 
