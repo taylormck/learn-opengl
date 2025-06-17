@@ -63,7 +63,7 @@ light_colors := [NUM_POINT_LIGHTS]types.Vec3{{700, 300, 300}, {300, 700, 300}, {
 pbr_material :: "plastic"
 
 @(private = "file")
-env_cube_map: primitives.Cubemap
+env_cube_map: u32
 
 @(private = "file")
 env_capture_projection := linalg.matrix4_perspective_f32(
@@ -95,9 +95,12 @@ albedo := types.Vec3{0.5, 0, 0}
 exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.PBR, .Light, .EquirectangularTexture, .SkyboxHDR)
+
 		primitives.sphere_init()
 		primitives.sphere_send_to_gpu()
-		primitives.cubemap_send_to_gpu(&env_cube_map)
+		primitives.sphere_destroy()
+
+		primitives.cubemap_send_to_gpu()
 		primitives.cube_send_to_gpu()
 
 		for row in 0 ..< NUM_ROWS {
@@ -137,8 +140,8 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 			gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, env_capture_rbo)
 
 			// Create cube map textures.
-			gl.GenTextures(1, &env_cube_map.texture_id)
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map.texture_id)
+			gl.GenTextures(1, &env_cube_map)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map)
 
 			for i in 0 ..< 6 {
 				gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i), 0, gl.RGB16F, 512, 512, 0, gl.RGB, gl.FLOAT, nil)
@@ -171,7 +174,7 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 					gl.FRAMEBUFFER,
 					gl.COLOR_ATTACHMENT0,
 					gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i),
-					env_cube_map.texture_id,
+					env_cube_map,
 					0,
 				)
 
@@ -259,13 +262,13 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 		shaders.set_mat_4x4(skybox_shader, "projection_view", raw_data(&projection_rot_view))
 		shaders.set_int(skybox_shader, "skybox", 0)
 
-		primitives.cubemap_draw(&env_cube_map)
+		primitives.cubemap_draw(env_cube_map)
 	},
 	teardown = proc() {
-		primitives.cube_send_to_gpu()
-		primitives.cubemap_clear_from_gpu(&env_cube_map)
-		primitives.cubemap_destroy_texture(&env_cube_map)
+		primitives.cube_clear_from_gpu()
+		primitives.cubemap_clear_from_gpu()
 		primitives.sphere_clear_from_gpu()
-		primitives.sphere_destroy()
+
+		gl.DeleteTextures(1, &env_cube_map)
 	},
 }

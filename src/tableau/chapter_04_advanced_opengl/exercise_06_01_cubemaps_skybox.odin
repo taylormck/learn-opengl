@@ -36,15 +36,17 @@ camera := render.Camera {
 container_texture: render.Texture
 
 @(private = "file")
-cubemap: primitives.Cubemap
+cubemap: u32
 
 exercise_06_01_cubemaps_skybox := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformTexture, .Skybox)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
-		primitives.cubemap_send_to_gpu(&cubemap)
-		primitives.cubemap_load(&cubemap, "textures/skybox")
+
+		primitives.cubemap_send_to_gpu()
 		primitives.cube_send_to_gpu()
+
+		cubemap = primitives.cubemap_load_texture("textures/skybox")
 	},
 	update = proc(delta: f64) {
 		camera.aspect_ratio = window.aspect_ratio()
@@ -68,7 +70,7 @@ exercise_06_01_cubemaps_skybox := types.Tableau {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
-		gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap.texture_id)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -90,15 +92,15 @@ exercise_06_01_cubemaps_skybox := types.Tableau {
 		cubemap_view := types.TransformMatrix(types.SubTransformMatrix(view))
 		cubemap_pv := projection * cubemap_view
 		gl.UniformMatrix4fv(gl.GetUniformLocation(skybox_shader, "projection_view"), 1, false, raw_data(&cubemap_pv))
-		primitives.cubemap_draw(&cubemap)
+		primitives.cubemap_draw(cubemap)
 
 		gl.DepthFunc(gl.LESS)
 
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.cubemap_destroy_texture(&cubemap)
-		primitives.cubemap_clear_from_gpu(&cubemap)
+		primitives.cubemap_clear_from_gpu()
 		gl.DeleteTextures(1, &container_texture.id)
+		gl.DeleteTextures(1, &cubemap)
 	},
 }

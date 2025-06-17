@@ -63,7 +63,7 @@ light_positions := [NUM_POINT_LIGHTS]types.Vec3{{-10, 10, 10}, {10, 10, 10}, {-1
 light_colors := [NUM_POINT_LIGHTS]types.Vec3{{700, 300, 300}, {300, 700, 300}, {300, 300, 700}, {700, 300, 700}}
 
 @(private = "file")
-env_cube_map, irradiance_map, prefilter_map: primitives.Cubemap
+env_cube_map, irradiance_map, prefilter_map: u32
 
 @(private = "file")
 env_capture_projection := linalg.matrix4_perspective_f32(
@@ -120,9 +120,7 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 		primitives.sphere_send_to_gpu()
 		primitives.sphere_destroy()
 
-		primitives.cubemap_send_to_gpu(&env_cube_map)
-		primitives.cubemap_send_to_gpu(&irradiance_map)
-		primitives.cubemap_send_to_gpu(&prefilter_map)
+		primitives.cubemap_send_to_gpu()
 		primitives.cube_send_to_gpu()
 
 		primitives.full_screen_send_to_gpu()
@@ -211,8 +209,8 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 			gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, CUBE_MAP_RESOLUTION, CUBE_MAP_RESOLUTION)
 			gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, env_capture_rbo)
 
-			gl.GenTextures(1, &env_cube_map.texture_id)
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map.texture_id)
+			gl.GenTextures(1, &env_cube_map)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map)
 
 			for i in 0 ..< 6 {
 				gl.TexImage2D(
@@ -253,7 +251,7 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 					gl.FRAMEBUFFER,
 					gl.COLOR_ATTACHMENT0,
 					gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i),
-					env_cube_map.texture_id,
+					env_cube_map,
 					0,
 				)
 
@@ -273,8 +271,8 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 			gl.RenderbufferStorage(gl.RENDERBUFFER, gl.DEPTH_COMPONENT24, 32, 32)
 			gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, env_capture_rbo)
 
-			gl.GenTextures(1, &irradiance_map.texture_id)
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map.texture_id)
+			gl.GenTextures(1, &irradiance_map)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map)
 
 			for i in 0 ..< 6 {
 				gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i), 0, gl.RGB16F, 32, 32, 0, gl.RGB, gl.FLOAT, nil)
@@ -291,7 +289,7 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 			gl.UseProgram(convolution_shader)
 
 			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map.texture_id)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map)
 
 			shaders.set_int(convolution_shader, "environment_map", 0)
 
@@ -306,7 +304,7 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 					gl.FRAMEBUFFER,
 					gl.COLOR_ATTACHMENT0,
 					gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i),
-					irradiance_map.texture_id,
+					irradiance_map,
 					0,
 				)
 
@@ -322,8 +320,8 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 			gl.BindFramebuffer(gl.FRAMEBUFFER, env_capture_fbo)
 			gl.BindRenderbuffer(gl.RENDERBUFFER, env_capture_rbo)
 
-			gl.GenTextures(1, &prefilter_map.texture_id)
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP, prefilter_map.texture_id)
+			gl.GenTextures(1, &prefilter_map)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, prefilter_map)
 
 			for i in 0 ..< 6 {
 				gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i), 0, gl.RGB16F, 128, 128, 0, gl.RGB, gl.FLOAT, nil)
@@ -342,7 +340,7 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 			shaders.set_float(prefilter_shader, "cube_map_resolution", CUBE_MAP_RESOLUTION)
 
 			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map.texture_id)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map)
 			shaders.set_int(prefilter_shader, "environment_map", 0)
 
 			max_mip_levels :: 5
@@ -367,7 +365,7 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 						gl.FRAMEBUFFER,
 						gl.COLOR_ATTACHMENT0,
 						gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i),
-						prefilter_map.texture_id,
+						prefilter_map,
 						i32(mip),
 					)
 
@@ -446,10 +444,10 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 		gl.BindTexture(gl.TEXTURE_2D, ao_map.id)
 
 		gl.ActiveTexture(gl.TEXTURE5)
-		gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map.texture_id)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map)
 
 		gl.ActiveTexture(gl.TEXTURE6)
-		gl.BindTexture(gl.TEXTURE_CUBE_MAP, prefilter_map.texture_id)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, prefilter_map)
 
 		gl.ActiveTexture(gl.TEXTURE7)
 		gl.BindTexture(gl.TEXTURE_2D, brdf_lut_texture.id)
@@ -493,25 +491,21 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 		shaders.set_mat_4x4(skybox_shader, "projection_view", raw_data(&projection_rot_view))
 		shaders.set_int(skybox_shader, "skybox", 0)
 
-		if display_irradiance {primitives.cubemap_draw(&prefilter_map)} else {primitives.cubemap_draw(&env_cube_map)}
+		if display_irradiance {primitives.cubemap_draw(prefilter_map)} else {primitives.cubemap_draw(env_cube_map)}
 	},
 	teardown = proc() {
-		gl.DeleteTextures(1, &brdf_lut_texture.id)
 		primitives.full_screen_clear_from_gpu()
-
-		primitives.cubemap_clear_from_gpu(&env_cube_map)
-		primitives.cubemap_destroy_texture(&env_cube_map)
-		primitives.cubemap_clear_from_gpu(&irradiance_map)
-		primitives.cubemap_destroy_texture(&irradiance_map)
-		primitives.cubemap_clear_from_gpu(&prefilter_map)
-		primitives.cubemap_destroy_texture(&prefilter_map)
-
+		primitives.cubemap_clear_from_gpu()
 		primitives.sphere_clear_from_gpu()
 
+		gl.DeleteTextures(1, &brdf_lut_texture.id)
 		gl.DeleteTextures(1, &albedo_map.id)
 		gl.DeleteTextures(1, &normal_map.id)
 		gl.DeleteTextures(1, &metallic_map.id)
 		gl.DeleteTextures(1, &roughness_map.id)
 		gl.DeleteTextures(1, &ao_map.id)
+		gl.DeleteTextures(1, &env_cube_map)
+		gl.DeleteTextures(1, &irradiance_map)
+		gl.DeleteTextures(1, &prefilter_map)
 	},
 }

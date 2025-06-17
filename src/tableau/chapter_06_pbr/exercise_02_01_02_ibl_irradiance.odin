@@ -60,7 +60,7 @@ light_positions := [NUM_POINT_LIGHTS]types.Vec3{{-10, 10, 10}, {10, 10, 10}, {-1
 light_colors := [NUM_POINT_LIGHTS]types.Vec3{{700, 300, 300}, {300, 700, 300}, {300, 300, 700}, {700, 300, 700}}
 
 @(private = "file")
-env_cube_map, irradiance_map: primitives.Cubemap
+env_cube_map, irradiance_map: u32
 
 @(private = "file")
 env_capture_projection := linalg.matrix4_perspective_f32(
@@ -93,10 +93,12 @@ display_irradiance := false
 exercise_02_01_02_ibl_irradiance := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.PBRIrradiance, .Light, .EquirectangularTexture, .SkyboxHDR, .CubemapConvolution)
+
 		primitives.sphere_init()
 		primitives.sphere_send_to_gpu()
-		primitives.cubemap_send_to_gpu(&env_cube_map)
-		primitives.cubemap_send_to_gpu(&irradiance_map)
+		primitives.sphere_destroy()
+
+		primitives.cubemap_send_to_gpu()
 		primitives.cube_send_to_gpu()
 
 		defer gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
@@ -138,8 +140,8 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 			gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, env_capture_rbo)
 
 			// Create cube map textures.
-			gl.GenTextures(1, &env_cube_map.texture_id)
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map.texture_id)
+			gl.GenTextures(1, &env_cube_map)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map)
 
 			for i in 0 ..< 6 {
 				gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i), 0, gl.RGB16F, 512, 512, 0, gl.RGB, gl.FLOAT, nil)
@@ -172,7 +174,7 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 					gl.FRAMEBUFFER,
 					gl.COLOR_ATTACHMENT0,
 					gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i),
-					env_cube_map.texture_id,
+					env_cube_map,
 					0,
 				)
 
@@ -197,8 +199,8 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 			gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.RENDERBUFFER, env_capture_rbo)
 
 			// Create cube map textures.
-			gl.GenTextures(1, &irradiance_map.texture_id)
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map.texture_id)
+			gl.GenTextures(1, &irradiance_map)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map)
 
 			for i in 0 ..< 6 {
 				gl.TexImage2D(gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i), 0, gl.RGB16F, 32, 32, 0, gl.RGB, gl.FLOAT, nil)
@@ -216,7 +218,7 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 			gl.UseProgram(convolution_shader)
 
 			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map.texture_id)
+			gl.BindTexture(gl.TEXTURE_CUBE_MAP, env_cube_map)
 
 			shaders.set_int(convolution_shader, "environment_map", 0)
 
@@ -232,7 +234,7 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 					gl.FRAMEBUFFER,
 					gl.COLOR_ATTACHMENT0,
 					gl.TEXTURE_CUBE_MAP_POSITIVE_X + u32(i),
-					irradiance_map.texture_id,
+					irradiance_map,
 					0,
 				)
 
@@ -275,7 +277,7 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 		shaders.set_vec3(pbr_shader, "view_position", raw_data(&camera.position))
 
 		gl.ActiveTexture(gl.TEXTURE0)
-		gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map.texture_id)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, irradiance_map)
 		shaders.set_int(pbr_shader, "irradiance_map", 0)
 
 		for i in 0 ..< NUM_POINT_LIGHTS {
@@ -326,15 +328,14 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 		shaders.set_mat_4x4(skybox_shader, "projection_view", raw_data(&projection_rot_view))
 		shaders.set_int(skybox_shader, "skybox", 0)
 
-		if display_irradiance {primitives.cubemap_draw(&irradiance_map)} else {primitives.cubemap_draw(&env_cube_map)}
+		if display_irradiance {primitives.cubemap_draw(irradiance_map)} else {primitives.cubemap_draw(env_cube_map)}
 	},
 	teardown = proc() {
-		primitives.cube_send_to_gpu()
-		primitives.cubemap_clear_from_gpu(&env_cube_map)
-		primitives.cubemap_destroy_texture(&env_cube_map)
-		primitives.cubemap_clear_from_gpu(&irradiance_map)
-		primitives.cubemap_destroy_texture(&irradiance_map)
+		primitives.cube_clear_from_gpu()
+		primitives.cubemap_clear_from_gpu()
 		primitives.sphere_clear_from_gpu()
-		primitives.sphere_destroy()
+
+		gl.DeleteTextures(1, &env_cube_map)
+		gl.DeleteTextures(1, &irradiance_map)
 	},
 }

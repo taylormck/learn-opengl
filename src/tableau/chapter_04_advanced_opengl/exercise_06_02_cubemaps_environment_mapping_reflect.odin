@@ -36,7 +36,7 @@ camera := render.Camera {
 }
 
 @(private = "file")
-cubemap: primitives.Cubemap
+cubemap: u32
 
 @(private = "file")
 backpack_model: render.Scene
@@ -44,8 +44,10 @@ backpack_model: render.Scene
 exercise_06_02_cubemaps_environment_mapping_reflect := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.SkyboxReflect, .Skybox)
-		primitives.cubemap_send_to_gpu(&cubemap)
-		primitives.cubemap_load(&cubemap, "textures/skybox")
+
+		primitives.cubemap_send_to_gpu()
+		cubemap = primitives.cubemap_load_texture("textures/skybox")
+
 		backpack_model =
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 		render.scene_send_to_gpu(&backpack_model)
@@ -68,7 +70,7 @@ exercise_06_02_cubemaps_environment_mapping_reflect := types.Tableau {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
-		gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap.texture_id)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -92,14 +94,14 @@ exercise_06_02_cubemaps_environment_mapping_reflect := types.Tableau {
 		cubemap_view := types.TransformMatrix(types.SubTransformMatrix(view))
 		cubemap_pv := projection * cubemap_view
 		shaders.set_mat_4x4(skybox_shader, "projection_view", raw_data(&cubemap_pv))
-		primitives.cubemap_draw(&cubemap)
+		primitives.cubemap_draw(cubemap)
 
 		gl.DepthFunc(gl.LESS)
 	},
 	teardown = proc() {
 		render.scene_clear_from_gpu(&backpack_model)
 		render.scene_destroy(&backpack_model)
-		primitives.cubemap_destroy_texture(&cubemap)
-		primitives.cubemap_clear_from_gpu(&cubemap)
+		primitives.cubemap_clear_from_gpu()
+		gl.DeleteTextures(1, &cubemap)
 	},
 }
