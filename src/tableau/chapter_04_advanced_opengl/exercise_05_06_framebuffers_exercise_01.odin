@@ -70,7 +70,7 @@ exercise_05_06_framebuffers_exercise_01 := types.Tableau {
 
 		gl.FramebufferRenderbuffer(gl.FRAMEBUFFER, gl.DEPTH_STENCIL_ATTACHMENT, gl.RENDERBUFFER, rbo)
 
-		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) != gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
+		ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	},
 	update = proc(delta: f64) {
@@ -89,14 +89,13 @@ exercise_05_06_framebuffers_exercise_01 := types.Tableau {
 		single_color_shader := shaders.shaders[.SingleColor]
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
-
 		gl.ActiveTexture(gl.TEXTURE0)
 
+		gl.UseProgram(texture_shader)
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 
 		camera.direction = -camera.direction
 
-		gl.UseProgram(texture_shader)
 		draw_scene(texture_shader)
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)

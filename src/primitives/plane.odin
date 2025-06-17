@@ -2,11 +2,14 @@ package primitives
 
 import "../render"
 import "../types"
+import "core:log"
 import gl "vendor:OpenGL"
 
-NUM_PLANE_VERTICES :: 4
+@(private = "file")
+NUM_VERTICES :: 4
 
-PLANE_VERTICES := [NUM_PLANE_VERTICES]render.Vertex {
+@(private = "file")
+VERTICES :: [NUM_VERTICES]render.Vertex {
 	// near right
 	{position = {25, -0.5, 25}, texture_coords = {25, 0}, color = {0, 1, 1}, normal = {0, 1, 0}},
 	// near left
@@ -17,61 +20,48 @@ PLANE_VERTICES := [NUM_PLANE_VERTICES]render.Vertex {
 	{position = {-25, -0.5, -25}, texture_coords = {0, 25}, color = {0, 0, 1}, normal = {0, 1, 0}},
 }
 
-PLANE_INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
+@(private = "file")
+INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
 
-plane_vao, plane_vbo, plane_ebo: u32
+@(private = "file")
+vao, vbo, ebo: u32
 
-plane_send_to_gpu :: proc() {
-	assert(plane_vao == 0, "Plane VAO already set")
-	assert(plane_vbo == 0, "Plane VBO already set")
-	assert(plane_ebo == 0, "Plane EBO already set")
+plane_send_to_gpu :: proc(location := #caller_location) {
+	ensure(vao == 0, "Attempted to send fullscreen data to GPU twice.")
+	ensure(vbo == 0, "Attempted to send fullscreen data to GPU twice.")
+	ensure(ebo == 0, "Attempted to send fullscreen data to GPU twice.")
+	log.info("Sending plane data to the GPU", location = location)
 
-	gl.GenVertexArrays(1, &plane_vao)
-	gl.GenBuffers(1, &plane_vbo)
-	gl.GenBuffers(1, &plane_ebo)
+	gl.GenVertexArrays(1, &vao)
+	gl.GenBuffers(1, &vbo)
+	gl.GenBuffers(1, &ebo)
 
-	gl.BindVertexArray(plane_vao)
+	gl.BindVertexArray(vao)
+	defer gl.BindVertexArray(0)
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, plane_vbo)
-	gl.BufferData(
-		gl.ARRAY_BUFFER,
-		size_of(render.Vertex) * NUM_PLANE_VERTICES,
-		raw_data(PLANE_VERTICES[:]),
-		gl.STATIC_DRAW,
-	)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
+	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, position))
-	gl.EnableVertexAttribArray(0)
+	vertices := VERTICES
+	render.send_vertices_to_gpu(vertices[:])
 
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, texture_coords))
-	gl.EnableVertexAttribArray(1)
-
-	gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, normal))
-	gl.EnableVertexAttribArray(2)
-
-	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, color))
-	gl.EnableVertexAttribArray(3)
-
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, plane_ebo)
-	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(PLANE_INDICES), &PLANE_INDICES, gl.STATIC_DRAW)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
+	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(INDICES), &INDICES, gl.STATIC_DRAW)
 }
 
-plane_clear_from_gpu :: proc() {
-	assert(plane_vao != 0, "Plane VAO not set")
-	assert(plane_vbo != 0, "Plane VBO not set")
-	assert(plane_ebo != 0, "Plane EBO not set")
+plane_clear_from_gpu :: proc(location := #caller_location) {
+	ensure(vbo != 0, "Attempted to clear fullscreen data from GPU, but was already clear.")
+	log.info("Clearing plane data from the GPU", location = location)
 
-	gl.DeleteBuffers(1, &plane_vbo)
-	gl.DeleteBuffers(1, &plane_ebo)
-	gl.DeleteVertexArrays(1, &plane_vao)
+	gl.DeleteBuffers(1, &vbo)
+	gl.DeleteBuffers(1, &ebo)
+	gl.DeleteVertexArrays(1, &vao)
 }
 
 plane_draw :: proc() {
-	assert(plane_vao != 0, "Plane VAO not set")
-	assert(plane_vbo != 0, "Plane VBO not set")
-	assert(plane_ebo != 0, "Plane EBO not set")
+	ensure(vao != 0, "Attempted to draw plane, but plane data has not been sent to the GPU.")
 
-	gl.BindVertexArray(plane_vao)
+	gl.BindVertexArray(vao)
 	defer gl.BindVertexArray(0)
 
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)

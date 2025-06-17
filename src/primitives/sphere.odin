@@ -93,24 +93,7 @@ sphere_send_to_gpu :: proc(location := #caller_location) {
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
-	gl.BufferData(
-		gl.ARRAY_BUFFER,
-		size_of(render.Vertex) * len(sphere_vertices),
-		raw_data(sphere_vertices),
-		gl.STATIC_DRAW,
-	)
-
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, position))
-	gl.EnableVertexAttribArray(0)
-
-	gl.VertexAttribPointer(1, 2, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, texture_coords))
-	gl.EnableVertexAttribArray(1)
-
-	gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, normal))
-	gl.EnableVertexAttribArray(2)
-
-	gl.VertexAttribPointer(3, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, color))
-	gl.EnableVertexAttribArray(3)
+	render.send_vertices_to_gpu(sphere_vertices[:])
 
 	gl.GenBuffers(1, &ebo)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)

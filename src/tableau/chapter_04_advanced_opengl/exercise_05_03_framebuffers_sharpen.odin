@@ -96,8 +96,8 @@ exercise_05_03_framebuffers_sharpen := types.Tableau {
 		gl.ActiveTexture(gl.TEXTURE0)
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 		gl.UseProgram(texture_shader)
+		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
