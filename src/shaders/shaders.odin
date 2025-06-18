@@ -88,6 +88,7 @@ Shader :: enum {
 	BRDFIntegration,
 	PBRFull,
 	PBRFullTextured,
+	Text,
 }
 
 ShaderMap :: map[Shader]u32
@@ -693,6 +694,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pbr.vert"),
 				#load("../../shaders/frag/pbr_full_textured.frag"),
 			) or_else panic("Failed to load the PBR Full Textured shader")
+
+	case .Text:
+		shaders[.Text] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/text.vert"),
+				#load("../../shaders/frag/text.frag"),
+			) or_else panic("Failed to load the text shader")
 
 	}
 }

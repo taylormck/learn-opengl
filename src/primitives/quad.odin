@@ -104,6 +104,7 @@ quad_draw :: proc() {
 	gl.BindVertexArray(quad_vao)
 	defer gl.BindVertexArray(0)
 
+	// TODO: render as a TRIANGLE_STRIP for better performance
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, nil)
 }
 

@@ -99,6 +99,7 @@ mesh_set_material :: proc(mesh: ^Mesh, shader_id: u32) {
 mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
 	diffuse_count, specular_count, normal_count, emissive_count: u32
 	metallic_count, roughness_count, ao_count, displacement_count: u32
+	albedo_count, alpha_count: u32
 
 	for texture, i in mesh.textures {
 		i := i32(i)
@@ -123,14 +124,18 @@ mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
 			texture_type = "emissive"
 			number = emissive_count
 			emissive_count += 1
+		case .Albedo:
+			texture_type = "alpha"
+			number = albedo_count
+			albedo_count += 1
 		case .Metallic:
 			texture_type = "metallic"
 			number = metallic_count
-			displacement_count += 1
+			metallic_count += 1
 		case .Roughness:
 			texture_type = "roughness"
 			number = roughness_count
-			displacement_count += 1
+			roughness_count += 1
 		case .Displacement:
 			texture_type = "displacement"
 			number = displacement_count
@@ -138,7 +143,11 @@ mesh_set_textures :: proc(mesh: ^Mesh, shader_id: u32) {
 		case .AO:
 			texture_type = "ao"
 			number = ao_count
-			displacement_count += 1
+			ao_count += 1
+		case .Alpha:
+			texture_type = "alpha"
+			number = alpha_count
+			alpha_count += 1
 		}
 
 		texture_name := fmt.caprintf("material.{}_{}", texture_type, number)

@@ -17,10 +17,12 @@ TextureType :: enum {
 	Specular,
 	Normal,
 	Emissive,
+	Albedo,
 	Displacement,
 	Metallic,
 	Roughness,
 	AO,
+	Alpha,
 }
 
 Image :: struct {

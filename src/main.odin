@@ -23,6 +23,7 @@ import "tableau/chapter_03_model_loading"
 import "tableau/chapter_04_advanced_opengl"
 import "tableau/chapter_05_advanced_lighting"
 import "tableau/chapter_06_pbr"
+import "tableau/chapter_07_in_practice"
 
 INITIAL_WIDTH :: 800
 INITIAL_HEIGHT :: 600
@@ -82,8 +83,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_03_model_loading.exercise_01_01_model
-	// current_tableau = chapter_06_pbr.exercise_02_02_02_ibl_specular_textured
+	current_tableau = chapter_07_in_practice.exercise_02_text_rendering
 
 	if current_tableau.init != nil {
 		log.info("Initializing tableau")
