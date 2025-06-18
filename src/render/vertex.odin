@@ -13,20 +13,6 @@ Vertex :: struct {
 	bitangent:      types.Vec3,
 }
 
-VertexData :: struct {
-	positions: [dynamic]types.Vec3,
-	colors:    [dynamic]types.Vec3,
-	uvs:       [dynamic]types.Vec2,
-	normals:   [dynamic]types.Vec3,
-}
-
-vertex_data_free :: proc(v: ^VertexData) {
-	delete(v.positions)
-	delete(v.colors)
-	delete(v.uvs)
-	delete(v.normals)
-}
-
 send_vertices_to_gpu :: proc(vertices: []Vertex, location := #caller_location) {
 	assert(utils.get_current_vao() != 0, "Attempted to send vertices to GPU, but VAO not bound")
 	assert(utils.get_current_vbo() != 0, "Attempted to send vertices to GPU, but VBO not bound")
