@@ -14,6 +14,8 @@ ObjTokenIter :: common.TokenIter(ObjToken)
 VertexMap :: map[render.MeshVertex]uint
 
 load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.Scene, ok: bool) {
+	log.infof("Loading scene from file: {}/{}", dir_path, file_name)
+
 	path := fmt.tprintf("{}/{}", dir_path, file_name)
 	scene_file_data := os.read_entire_file(path) or_return
 	defer delete(scene_file_data)
@@ -345,6 +347,7 @@ parse_material :: proc(
 ) -> (
 	ok: bool,
 ) {
+	log.infof("Loading material from file: {}", material_file_name)
 	mtl_data, loaded_ok := load_material_data(material_file_name)
 
 	if !loaded_ok {

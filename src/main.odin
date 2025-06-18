@@ -82,10 +82,7 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	// current_tableau = chapter_01_getting_started.exercise_07_04_camera_exercise_01
-	current_tableau = chapter_01_getting_started.exercise_02_02_hello_triangle_indexed
-	// current_tableau = chapter_04_advanced_opengl.exercise_09_02_geometry_shader_exploding
-	// current_tableau = chapter_05_advanced_lighting.exercise_02_01_gamma_correction
+	current_tableau = chapter_03_model_loading.exercise_01_01_model
 	// current_tableau = chapter_06_pbr.exercise_02_02_02_ibl_specular_textured
 
 	if current_tableau.init != nil {
