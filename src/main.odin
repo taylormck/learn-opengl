@@ -25,7 +25,7 @@ import "tableau/chapter_05_advanced_lighting"
 import "tableau/chapter_06_pbr"
 import "tableau/chapter_07_in_practice"
 
-INITIAL_WIDTH :: 1600
+INITIAL_WIDTH :: 800
 INITIAL_HEIGHT :: 600
 
 GL_MAJOR_VERSION :: 3

@@ -21,8 +21,7 @@ FONT_SCALE :: 125
 glyph_bitmap: [^]u8
 
 @(private = "file")
-// TEXT :: "Hello, world!"
-TEXT :: "Holy shit, this is so much harder than it looks."
+TEXT :: "Hello, world!"
 
 @(private = "file")
 CharacterTexture :: struct {
@@ -54,6 +53,7 @@ exercise_02_text_rendering := types.Tableau {
 
 		log.infof("Loading font {}", FONT_PATH)
 		font_data := os.read_entire_file(FONT_PATH) or_else panic("Failed to load font")
+		defer delete(font_data)
 
 		log.infof("Initializing font {}", FONT_PATH)
 		font: tt.fontinfo
