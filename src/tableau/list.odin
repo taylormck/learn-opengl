@@ -51,4 +51,13 @@ tableaus :: [?]types.Tableau {
 	chapter_02_lighting.exercise_04_02_lighting_maps_specular_map,
 	chapter_02_lighting.exercise_04_03_lighting_maps_exercise_01,
 	chapter_02_lighting.exercise_04_04_lighting_maps_exercise_04,
+	chapter_02_lighting.exercise_05_01_light_casters_directional,
+	chapter_02_lighting.exercise_05_02_light_casters_point,
+	chapter_02_lighting.exercise_05_03_light_casters_spot,
+	chapter_02_lighting.exercise_05_04_light_casters_spot_soft,
+	chapter_02_lighting.exercise_06_01_multiple_lights,
+	chapter_02_lighting.exercise_06_02_multiple_lights_desert,
+	chapter_02_lighting.exercise_06_03_multiple_lights_factory,
+	chapter_02_lighting.exercise_06_04_multiple_lights_horror,
+	chapter_02_lighting.exercise_06_05_multiple_lights_biochemical_lab,
 }

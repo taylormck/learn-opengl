@@ -66,7 +66,7 @@ models := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({-1.3, 1, -1.5}),
 }
 
-exercise_05_02_light_casters_point := types.Tableau {
+exercise_05_02_light_casters_point :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .PhongPointLight)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
@@ -105,8 +105,8 @@ exercise_05_02_light_casters_point := types.Tableau {
 		transform := pv * model
 
 		gl.UseProgram(light_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light.emissive))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+		shaders.set_vec3(light_shader, "light_color", raw_data(&light.emissive))
+		shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
 
 		primitives.cube_draw()
 
@@ -128,14 +128,14 @@ exercise_05_02_light_casters_point := types.Tableau {
 
 		render.point_light_set_uniform(&light, obj_shader)
 		render.material_sampled_set_uniform(&obj_material, obj_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
+		shaders.set_vec3(obj_shader, "view_position", raw_data(&camera.position))
 
 		for &model in models {
 			transform = pv * model
 			mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "model"), 1, false, raw_data(&model))
-			gl.UniformMatrix3fv(gl.GetUniformLocation(obj_shader, "mit"), 1, false, raw_data(&mit))
+			shaders.set_mat_4x4(obj_shader, "transform", raw_data(&transform))
+			shaders.set_mat_4x4(obj_shader, "model", raw_data(&model))
+			shaders.set_mat_3x3(obj_shader, "mit", raw_data(&mit))
 			primitives.cube_draw()
 		}
 	},

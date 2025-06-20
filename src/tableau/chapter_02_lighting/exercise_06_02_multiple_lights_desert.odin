@@ -121,7 +121,7 @@ models := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({-1.3, 1, -1.5}),
 }
 
-exercise_06_02_multiple_lights_desert := types.Tableau {
+exercise_06_02_multiple_lights_desert :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .PhongMultiLight)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
@@ -163,8 +163,8 @@ exercise_06_02_multiple_lights_desert := types.Tableau {
 			model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
 			transform := pv * model
 
-			gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
-			gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&point_light.emissive))
+			shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
+			shaders.set_vec3(light_shader, "light_color", raw_data(&point_light.emissive))
 			primitives.cube_draw()
 		}
 
@@ -172,37 +172,29 @@ exercise_06_02_multiple_lights_desert := types.Tableau {
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, container_texture.id)
-		defer {
-			gl.ActiveTexture(gl.TEXTURE0)
-			gl.BindTexture(gl.TEXTURE_2D, 0)
-		}
 
 		gl.ActiveTexture(gl.TEXTURE1)
 		gl.BindTexture(gl.TEXTURE_2D, container_specular_texture.id)
-		defer {
-			gl.ActiveTexture(gl.TEXTURE1)
-			gl.BindTexture(gl.TEXTURE_2D, 0)
-		}
 
 		spot_light.position = camera.position
 		spot_light.direction = camera.direction
 		render.spot_light_set_uniform(&spot_light, obj_shader)
 		render.directional_light_set_uniform(&directional_light, obj_shader)
 
-		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "num_point_lights"), len(point_lights))
+		shaders.set_int(obj_shader, "num_point_lights", len(point_lights))
 		for &point_light, i in point_lights {
 			render.point_light_array_set_uniform(&point_light, obj_shader, u32(i))
 		}
 
 		render.material_sampled_set_uniform(&obj_material, obj_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
+		shaders.set_vec3(obj_shader, "view_position", raw_data(&camera.position))
 
 		for &model in models {
 			transform := pv * model
 			mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
-			gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "model"), 1, false, raw_data(&model))
-			gl.UniformMatrix3fv(gl.GetUniformLocation(obj_shader, "mit"), 1, false, raw_data(&mit))
+			shaders.set_mat_4x4(obj_shader, "transform", raw_data(&transform))
+			shaders.set_mat_4x4(obj_shader, "model", raw_data(&model))
+			shaders.set_mat_3x3(obj_shader, "mit", raw_data(&mit))
 			primitives.cube_draw()
 		}
 	},
