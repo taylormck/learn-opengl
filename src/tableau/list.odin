@@ -1,0 +1,44 @@
+package tableau
+
+import "../types"
+import "chapter_01_getting_started"
+import "chapter_02_lighting"
+import "chapter_03_model_loading"
+import "chapter_04_advanced_opengl"
+import "chapter_05_advanced_lighting"
+import "chapter_06_pbr"
+import "chapter_07_in_practice"
+
+tableaus :: [?]types.Tableau {
+	chapter_01_getting_started.exercise_01_02_hello_window_clear,
+	chapter_01_getting_started.exercise_02_01_hello_triangle,
+	chapter_01_getting_started.exercise_02_02_hello_triangle_indexed,
+	chapter_01_getting_started.exercise_02_03_hello_triangle_exercise_01,
+
+	// This one looks exactly the same as the previous exercise
+	// chapter_01_getting_started.exercise_02_04_hello_triangle_exercise_02,
+	chapter_01_getting_started.exercise_02_05_hello_triangle_exercise_03,
+	chapter_01_getting_started.exercise_03_01_shaders_uniform,
+	chapter_01_getting_started.exercise_03_02_shaders_interpolation,
+	chapter_01_getting_started.exercise_03_03_shaders_exercise_01,
+	chapter_01_getting_started.exercise_03_04_shaders_exercise_02,
+	chapter_01_getting_started.exercise_03_05_shaders_exercise_03,
+	chapter_01_getting_started.exercise_04_01_textures,
+	chapter_01_getting_started.exercise_04_01_textures_color,
+	chapter_01_getting_started.exercise_04_02_textures_combined,
+	chapter_01_getting_started.exercise_04_03_textures_exercise_01,
+	chapter_01_getting_started.exercise_04_04_textures_exercise_02,
+	chapter_01_getting_started.exercise_04_05_textures_exercise_03,
+	chapter_01_getting_started.exercise_04_06_textures_exercise_04,
+	chapter_01_getting_started.exercise_05_01_transforms,
+	chapter_01_getting_started.exercise_05_02_transforms_exercise_01,
+	chapter_01_getting_started.exercise_05_03_transforms_exercise_02,
+	chapter_01_getting_started.exercise_06_01_coordinate_systems,
+	chapter_01_getting_started.exercise_06_02_coordinate_systems_depth,
+	chapter_01_getting_started.exercise_06_03_coordinate_systems_multiple,
+	chapter_01_getting_started.exercise_06_04_coordinate_systems_exercise_03,
+	chapter_01_getting_started.exercise_07_01_camera_circle,
+	chapter_01_getting_started.exercise_07_02_camera_keyboard_dt,
+	chapter_01_getting_started.exercise_07_03_camera_mouse_zoom,
+	chapter_01_getting_started.exercise_07_04_camera_exercise_01,
+}

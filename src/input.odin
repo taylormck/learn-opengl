@@ -46,6 +46,8 @@ key_callback :: proc "cdecl" (window: glfw.WindowHandle, key, scancode, action, 
 	if key == glfw.KEY_SPACE && action == glfw.PRESS do input.input_state.pressed_keys += {.Space}
 	if key == glfw.KEY_UP && action == glfw.PRESS do input.input_state.pressed_keys += {.UpArrow}
 	if key == glfw.KEY_DOWN && action == glfw.PRESS do input.input_state.pressed_keys += {.DownArrow}
+	if key == glfw.KEY_LEFT && action == glfw.PRESS do input.input_state.pressed_keys += {.LeftArrow}
+	if key == glfw.KEY_RIGHT && action == glfw.PRESS do input.input_state.pressed_keys += {.RightArrow}
 }
 
 @(private = "file")

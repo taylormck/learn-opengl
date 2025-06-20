@@ -77,7 +77,10 @@ cube_clear_from_gpu :: proc(location := #caller_location) {
 	log.info("Clearing cube data from the GPU", location = location)
 
 	gl.DeleteBuffers(1, &vbo)
+	vbo = 0
+
 	gl.DeleteVertexArrays(1, &vao)
+	vao = 0
 }
 
 cube_draw :: proc() {

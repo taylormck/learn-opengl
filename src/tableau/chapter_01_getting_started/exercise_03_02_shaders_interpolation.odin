@@ -7,7 +7,7 @@ import "core:log"
 import "core:math"
 import gl "vendor:OpenGL"
 
-exercise_03_02_shaders_interpolation := types.Tableau {
+exercise_03_02_shaders_interpolation :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.VertexColor)
 		primitives.triangle_send_to_gpu()

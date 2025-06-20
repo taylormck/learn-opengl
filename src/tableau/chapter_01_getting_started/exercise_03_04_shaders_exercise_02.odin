@@ -10,7 +10,7 @@ import gl "vendor:OpenGL"
 @(private = "file")
 offset := types.Vec3{0.5, 0, 0}
 
-exercise_03_04_shaders_exercise_02 := types.Tableau {
+exercise_03_04_shaders_exercise_02 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Offset)
 		primitives.triangle_send_to_gpu()

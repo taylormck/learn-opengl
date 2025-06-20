@@ -5,7 +5,7 @@ import "../../shaders"
 import "../../types"
 import gl "vendor:OpenGL"
 
-exercise_02_02_hello_triangle_indexed := types.Tableau {
+exercise_02_02_hello_triangle_indexed :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Orange)
 		primitives.quad_send_to_gpu()

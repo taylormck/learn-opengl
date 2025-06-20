@@ -24,7 +24,7 @@ camera := render.Camera {
 @(private = "file")
 container_texture, awesome_texture: render.Texture
 
-exercise_06_01_coordinate_systems := types.Tableau {
+exercise_06_01_coordinate_systems :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
@@ -45,6 +45,7 @@ exercise_06_01_coordinate_systems := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		texture_shader := shaders.shaders[.TransformDoubleTexture]
+		gl.UseProgram(texture_shader)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -55,7 +56,6 @@ exercise_06_01_coordinate_systems := types.Tableau {
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
 		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
 
-		gl.UseProgram(texture_shader)
 		primitives.quad_draw()
 	},
 	teardown = proc() {

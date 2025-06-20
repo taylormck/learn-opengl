@@ -13,7 +13,7 @@ ratio: f32 = 0.5
 @(private = "file")
 container_texture, awesome_texture: render.Texture
 
-exercise_04_06_textures_exercise_04 := types.Tableau {
+exercise_04_06_textures_exercise_04 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Exercise_04_06)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
@@ -36,11 +36,11 @@ exercise_04_06_textures_exercise_04 := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		texture_shader := shaders.shaders[.Exercise_04_06]
+		gl.UseProgram(texture_shader)
 
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
 		gl.Uniform1f(gl.GetUniformLocation(texture_shader, "ratio"), ratio)
-		gl.UseProgram(texture_shader)
 		primitives.quad_draw()
 	},
 	teardown = proc() {

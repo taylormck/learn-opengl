@@ -9,7 +9,7 @@ import gl "vendor:OpenGL"
 @(private = "file")
 container_texture, awesome_texture: render.Texture
 
-exercise_04_02_textures_combined := types.Tableau {
+exercise_04_02_textures_combined :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.DoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)

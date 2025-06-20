@@ -14,7 +14,7 @@ time: f64 = 0
 @(private = "file")
 container_texture, awesome_texture: render.Texture
 
-exercise_05_03_transforms_exercise_02 := types.Tableau {
+exercise_05_03_transforms_exercise_02 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
@@ -35,6 +35,8 @@ exercise_05_03_transforms_exercise_02 := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		texture_shader := shaders.shaders[.TransformDoubleTexture]
+		gl.UseProgram(texture_shader)
+
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
 
@@ -46,7 +48,6 @@ exercise_05_03_transforms_exercise_02 := types.Tableau {
 		scale := f32(math.sin(time))
 		transform = linalg.matrix4_translate_f32({-0.5, 0.5, 0}) * linalg.matrix4_scale_f32({scale, scale, scale})
 		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UseProgram(texture_shader)
 		primitives.quad_draw()
 	},
 	teardown = proc() {

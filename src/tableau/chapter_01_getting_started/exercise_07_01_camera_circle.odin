@@ -43,7 +43,7 @@ models := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({-1.3, 1, -1.5}),
 }
 
-exercise_07_01_camera_circle := types.Tableau {
+exercise_07_01_camera_circle :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
@@ -85,6 +85,7 @@ exercise_07_01_camera_circle := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		texture_shader := shaders.shaders[.TransformDoubleTexture]
+		gl.UseProgram(texture_shader)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -96,7 +97,6 @@ exercise_07_01_camera_circle := types.Tableau {
 			transform := projection * view * model
 			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
 
-			gl.UseProgram(texture_shader)
 			primitives.cube_draw()
 		}
 	},

@@ -7,6 +7,7 @@ import "core:math"
 import "core:math/linalg"
 import "core:os"
 import "core:slice"
+import "input"
 import "parse/obj"
 import "primitives"
 import "render"
@@ -17,13 +18,14 @@ import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 import "window"
 
-import "tableau/chapter_01_getting_started"
-import "tableau/chapter_02_lighting"
-import "tableau/chapter_03_model_loading"
-import "tableau/chapter_04_advanced_opengl"
-import "tableau/chapter_05_advanced_lighting"
-import "tableau/chapter_06_pbr"
-import "tableau/chapter_07_in_practice"
+// import "tableau/chapter_01_getting_started"
+// import "tableau/chapter_02_lighting"
+// import "tableau/chapter_03_model_loading"
+// import "tableau/chapter_04_advanced_opengl"
+// import "tableau/chapter_05_advanced_lighting"
+// import "tableau/chapter_06_pbr"
+// import "tableau/chapter_07_in_practice"
+import "tableau"
 
 INITIAL_WIDTH :: 800
 INITIAL_HEIGHT :: 600
@@ -32,7 +34,8 @@ GL_MAJOR_VERSION :: 3
 GL_MINOR_VERSION :: 3
 NUM_SAMPLES :: 4
 
-current_tableau: types.Tableau
+tableau_list := tableau.tableaus
+current_tableau_index := len(tableau_list) - 1
 
 main :: proc() {
 	when ODIN_DEBUG {
@@ -83,16 +86,13 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	current_tableau = chapter_07_in_practice.exercise_02_text_rendering
-
-	if current_tableau.init != nil {
+	if init := tableau_list[current_tableau_index].init; init != nil {
 		log.info("Initializing tableau")
-		current_tableau.init()
+		init()
 	}
 
 	utils.print_gl_errors()
 
-	defer if current_tableau.teardown != nil do current_tableau.teardown()
 	defer shaders.delete_shaders()
 
 	prev_time := glfw.GetTime()
@@ -104,7 +104,9 @@ main :: proc() {
 
 		glfw.PollEvents()
 		process_input(window_handle, delta)
+		update_tableau()
 
+		current_tableau := &tableau_list[current_tableau_index]
 		if current_tableau.update != nil do current_tableau.update(delta)
 
 		clear_input()
@@ -115,7 +117,13 @@ main :: proc() {
 		glfw.SwapBuffers(window_handle)
 		prev_time = new_time
 	}
+
 	log.info("Exiting main loop")
+
+	if teardown := tableau_list[current_tableau_index].teardown; teardown != nil {
+		log.info("Tearing down tableau")
+		teardown()
+	}
 }
 
 framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, width, height: i32) {
@@ -125,5 +133,28 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 
 	gl.Viewport(0, 0, width, height)
 
-	if current_tableau.framebuffer_size_callback != nil do current_tableau.framebuffer_size_callback()
+	if callback := tableau_list[current_tableau_index].framebuffer_size_callback; callback != nil do callback()
+}
+
+update_tableau :: proc() {
+	tableau_offset := 0
+	if .LeftArrow in input.input_state.pressed_keys do tableau_offset -= 1
+	if .RightArrow in input.input_state.pressed_keys do tableau_offset += 1
+
+	if tableau_offset != 0 {
+		if teardown := tableau_list[current_tableau_index].teardown; teardown != nil {
+			log.info("Tearing down tableau")
+			teardown()
+		}
+
+		current_tableau_index += len(tableau_list) + tableau_offset
+		current_tableau_index %= len(tableau_list)
+
+		if init := tableau_list[current_tableau_index].init; init != nil {
+			log.info("Initializing tableau")
+			init()
+		}
+
+		utils.print_gl_errors()
+	}
 }

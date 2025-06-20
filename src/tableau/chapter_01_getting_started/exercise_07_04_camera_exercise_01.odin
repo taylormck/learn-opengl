@@ -44,7 +44,7 @@ models := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({-1.3, 1, -1.5}),
 }
 
-exercise_07_04_camera_exercise_01 := types.Tableau {
+exercise_07_04_camera_exercise_01 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)

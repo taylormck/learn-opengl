@@ -4,12 +4,13 @@ import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
+import "../../utils"
 import gl "vendor:OpenGL"
 
 @(private = "file")
 container_texture: render.Texture
 
-exercise_04_01_textures := types.Tableau {
+exercise_04_01_textures :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Texture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
@@ -24,9 +25,9 @@ exercise_04_01_textures := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		texture_shader := shaders.shaders[.Texture]
+		gl.UseProgram(texture_shader)
 
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-		gl.UseProgram(texture_shader)
 		primitives.quad_draw()
 	},
 	teardown = proc() {
@@ -34,7 +35,7 @@ exercise_04_01_textures := types.Tableau {
 	},
 }
 
-exercise_04_01_textures_color := types.Tableau {
+exercise_04_01_textures_color :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.ColorTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
@@ -49,9 +50,9 @@ exercise_04_01_textures_color := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		texture_shader := shaders.shaders[.ColorTexture]
+		gl.UseProgram(texture_shader)
 
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-		gl.UseProgram(texture_shader)
 		primitives.quad_draw()
 	},
 	teardown = proc() {

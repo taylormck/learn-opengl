@@ -2,6 +2,7 @@ package primitives
 
 import "../render"
 import "../types"
+import "../utils"
 import "core:log"
 import gl "vendor:OpenGL"
 
@@ -48,21 +49,22 @@ QUAD_VERTICES := [NUM_QUAD_VERTICES]render.Vertex {
 
 QUAD_INDICES := [2]types.Vec3u{{0, 1, 2}, {1, 3, 2}}
 
-quad_vao, quad_vbo, quad_ebo: u32
+@(private = "file")
+vao, vbo, ebo: u32
 
 quad_send_to_gpu :: proc(location := #caller_location) {
-	ensure(quad_vao == 0, "attempted to send quad to GPU twice.")
-	ensure(quad_vbo == 0, "attempted to send quad to GPU twice.")
-	ensure(quad_ebo == 0, "attempted to send quad to GPU twice.")
+	ensure(vao == 0, "attempted to send quad to GPU twice.")
+	ensure(vbo == 0, "attempted to send quad to GPU twice.")
+	ensure(ebo == 0, "attempted to send quad to GPU twice.")
 	log.info("Sending quad data to the GPU", location = location)
-	gl.GenVertexArrays(1, &quad_vao)
-	gl.GenBuffers(1, &quad_vbo)
-	gl.GenBuffers(1, &quad_ebo)
+	gl.GenVertexArrays(1, &vao)
+	gl.GenBuffers(1, &vbo)
+	gl.GenBuffers(1, &ebo)
 
-	gl.BindVertexArray(quad_vao)
+	gl.BindVertexArray(vao)
 	defer gl.BindVertexArray(0)
 
-	gl.BindBuffer(gl.ARRAY_BUFFER, quad_vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
 	defer gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 
 	gl.BufferData(gl.ARRAY_BUFFER, size_of(QUAD_VERTICES), raw_data(QUAD_VERTICES[:]), gl.STATIC_DRAW)
@@ -85,23 +87,30 @@ quad_send_to_gpu :: proc(location := #caller_location) {
 	gl.VertexAttribPointer(5, 3, gl.FLOAT, gl.FALSE, size_of(render.Vertex), offset_of(render.Vertex, bitangent))
 	gl.EnableVertexAttribArray(5)
 
-	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, quad_ebo)
+	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(QUAD_INDICES), &QUAD_INDICES, gl.STATIC_DRAW)
+
+	utils.print_gl_errors()
 }
 
 quad_clear_from_gpu :: proc(location := #caller_location) {
-	ensure(quad_vao != 0, "attempted to clear quad from GPU twice.")
-	ensure(quad_vbo != 0, "attempted to clear quad from GPU twice.")
-	ensure(quad_ebo != 0, "attempted to clear quad from GPU twice.")
+	ensure(vao != 0, "attempted to clear quad from GPU twice.")
+	ensure(vbo != 0, "attempted to clear quad from GPU twice.")
+	ensure(ebo != 0, "attempted to clear quad from GPU twice.")
 	log.info("Clearing quad data from the GPU", location = location)
 
-	gl.DeleteBuffers(1, &quad_vbo)
-	gl.DeleteBuffers(1, &quad_ebo)
-	gl.DeleteVertexArrays(1, &quad_vao)
+	gl.DeleteBuffers(1, &vbo)
+	vbo = 0
+
+	gl.DeleteBuffers(1, &ebo)
+	ebo = 0
+
+	gl.DeleteVertexArrays(1, &vao)
+	vao = 0
 }
 
 quad_draw :: proc() {
-	gl.BindVertexArray(quad_vao)
+	gl.BindVertexArray(vao)
 	defer gl.BindVertexArray(0)
 
 	// TODO: render as a TRIANGLE_STRIP for better performance
@@ -109,7 +118,7 @@ quad_draw :: proc() {
 }
 
 quad_draw_instanced :: proc(num_instances: i32, instance_data_vbo: u32) {
-	gl.BindVertexArray(quad_vao)
+	gl.BindVertexArray(vao)
 	defer gl.BindVertexArray(0)
 
 	// TODO: factor this out into some kind of setup function

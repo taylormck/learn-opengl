@@ -9,7 +9,7 @@ import gl "vendor:OpenGL"
 @(private = "file")
 container_texture, awesome_texture: render.Texture
 
-exercise_04_04_textures_exercise_02 := types.Tableau {
+exercise_04_04_textures_exercise_02 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Exercise_04_04)
 
@@ -35,10 +35,10 @@ exercise_04_04_textures_exercise_02 := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		texture_shader := shaders.shaders[.Exercise_04_04]
+		gl.UseProgram(texture_shader)
 
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
-		gl.UseProgram(texture_shader)
 		primitives.quad_draw()
 	},
 	teardown = proc() {

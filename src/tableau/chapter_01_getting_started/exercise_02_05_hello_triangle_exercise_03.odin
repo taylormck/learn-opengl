@@ -22,7 +22,7 @@ vertices := [2][3]types.Vec3 {
 	},
 }
 
-exercise_02_05_hello_triangle_exercise_03 := types.Tableau {
+exercise_02_05_hello_triangle_exercise_03 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Orange, .Yellow)
 

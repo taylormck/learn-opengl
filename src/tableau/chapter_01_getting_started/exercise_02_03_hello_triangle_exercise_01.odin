@@ -18,7 +18,7 @@ vertices := [6]types.Vec3 {
 	{0.25, 0.5, 0}, // top
 }
 
-exercise_02_03_hello_triangle_exercise_01 := types.Tableau {
+exercise_02_03_hello_triangle_exercise_01 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Orange)
 
