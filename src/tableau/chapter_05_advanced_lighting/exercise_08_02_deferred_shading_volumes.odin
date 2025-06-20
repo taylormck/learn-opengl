@@ -87,7 +87,7 @@ debug_channel: i32 = 0
 @(private = "file")
 NUM_DEBUG_CHANNELS :: 5
 
-exercise_08_02_deferred_shading_volumes := types.Tableau {
+exercise_08_02_deferred_shading_volumes :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .GBuffer, .GBufferDebug, .DeferredShadingVolumes)
 
@@ -167,6 +167,7 @@ exercise_08_02_deferred_shading_volumes := types.Tableau {
 		gl.ClearColor(0, 0, 0, 0)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		gl.UseProgram(mesh_shader)
 

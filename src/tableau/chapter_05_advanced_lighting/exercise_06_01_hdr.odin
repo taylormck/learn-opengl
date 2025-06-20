@@ -107,7 +107,7 @@ reinhard := false
 @(private = "file")
 exposure: f32 = 1.0
 
-exercise_06_01_hdr := types.Tableau {
+exercise_06_01_hdr :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnPhongDiffuseSampledMultilights, .HDR)
 		wood_texture = render.prepare_texture(
@@ -211,7 +211,9 @@ exercise_06_01_hdr := types.Tableau {
 		gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		gl.UseProgram(scene_shader)
 

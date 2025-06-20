@@ -92,4 +92,13 @@ tableaus :: [?]types.Tableau {
 	chapter_05_advanced_lighting.exercise_03_01_03_shadow_mapping,
 	chapter_05_advanced_lighting.exercise_03_02_01_point_shadows,
 	chapter_05_advanced_lighting.exercise_03_02_02_point_shadows_soft,
+	chapter_05_advanced_lighting.exercise_04_01_normal_mapping,
+	chapter_05_advanced_lighting.exercise_05_01_parallax_mapping,
+	chapter_05_advanced_lighting.exercise_05_02_steep_parallax_mapping,
+	chapter_05_advanced_lighting.exercise_05_03_parallax_occlusion_mapping,
+	chapter_05_advanced_lighting.exercise_06_01_hdr,
+	chapter_05_advanced_lighting.exercise_07_01_bloom,
+	chapter_05_advanced_lighting.exercise_08_01_deferred_shading,
+	chapter_05_advanced_lighting.exercise_08_02_deferred_shading_volumes,
+	chapter_05_advanced_lighting.exercise_09_01_ssao,
 }

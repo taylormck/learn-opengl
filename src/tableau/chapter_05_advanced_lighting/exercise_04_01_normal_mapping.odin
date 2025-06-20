@@ -65,7 +65,7 @@ wall_model :=
 @(private = "file")
 wall_mit: types.SubTransformMatrix
 
-exercise_04_01_normal_mapping := types.Tableau {
+exercise_04_01_normal_mapping :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnPhongPointLightNormalMap, .Light)
 		brick_wall_texture = render.prepare_texture("textures/brickwall.png", .Diffuse, true)
@@ -95,6 +95,7 @@ exercise_04_01_normal_mapping := types.Tableau {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		obj_shader := shaders.shaders[.BlinnPhongPointLightNormalMap]
 		light_shader := shaders.shaders[.Light]

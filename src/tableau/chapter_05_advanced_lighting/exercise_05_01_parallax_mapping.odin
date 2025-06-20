@@ -67,7 +67,7 @@ wall_mit: types.SubTransformMatrix
 @(private = "file")
 height_scale: f32 = 0.1
 
-exercise_05_01_parallax_mapping := types.Tableau {
+exercise_05_01_parallax_mapping :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnDisplacement, .Light)
 		brick_wall_texture = render.prepare_texture("textures/bricks2.png", .Diffuse, true)
@@ -98,6 +98,7 @@ exercise_05_01_parallax_mapping := types.Tableau {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		obj_shader := shaders.shaders[.BlinnDisplacement]
 		light_shader := shaders.shaders[.Light]

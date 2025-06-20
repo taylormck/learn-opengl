@@ -152,7 +152,7 @@ cube_mits := [len(cube_models)]types.SubTransformMatrix{}
 // Blur the bright framebuffer
 BLUR_AMOUNT :: 10
 
-exercise_07_01_bloom := types.Tableau {
+exercise_07_01_bloom :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BloomLighting, .HDR, .Light, .BlurSeparated)
 		wood_texture = render.prepare_texture(
@@ -302,6 +302,7 @@ exercise_07_01_bloom := types.Tableau {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)

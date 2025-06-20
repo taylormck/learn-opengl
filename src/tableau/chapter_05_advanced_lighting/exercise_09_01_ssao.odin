@@ -100,7 +100,7 @@ noise_texture: u32
 @(private = "file")
 ssao_fbo, ssao_color_buffer, ssao_blur_fbo, ssao_blur_texture: u32
 
-exercise_09_01_ssao := types.Tableau {
+exercise_09_01_ssao :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.SSAOGeometry, .GBufferDebug, .SSAOLighting, .SSAODepth, .SSAOBlur)
 
@@ -212,7 +212,10 @@ exercise_09_01_ssao := types.Tableau {
 		pv := projection * view
 
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
+
 		gl.Enable(gl.CULL_FACE)
+		defer gl.Disable(gl.CULL_FACE)
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, g_buffer_fbo)
 
@@ -331,7 +334,6 @@ exercise_09_01_ssao := types.Tableau {
 		shaders.set_int(lighting_shader, "g_albedo", 2)
 		shaders.set_int(lighting_shader, "ssao", 3)
 		render.point_light_set_uniform(&light, lighting_shader)
-		// shaders.set_vec3(lighting_shader, "view_position", raw_data(&camera.position))
 
 		primitives.full_screen_draw()
 	},

@@ -108,7 +108,6 @@ exercise_05_06_framebuffers_exercise_01 :: types.Tableau {
 		gl.Enable(gl.STENCIL_TEST)
 		defer gl.Disable(gl.STENCIL_TEST)
 
-		gl.Disable(gl.DEPTH_TEST)
 		gl.Clear(gl.STENCIL_BUFFER_BIT)
 		gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
 		gl.StencilFunc(gl.ALWAYS, 1, 0xff)
@@ -153,6 +152,7 @@ draw_scene :: proc(shader: u32) {
 	gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 	gl.Enable(gl.DEPTH_TEST)
+	defer gl.Disable(gl.DEPTH_TEST)
 
 	projection := render.camera_get_projection(&camera)
 	view := render.camera_get_view(&camera)

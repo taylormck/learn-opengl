@@ -59,8 +59,11 @@ exercise_02_01_stencil_testing :: types.Tableau {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
 
 		gl.Enable(gl.STENCIL_TEST)
+		defer gl.Disable(gl.STENCIL_TEST)
 		gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)

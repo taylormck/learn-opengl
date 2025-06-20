@@ -69,7 +69,9 @@ exercise_03_01_blending_discard :: types.Tableau {
 	draw = proc() {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
