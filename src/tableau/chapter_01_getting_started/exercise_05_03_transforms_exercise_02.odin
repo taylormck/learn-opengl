@@ -37,17 +37,17 @@ exercise_05_03_transforms_exercise_02 :: types.Tableau {
 		texture_shader := shaders.shaders[.TransformDoubleTexture]
 		gl.UseProgram(texture_shader)
 
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
+		shaders.set_int(texture_shader, "diffuse_1", 1)
 
 		transform := linalg.matrix4_translate_f32({0.5, -0.5, 0}) * linalg.matrix4_rotate_f32(f32(time), {0, 0, 1})
-		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+		shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 		gl.UseProgram(texture_shader)
 		primitives.quad_draw()
 
 		scale := f32(math.sin(time))
 		transform = linalg.matrix4_translate_f32({-0.5, 0.5, 0}) * linalg.matrix4_scale_f32({scale, scale, scale})
-		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+		shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 		primitives.quad_draw()
 	},
 	teardown = proc() {

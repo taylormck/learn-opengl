@@ -85,9 +85,12 @@ cubemap_send_to_gpu :: proc(location := #caller_location) {
 
 cubemap_clear_from_gpu :: proc(location := #caller_location) {
 	log.infof("Clearing cubemap data from the GPU: vao: {}, vbo: {}", vao, vbo, location = location)
+
 	gl.DeleteBuffers(1, &vbo)
+	vbo = 0
+
 	gl.DeleteVertexArrays(1, &vao)
-	utils.print_gl_errors()
+	vao = 0
 }
 
 cubemap_load_texture :: proc(

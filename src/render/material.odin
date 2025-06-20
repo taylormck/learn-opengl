@@ -22,18 +22,38 @@ Material :: struct {
 
 MaterialMap :: map[string]Material
 
-material_calculated_set_uniform :: proc(material: ^MaterialCalculated, shader_id: u32) {
-	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.ambient"), 1, raw_data(&material.ambient))
-	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.diffuse"), 1, raw_data(&material.diffuse))
-	gl.Uniform3fv(gl.GetUniformLocation(shader_id, "material.specular"), 1, raw_data(&material.specular))
-	gl.Uniform1f(gl.GetUniformLocation(shader_id, "material.shininess"), material.shininess)
+MaterialEntries :: enum {
+	Ambient,
+	Diffuse,
+	Specular,
+	Emissive,
+	Shininess,
 }
 
-material_sampled_set_uniform :: proc(material: ^MaterialSampled, shader_id: u32) {
-	shaders.set_int(shader_id, "material.diffuse_0", 0)
-	shaders.set_int(shader_id, "material.specular_0", 1)
-	shaders.set_int(shader_id, "material.emissive_0", 2)
-	shaders.set_float(shader_id, "material.shininess", material.shininess)
+SetMaterialOptions :: bit_set[MaterialEntries]
+
+DEFAULT_MATIERAL_OPTIONS :: SetMaterialOptions{.Ambient, .Diffuse, .Specular, .Shininess}
+
+material_calculated_set_uniform :: proc(
+	material: ^MaterialCalculated,
+	shader_id: u32,
+	options: SetMaterialOptions = DEFAULT_MATIERAL_OPTIONS,
+) {
+	if .Ambient in options do shaders.set_vec3(shader_id, "material.ambient", raw_data(&material.ambient))
+	if .Diffuse in options do shaders.set_vec3(shader_id, "material.diffuse", raw_data(&material.diffuse))
+	if .Specular in options do shaders.set_vec3(shader_id, "material.specular", raw_data(&material.specular))
+	if .Shininess in options do shaders.set_float(shader_id, "material.shininess", material.shininess)
+}
+
+material_sampled_set_uniform :: proc(
+	material: ^MaterialSampled,
+	shader_id: u32,
+	options: SetMaterialOptions = DEFAULT_MATIERAL_OPTIONS,
+) {
+	if .Diffuse in options do shaders.set_int(shader_id, "material.diffuse_0", 0)
+	if .Specular in options do shaders.set_int(shader_id, "material.specular_0", 1)
+	if .Emissive in options do shaders.set_int(shader_id, "material.emissive_0", 2)
+	if .Shininess in options do shaders.set_float(shader_id, "material.shininess", material.shininess)
 }
 
 material_free :: proc(material: ^Material) {

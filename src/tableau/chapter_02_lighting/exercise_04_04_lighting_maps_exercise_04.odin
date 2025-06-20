@@ -53,7 +53,7 @@ obj_material := render.MaterialSampled {
 @(private = "file")
 cube_position := types.Vec3{}
 
-exercise_04_04_lighting_maps_exercise_04 := types.Tableau {
+exercise_04_04_lighting_maps_exercise_04 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .PhongEmissive)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
@@ -121,11 +121,17 @@ exercise_04_04_lighting_maps_exercise_04 := types.Tableau {
 			gl.ActiveTexture(gl.TEXTURE2)
 			gl.BindTexture(gl.TEXTURE_2D, 0)
 		}
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.position"), 1, raw_data(&light_position))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.ambient"), 1, raw_data(&light_color))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.diffuse"), 1, raw_data(&light_color))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.specular"), 1, raw_data(&light_color))
-		render.material_sampled_set_uniform(&obj_material, obj_shader)
+		shaders.set_vec3(obj_shader, "light.position", raw_data(&light_position))
+		shaders.set_vec3(obj_shader, "light.ambient", raw_data(&light_color))
+		shaders.set_vec3(obj_shader, "light.diffuse", raw_data(&light_color))
+		shaders.set_vec3(obj_shader, "light.specular", raw_data(&light_color))
+
+		render.material_sampled_set_uniform(
+			&obj_material,
+			obj_shader,
+			options = {.Diffuse, .Specular, .Shininess, .Emissive},
+		)
+
 		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
 		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "model"), 1, false, raw_data(&model))

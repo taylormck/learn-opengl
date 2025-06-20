@@ -50,7 +50,7 @@ obj_material := render.MaterialSampled {
 @(private = "file")
 cube_position := types.Vec3{}
 
-exercise_04_03_lighting_maps_exercise_01 := types.Tableau {
+exercise_04_03_lighting_maps_exercise_01 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .PhongSampledInvertedSpecular)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)

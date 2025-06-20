@@ -38,9 +38,9 @@ exercise_04_06_textures_exercise_04 :: types.Tableau {
 		texture_shader := shaders.shaders[.Exercise_04_06]
 		gl.UseProgram(texture_shader)
 
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
-		gl.Uniform1f(gl.GetUniformLocation(texture_shader, "ratio"), ratio)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
+		shaders.set_int(texture_shader, "diffuse_1", 1)
+		shaders.set_float(texture_shader, "ratio", ratio)
 		primitives.quad_draw()
 	},
 	teardown = proc() {

@@ -22,7 +22,7 @@ exercise_03_04_shaders_exercise_02 :: types.Tableau {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		gl.UseProgram(uniform_color_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(uniform_color_shader, "offset"), 1, raw_data(offset[:]))
+		shaders.set_vec3(uniform_color_shader, "offset", raw_data(&offset))
 		primitives.triangle_draw()
 	},
 	teardown = proc() {

@@ -54,8 +54,13 @@ plane_clear_from_gpu :: proc(location := #caller_location) {
 	log.info("Clearing plane data from the GPU", location = location)
 
 	gl.DeleteBuffers(1, &vbo)
+	vbo = 0
+
 	gl.DeleteBuffers(1, &ebo)
+	ebo = 0
+
 	gl.DeleteVertexArrays(1, &vao)
+	vao = 0
 }
 
 plane_draw :: proc() {

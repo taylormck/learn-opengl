@@ -26,7 +26,7 @@ exercise_03_01_shaders_uniform :: types.Tableau {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 
 		gl.UseProgram(uniform_color_shader)
-		gl.Uniform4fv(gl.GetUniformLocation(uniform_color_shader, "our_color"), 1, raw_data(uniform_color[:]))
+		shaders.set_vec4(uniform_color_shader, "our_color", raw_data(&uniform_color))
 		primitives.triangle_draw()
 	},
 	teardown = proc() {

@@ -27,7 +27,7 @@ exercise_04_01_textures :: types.Tableau {
 		texture_shader := shaders.shaders[.Texture]
 		gl.UseProgram(texture_shader)
 
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
 		primitives.quad_draw()
 	},
 	teardown = proc() {
@@ -52,7 +52,8 @@ exercise_04_01_textures_color :: types.Tableau {
 		texture_shader := shaders.shaders[.ColorTexture]
 		gl.UseProgram(texture_shader)
 
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
+
 		primitives.quad_draw()
 	},
 	teardown = proc() {

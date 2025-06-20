@@ -64,7 +64,10 @@ points_clear_from_gpu :: proc(location := #caller_location) {
 	log.info("Clearing points data from the GPU", location = location)
 
 	gl.DeleteBuffers(1, &vbo)
+	vbo = 0
+
 	gl.DeleteVertexArrays(1, &vao)
+	vao = 0
 }
 
 points_draw :: proc() {

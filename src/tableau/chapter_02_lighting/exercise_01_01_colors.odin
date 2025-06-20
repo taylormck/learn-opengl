@@ -38,7 +38,7 @@ obj_color := types.Vec3{1, 0.5, 0.31}
 @(private = "file")
 cube_position := types.Vec3{}
 
-exercise_01_01_colors := types.Tableau {
+exercise_01_01_colors :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .ObjLightColor)
 		primitives.cube_send_to_gpu()
@@ -72,8 +72,9 @@ exercise_01_01_colors := types.Tableau {
 		transform := pv * model
 
 		gl.UseProgram(light_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light_color))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+
+		shaders.set_vec3(light_shader, "light_color", raw_data(&light_color))
+		shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
 
 		primitives.cube_draw()
 
@@ -81,9 +82,11 @@ exercise_01_01_colors := types.Tableau {
 		transform = pv * model
 
 		gl.UseProgram(obj_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light_color"), 1, raw_data(&light_color))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "object_color"), 1, raw_data(&obj_color))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
+
+		shaders.set_vec3(obj_shader, "light_color", raw_data(&light_color))
+		shaders.set_vec3(obj_shader, "object_color", raw_data(&obj_color))
+		shaders.set_mat_4x4(obj_shader, "transform", raw_data(&transform))
+
 		primitives.cube_draw()
 	},
 	teardown = proc() {

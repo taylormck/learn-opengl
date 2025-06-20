@@ -68,9 +68,15 @@ cross_imposter_clear_from_gpu :: proc(location := #caller_location) {
 	ensure(vbo != 0, "attempted to remove cross imposter from GPU but it was already removed.")
 	ensure(ebo != 0, "attempted to remove cross imposter from GPU but it was already removed.")
 	log.info("Clearing cross imposter data from the GPU", location = location)
+
 	gl.DeleteBuffers(1, &vbo)
+	vbo = 0
+
 	gl.DeleteBuffers(1, &ebo)
+	ebo = 0
+
 	gl.DeleteVertexArrays(1, &vao)
+	vao = 0
 }
 
 cross_imposter_draw :: proc() {

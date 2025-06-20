@@ -90,12 +90,12 @@ exercise_07_01_camera_circle :: types.Tableau {
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
 
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
+		shaders.set_int(texture_shader, "diffuse_1", 1)
 
 		for model in models {
 			transform := projection * view * model
-			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+			shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
 			primitives.cube_draw()
 		}

@@ -47,7 +47,7 @@ obj_material := render.MaterialCalculated {
 @(private = "file")
 cube_position := types.Vec3{}
 
-exercise_04_01_lighting_maps_diffuse_map := types.Tableau {
+exercise_04_01_lighting_maps_diffuse_map :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .PhongDiffuseSampled)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
@@ -82,8 +82,9 @@ exercise_04_01_lighting_maps_diffuse_map := types.Tableau {
 		transform := pv * model
 
 		gl.UseProgram(light_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&light_color))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+
+		shaders.set_vec3(light_shader, "light_color", raw_data(&light_color))
+		shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
 
 		primitives.cube_draw()
 
@@ -97,15 +98,17 @@ exercise_04_01_lighting_maps_diffuse_map := types.Tableau {
 		gl.BindTexture(gl.TEXTURE_2D, container_texture.id)
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.position"), 1, raw_data(&light_position))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.ambient"), 1, raw_data(&light_color))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.diffuse"), 1, raw_data(&light_color))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.specular"), 1, raw_data(&light_color))
-		gl.Uniform1i(gl.GetUniformLocation(obj_shader, "material.diffuse_0"), 0)
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(obj_shader, "mit"), 1, false, raw_data(&mit))
+		shaders.set_vec3(obj_shader, "light.position", raw_data(&light_position))
+		shaders.set_vec3(obj_shader, "light.ambient", raw_data(&light_color))
+		shaders.set_vec3(obj_shader, "light.diffuse", raw_data(&light_color))
+		shaders.set_vec3(obj_shader, "light.specular", raw_data(&light_color))
+
+		shaders.set_int(obj_shader, "material.diffuse", 0)
+		shaders.set_vec3(obj_shader, "view_position", raw_data(&camera.position))
+
+		shaders.set_mat_4x4(obj_shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(obj_shader, "model", raw_data(&model))
+		shaders.set_mat_3x3(obj_shader, "mit", raw_data(&mit))
 		primitives.cube_draw()
 	},
 	teardown = proc() {

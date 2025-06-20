@@ -38,9 +38,9 @@ exercise_05_02_transforms_exercise_01 :: types.Tableau {
 
 		transform := linalg.matrix4_rotate_f32(f32(time), {0, 0, 1}) * linalg.matrix4_translate_f32({0.5, -0.5, 0})
 
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_1"), 1)
-		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+		shaders.set_int(texture_shader, "diffuse_0", 0)
+		shaders.set_int(texture_shader, "diffuse_1", 1)
+		shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
 		primitives.quad_draw()
 	},

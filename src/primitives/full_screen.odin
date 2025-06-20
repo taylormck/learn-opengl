@@ -56,7 +56,10 @@ full_screen_clear_from_gpu :: proc(location := #caller_location) {
 	log.info("Clearing full screen triangle data from the GPU", location = location)
 
 	gl.DeleteBuffers(1, &vbo)
+	vbo = 0
+
 	gl.DeleteVertexArrays(1, &vao)
+	vao = 0
 }
 
 full_screen_draw :: proc() {

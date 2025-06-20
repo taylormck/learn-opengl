@@ -49,7 +49,7 @@ coral_material := render.MaterialCalculated {
 @(private = "file")
 cube_position := types.Vec3{}
 
-exercise_03_02_materials_exercise_01 := types.Tableau {
+exercise_03_02_materials_exercise_01 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .Phong)
 		primitives.cube_send_to_gpu()
@@ -88,8 +88,8 @@ exercise_03_02_materials_exercise_01 := types.Tableau {
 		frame_light_color := types.Vec3{f32(math.sin(time * 2)), f32(math.sin(time * 0.7)), f32(math.sin(time * 1.3))}
 
 		gl.UseProgram(light_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&frame_light_color))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
+		shaders.set_vec3(light_shader, "light_color", raw_data(&frame_light_color))
+		shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
 
 		primitives.cube_draw()
 
@@ -98,18 +98,22 @@ exercise_03_02_materials_exercise_01 := types.Tableau {
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
 		gl.UseProgram(obj_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.position"), 1, raw_data(&light_position))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.ambient"), 1, raw_data(&frame_light_color))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.diffuse"), 1, raw_data(&frame_light_color))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "light.specular"), 1, raw_data(&frame_light_color))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "material.ambient"), 1, raw_data(&coral_material.ambient))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "material.diffuse"), 1, raw_data(&coral_material.diffuse))
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "material.specular"), 1, raw_data(&coral_material.specular))
-		gl.Uniform1f(gl.GetUniformLocation(obj_shader, "material.shininess"), coral_material.shininess)
-		gl.Uniform3fv(gl.GetUniformLocation(obj_shader, "view_position"), 1, raw_data(&camera.position))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(obj_shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(obj_shader, "mit"), 1, false, raw_data(&mit))
+
+		shaders.set_vec3(obj_shader, "light.position", raw_data(&light_position))
+		shaders.set_vec3(obj_shader, "light.ambient", raw_data(&frame_light_color))
+		shaders.set_vec3(obj_shader, "light.diffuse", raw_data(&frame_light_color))
+		shaders.set_vec3(obj_shader, "light.specular", raw_data(&frame_light_color))
+		shaders.set_vec3(obj_shader, "material.ambient", raw_data(&coral_material.ambient))
+		shaders.set_vec3(obj_shader, "material.diffuse", raw_data(&coral_material.diffuse))
+		shaders.set_vec3(obj_shader, "material.specular", raw_data(&coral_material.specular))
+
+		shaders.set_float(obj_shader, "material.shininess", coral_material.shininess)
+		shaders.set_vec3(obj_shader, "view_position", raw_data(&camera.position))
+
+		shaders.set_mat_4x4(obj_shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(obj_shader, "model", raw_data(&model))
+		shaders.set_mat_3x3(obj_shader, "mit", raw_data(&mit))
+
 		primitives.cube_draw()
 	},
 	teardown = proc() {
