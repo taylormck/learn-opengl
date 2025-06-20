@@ -41,7 +41,7 @@ cube_positions := [?]types.Vec3{{-1, 0, -1}, {2, 0, 0}}
 @(private = "file")
 grass_positions := [?]types.Vec3{{-1, 0, -0.48}, {2, 0, 0.51}, {0.5, 0, 0.7}, {0.2, 0, -2.3}, {1, 0, -0.6}}
 
-exercise_03_01_blending_discard := types.Tableau {
+exercise_03_01_blending_discard :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformTexture)
 		marble_texture = render.prepare_texture("textures/marble.png", .Diffuse, true)
@@ -75,9 +75,8 @@ exercise_03_01_blending_discard := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		texture_shader := shaders.shaders[.TransformTexture]
-
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 		gl.UseProgram(texture_shader)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -90,7 +89,7 @@ exercise_03_01_blending_discard := types.Tableau {
 				model := linalg.matrix4_translate(position)
 				transform := pv * model
 
-				gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+				shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
 				primitives.cube_draw()
 			}
@@ -104,7 +103,7 @@ exercise_03_01_blending_discard := types.Tableau {
 			model = linalg.matrix4_scale_f32(types.Vec3{10, 1, 10}) * model
 			transform := pv * model
 
-			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+			shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
 			primitives.quad_draw()
 		}
@@ -117,7 +116,7 @@ exercise_03_01_blending_discard := types.Tableau {
 				model := linalg.matrix4_translate(position)
 				transform := pv * model
 
-				gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+				shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
 				primitives.quad_draw()
 			}

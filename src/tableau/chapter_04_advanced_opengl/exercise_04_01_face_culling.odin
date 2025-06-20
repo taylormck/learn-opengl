@@ -36,7 +36,7 @@ camera := render.Camera {
 @(private = "file")
 marble_texture: render.Texture
 
-exercise_04_01_face_culling := types.Tableau {
+exercise_04_01_face_culling :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformTexture)
 		marble_texture = render.prepare_texture("textures/marble.png", .Diffuse, true)
@@ -60,13 +60,11 @@ exercise_04_01_face_culling := types.Tableau {
 		gl.CullFace(gl.FRONT)
 
 		gl.ActiveTexture(gl.TEXTURE0)
-		defer gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.BindTexture(gl.TEXTURE_2D, marble_texture.id)
 
 		texture_shader := shaders.shaders[.TransformTexture]
-
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
 		gl.UseProgram(texture_shader)
-		gl.BindTexture(gl.TEXTURE_2D, marble_texture.id)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -74,7 +72,7 @@ exercise_04_01_face_culling := types.Tableau {
 		model := linalg.matrix4_scale_f32(1.75)
 		transform := pv * model
 
-		gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+		shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
 		primitives.cube_draw()
 	},

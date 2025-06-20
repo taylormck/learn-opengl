@@ -38,7 +38,7 @@ container_texture, metal_texture: render.Texture
 @(private = "file")
 fbo, fb_texture, rbo: u32
 
-exercise_05_06_framebuffers_exercise_01 := types.Tableau {
+exercise_05_06_framebuffers_exercise_01 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformTexture, .SingleColor, .Texture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
@@ -92,7 +92,7 @@ exercise_05_06_framebuffers_exercise_01 := types.Tableau {
 		gl.ActiveTexture(gl.TEXTURE0)
 
 		gl.UseProgram(texture_shader)
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
 
 		camera.direction = -camera.direction
 
@@ -106,6 +106,8 @@ exercise_05_06_framebuffers_exercise_01 := types.Tableau {
 		gl.BindTexture(gl.TEXTURE_2D, fb_texture)
 
 		gl.Enable(gl.STENCIL_TEST)
+		defer gl.Disable(gl.STENCIL_TEST)
+
 		gl.Disable(gl.DEPTH_TEST)
 		gl.Clear(gl.STENCIL_BUFFER_BIT)
 		gl.StencilOp(gl.KEEP, gl.KEEP, gl.REPLACE)
@@ -113,7 +115,7 @@ exercise_05_06_framebuffers_exercise_01 := types.Tableau {
 		gl.StencilMask(0xff)
 
 		transform := linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.75, 0.75, 0})
-		gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
+		shaders.set_mat_4x4(single_color_shader, "transform", raw_data(&transform))
 		primitives.quad_draw()
 
 		gl.StencilFunc(gl.NOTEQUAL, 1, 0xff)
@@ -121,9 +123,8 @@ exercise_05_06_framebuffers_exercise_01 := types.Tableau {
 
 		gl.UseProgram(single_color_shader)
 		transform = linalg.matrix4_translate(types.Vec3{0, 0.5, 0}) * linalg.matrix4_scale_f32(types.Vec3{0.8, 0.8, 0})
-		gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
+		shaders.set_mat_4x4(single_color_shader, "transform", raw_data(&transform))
 		primitives.quad_draw()
-		//
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()

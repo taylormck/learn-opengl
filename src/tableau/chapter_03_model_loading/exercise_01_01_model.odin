@@ -100,7 +100,7 @@ spot_light := render.SpotLight {
 @(private = "file")
 backpack_model: render.Scene
 
-exercise_01_01_model := types.Tableau {
+exercise_01_01_model :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .PhongMultiLight)
 
@@ -140,8 +140,8 @@ exercise_01_01_model := types.Tableau {
 			model *= linalg.matrix4_scale_f32({0.2, 0.2, 0.2})
 			transform := pv * model
 
-			gl.UniformMatrix4fv(gl.GetUniformLocation(light_shader, "transform"), 1, false, raw_data(&transform))
-			gl.Uniform3fv(gl.GetUniformLocation(light_shader, "light_color"), 1, raw_data(&point_light.emissive))
+			shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
+			shaders.set_vec3(light_shader, "light_color", raw_data(&point_light.emissive))
 			primitives.cube_draw()
 		}
 
@@ -152,7 +152,7 @@ exercise_01_01_model := types.Tableau {
 		render.spot_light_set_uniform(&spot_light, mesh_shader)
 		render.directional_light_set_uniform(&directional_light, mesh_shader)
 
-		gl.Uniform1i(gl.GetUniformLocation(mesh_shader, "num_point_lights"), len(point_lights))
+		shaders.set_int(mesh_shader, "num_point_lights", len(point_lights))
 		for &point_light, i in point_lights {
 			render.point_light_array_set_uniform(&point_light, mesh_shader, u32(i))
 		}
@@ -162,9 +162,9 @@ exercise_01_01_model := types.Tableau {
 		model := linalg.identity(types.TransformMatrix)
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 		transform := pv * model
-		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(mesh_shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(mesh_shader, "mit"), 1, false, raw_data(&mit))
+		shaders.set_mat_4x4(mesh_shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(mesh_shader, "model", raw_data(&model))
+		shaders.set_mat_3x3(mesh_shader, "mit", raw_data(&mit))
 
 		render.scene_draw_with_materials(&backpack_model, mesh_shader)
 	},

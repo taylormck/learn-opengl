@@ -39,7 +39,7 @@ container_texture, metal_texture: render.Texture
 @(private = "file")
 fbo, fb_texture, rbo: u32
 
-exercise_05_04_framebuffers_blur := types.Tableau {
+exercise_05_04_framebuffers_blur :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformTexture, .Blur)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
@@ -98,7 +98,7 @@ exercise_05_04_framebuffers_blur := types.Tableau {
 		defer gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		gl.UseProgram(texture_shader)
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "diffuse_0"), 0)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -112,7 +112,7 @@ exercise_05_04_framebuffers_blur := types.Tableau {
 				model := linalg.matrix4_translate(position)
 				transform := pv * model
 
-				gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+				shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
 				primitives.cube_draw()
 			}
@@ -126,7 +126,7 @@ exercise_05_04_framebuffers_blur := types.Tableau {
 			model = linalg.matrix4_scale_f32(types.Vec3{10, 1, 10}) * model
 			transform := pv * model
 
-			gl.UniformMatrix4fv(gl.GetUniformLocation(texture_shader, "transform"), 1, false, raw_data(&transform))
+			shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
 			primitives.quad_draw()
 		}

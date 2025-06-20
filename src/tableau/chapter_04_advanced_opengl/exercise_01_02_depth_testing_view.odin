@@ -32,7 +32,7 @@ camera := render.Camera {
 	speed        = 5,
 }
 
-exercise_01_02_depth_testing_view := types.Tableau {
+exercise_01_02_depth_testing_view :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Depth)
 		primitives.cube_send_to_gpu()
@@ -57,8 +57,6 @@ exercise_01_02_depth_testing_view := types.Tableau {
 		defer gl.Disable(gl.DEPTH_TEST)
 
 		depth_shader := shaders.shaders[.Depth]
-
-		gl.Uniform1i(gl.GetUniformLocation(depth_shader, "diffuse_0"), 0)
 		gl.UseProgram(depth_shader)
 
 		projection := render.camera_get_projection(&camera)
@@ -72,7 +70,7 @@ exercise_01_02_depth_testing_view := types.Tableau {
 				model := linalg.matrix4_translate(position)
 				transform := pv * model
 
-				gl.UniformMatrix4fv(gl.GetUniformLocation(depth_shader, "transform"), 1, false, raw_data(&transform))
+				shaders.set_mat_4x4(depth_shader, "transform", raw_data(&transform))
 
 				primitives.cube_draw()
 			}
@@ -85,7 +83,7 @@ exercise_01_02_depth_testing_view := types.Tableau {
 			model = linalg.matrix4_scale_f32(types.Vec3{10, 1, 10}) * model
 			transform := pv * model
 
-			gl.UniformMatrix4fv(gl.GetUniformLocation(depth_shader, "transform"), 1, false, raw_data(&transform))
+			shaders.set_mat_4x4(depth_shader, "transform", raw_data(&transform))
 
 			primitives.quad_draw()
 		}
