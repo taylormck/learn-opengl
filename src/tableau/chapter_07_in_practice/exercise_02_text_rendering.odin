@@ -4,6 +4,7 @@ import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
+import "../../utils"
 import "../../window"
 import "core:log"
 import "core:math/linalg"
@@ -12,7 +13,7 @@ import gl "vendor:OpenGL"
 import tt "vendor:stb/truetype"
 
 @(private = "file")
-FONT_PATH :: "fonts/Crimson_Text/CrimsonText-Regular.ttf"
+FONT_PATH :: "../../../fonts/Crimson_Text/CrimsonText-Regular.ttf"
 
 @(private = "file")
 FONT_SCALE :: 125
@@ -46,14 +47,13 @@ CYAN :: types.Vec3{0.5, 1, 1}
 @(private = "file", rodata)
 STARTING_TEXT_POSITION := types.Vec2{-0.9, 0.1}
 
-exercise_02_text_rendering := types.Tableau {
+exercise_02_text_rendering :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Text)
 		primitives.quad_send_to_gpu()
 
 		log.infof("Loading font {}", FONT_PATH)
-		font_data := os.read_entire_file(FONT_PATH) or_else panic("Failed to load font")
-		defer delete(font_data)
+		font_data := #load(FONT_PATH)
 
 		log.infof("Initializing font {}", FONT_PATH)
 		font: tt.fontinfo
@@ -65,6 +65,8 @@ exercise_02_text_rendering := types.Tableau {
 		defer gl.PixelStorei(gl.UNPACK_ALIGNMENT, 4)
 
 		log.infof("Rendering textures for each characters in the string")
+		glyph_textures = make(map[rune]CharacterTexture)
+
 		for rune in TEXT {
 			if rune in glyph_textures do continue
 
@@ -113,6 +115,8 @@ exercise_02_text_rendering := types.Tableau {
 				bitmap     = glyph_bitmap,
 			}
 		}
+
+		utils.print_gl_errors()
 	},
 	draw = proc() {
 		text_shader := shaders.shaders[.Text]
@@ -139,6 +143,7 @@ exercise_02_text_rendering := types.Tableau {
 		x: f32 = STARTING_TEXT_POSITION.x
 		y: f32 = STARTING_TEXT_POSITION.y
 
+		utils.print_gl_errors()
 		for r, i in TEXT {
 			tex := glyph_textures[r]
 			xpos := x + (tex.bbox_x / window_width)
@@ -150,14 +155,19 @@ exercise_02_text_rendering := types.Tableau {
 					linalg.matrix4_scale_f32({f32(tex.width) / window_width, f32(tex.height) / window_height, 0}) *
 					base_transform
 				shaders.set_mat_4x4(text_shader, "transform", raw_data(&transform))
+				utils.print_gl_errors()
 
 				gl.BindTexture(gl.TEXTURE_2D, tex.texture_id)
+				utils.print_gl_errors()
 
 				primitives.quad_draw()
+				utils.print_gl_errors()
 			}
 
 			x += tex.advance / window_width
 		}
+
+		utils.print_gl_errors()
 	},
 	teardown = proc() {
 		log.info("Deleteing the textures for the display characters")
@@ -165,7 +175,9 @@ exercise_02_text_rendering := types.Tableau {
 			gl.DeleteTextures(1, &texture.texture_id)
 			tt.FreeBitmap(texture.bitmap, nil)
 		}
+		delete(glyph_textures)
 
 		primitives.quad_clear_from_gpu()
+		utils.print_gl_errors()
 	},
 }

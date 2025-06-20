@@ -498,6 +498,7 @@ exercise_02_02_02_ibl_specular_textured :: types.Tableau {
 	},
 	teardown = proc() {
 		primitives.full_screen_clear_from_gpu()
+		primitives.cube_clear_from_gpu()
 		primitives.cubemap_clear_from_gpu()
 		primitives.sphere_clear_from_gpu()
 
