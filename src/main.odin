@@ -1,31 +1,14 @@
 package main
 
 import "base:runtime"
-import "core:fmt"
 import "core:log"
-import "core:math"
-import "core:math/linalg"
-import "core:os"
-import "core:slice"
 import "input"
-import "parse/obj"
-import "primitives"
-import "render"
 import "shaders"
-import "types"
+import "tableau"
 import "utils"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 import "window"
-
-// import "tableau/chapter_01_getting_started"
-// import "tableau/chapter_02_lighting"
-// import "tableau/chapter_03_model_loading"
-// import "tableau/chapter_04_advanced_opengl"
-// import "tableau/chapter_05_advanced_lighting"
-// import "tableau/chapter_06_pbr"
-// import "tableau/chapter_07_in_practice"
-import "tableau"
 
 INITIAL_WIDTH :: 800
 INITIAL_HEIGHT :: 600
