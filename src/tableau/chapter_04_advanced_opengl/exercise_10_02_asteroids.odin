@@ -54,7 +54,7 @@ light := render.DirectionalLight {
 	direction = {-0.2, -1, -0.3},
 }
 
-exercise_10_02_asteroids := types.Tableau {
+exercise_10_02_asteroids :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Planet)
 
@@ -95,7 +95,7 @@ exercise_10_02_asteroids := types.Tableau {
 
 		gl.UseProgram(planet_shader)
 		render.directional_light_set_uniform(&light, planet_shader)
-		gl.Uniform3fv(gl.GetUniformLocation(planet_shader, "view_position"), 1, raw_data(&camera.position))
+		shaders.set_vec3(planet_shader, "view_position", raw_data(&camera.position))
 
 		{
 			model := linalg.matrix4_scale_f32(types.Vec3{4, 4, 4})

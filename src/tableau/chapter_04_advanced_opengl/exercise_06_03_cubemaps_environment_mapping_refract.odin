@@ -40,7 +40,7 @@ cubemap: u32
 @(private = "file")
 backpack_model: render.Scene
 
-exercise_06_03_cubemaps_environment_mapping_refract := types.Tableau {
+exercise_06_03_cubemaps_environment_mapping_refract :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.SkyboxRefract, .Skybox)
 

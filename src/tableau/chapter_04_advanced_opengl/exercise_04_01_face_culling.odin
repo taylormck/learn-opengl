@@ -58,6 +58,7 @@ exercise_04_01_face_culling :: types.Tableau {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.CULL_FACE)
 		gl.CullFace(gl.FRONT)
+		defer gl.CullFace(gl.BACK)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, marble_texture.id)

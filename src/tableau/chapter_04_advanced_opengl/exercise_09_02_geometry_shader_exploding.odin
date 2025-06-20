@@ -40,7 +40,7 @@ camera := render.Camera {
 @(private = "file")
 backpack_model: render.Scene
 
-exercise_09_02_geometry_shader_exploding := types.Tableau {
+exercise_09_02_geometry_shader_exploding :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Explode)
 		backpack_model =

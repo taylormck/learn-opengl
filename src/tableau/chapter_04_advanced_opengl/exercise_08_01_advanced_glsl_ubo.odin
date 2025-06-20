@@ -49,7 +49,7 @@ cube_offsets := [NUM_COLORS]types.TransformMatrix {
 	linalg.matrix4_translate_f32({0.75, -0.75, 0}),
 }
 
-exercise_08_01_advanced_glsl_ubo := types.Tableau {
+exercise_08_01_advanced_glsl_ubo :: types.Tableau {
 	init = proc() {
 		primitives.cube_send_to_gpu()
 		shaders.init_shaders(.UboRed, .UboGreen, .UboBlue, .UboYellow)
@@ -102,7 +102,7 @@ exercise_08_01_advanced_glsl_ubo := types.Tableau {
 			model := cube_offsets[i]
 
 			gl.UseProgram(shader)
-			gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model"), 1, false, raw_data(&model))
+			shaders.set_mat_4x4(shader, "model", raw_data(&model))
 			primitives.cube_draw()
 		}
 	},

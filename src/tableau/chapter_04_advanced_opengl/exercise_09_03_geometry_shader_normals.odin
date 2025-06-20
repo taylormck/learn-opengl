@@ -37,7 +37,7 @@ camera := render.Camera {
 @(private = "file")
 backpack_model: render.Scene
 
-exercise_09_03_geometry_shader_normals := types.Tableau {
+exercise_09_03_geometry_shader_normals :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformTexture, .Normal)
 		backpack_model =

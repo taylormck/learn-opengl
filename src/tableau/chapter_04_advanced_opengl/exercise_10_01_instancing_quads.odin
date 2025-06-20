@@ -25,7 +25,7 @@ instanced_rect_translations: [NUM_INSTANCES]types.Vec2
 @(private = "file")
 OFFSET :: 0.1
 
-exercise_10_01_instancing_quads := types.Tableau {
+exercise_10_01_instancing_quads :: types.Tableau {
 	init = proc() {
 		primitives.quad_send_to_gpu()
 		shaders.init_shaders(.InstancedRect)
@@ -48,6 +48,7 @@ exercise_10_01_instancing_quads := types.Tableau {
 	draw = proc() {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
+		gl.Disable(gl.DEPTH_TEST)
 
 		instanced_rect_shader := shaders.shaders[.InstancedRect]
 

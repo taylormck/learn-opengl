@@ -41,7 +41,7 @@ camera := render.Camera {
 	speed        = 5,
 }
 
-exercise_11_02_anti_aliasing_offscreen := types.Tableau {
+exercise_11_02_anti_aliasing_offscreen :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.TransformUniformColor, .Invert)
 		primitives.cube_send_to_gpu()
@@ -123,8 +123,8 @@ exercise_11_02_anti_aliasing_offscreen := types.Tableau {
 		transform := projection * view
 
 		gl.UseProgram(single_color_shader)
-		gl.UniformMatrix4fv(gl.GetUniformLocation(single_color_shader, "transform"), 1, false, raw_data(&transform))
-		gl.Uniform4fv(gl.GetUniformLocation(single_color_shader, "our_color"), 1, raw_data(&cube_color))
+		shaders.set_mat_4x4(single_color_shader, "transform", raw_data(&transform))
+		shaders.set_vec4(single_color_shader, "our_color", raw_data(&cube_color))
 		primitives.cube_draw()
 
 		gl.BindFramebuffer(gl.READ_FRAMEBUFFER, ms_fbo)

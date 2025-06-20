@@ -55,7 +55,7 @@ light := render.DirectionalLight {
 	direction = {-0.2, -1, -0.3},
 }
 
-exercise_10_03_asteroids_instanced := types.Tableau {
+exercise_10_03_asteroids_instanced :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Planet, .Asteroid)
 
