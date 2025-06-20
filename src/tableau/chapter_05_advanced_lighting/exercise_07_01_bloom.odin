@@ -309,6 +309,10 @@ exercise_07_01_bloom :: types.Tableau {
 		pv := projection * view
 
 		gl.UseProgram(light_shader)
+
+		shaders.set_bool(light_shader, "hdr", true)
+		shaders.set_float(light_shader, "hdr_exposure", 0.005)
+
 		for &light in lights {
 			model := linalg.matrix4_translate(light.position) * linalg.matrix4_scale_f32(0.25)
 			transform := pv * model
@@ -317,6 +321,8 @@ exercise_07_01_bloom :: types.Tableau {
 			shaders.set_vec3(light_shader, "light_color", raw_data(&light.emissive))
 			primitives.cube_draw()
 		}
+
+		shaders.set_bool(light_shader, "hdr", false)
 
 		gl.UseProgram(scene_shader)
 		shaders.set_vec3(scene_shader, "view_position", raw_data(&camera.position))

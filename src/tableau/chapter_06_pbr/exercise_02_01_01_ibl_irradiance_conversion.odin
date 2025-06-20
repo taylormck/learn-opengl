@@ -244,6 +244,8 @@ exercise_02_01_01_ibl_irradiance_conversion :: types.Tableau {
 		}
 
 		gl.UseProgram(light_shader)
+		shaders.set_bool(light_shader, "hdr", true)
+		shaders.set_float(light_shader, "hdr_exposure", 0.005)
 
 		for i in 0 ..< NUM_POINT_LIGHTS {
 			model := linalg.matrix4_translate_f32(light_positions[i])
@@ -251,11 +253,11 @@ exercise_02_01_01_ibl_irradiance_conversion :: types.Tableau {
 
 			shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
 			shaders.set_vec3(light_shader, "light_color", raw_data(&light_colors[i]))
-			shaders.set_bool(light_shader, "hdr", true)
-			shaders.set_float(light_shader, "hdr_exposure", 0.005)
 
 			primitives.sphere_draw()
 		}
+
+		shaders.set_bool(light_shader, "hdr", false)
 
 		// Draw the skybox
 		rot_view := types.TransformMatrix(types.SubTransformMatrix(view))
