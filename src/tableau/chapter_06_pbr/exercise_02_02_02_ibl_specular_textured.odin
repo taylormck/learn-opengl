@@ -104,7 +104,7 @@ albedo_map, normal_map, metallic_map, roughness_map, ao_map: render.Texture
 @(private = "file")
 display_irradiance := false
 
-exercise_02_02_02_ibl_specular_textured := types.Tableau {
+exercise_02_02_02_ibl_specular_textured :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(
 			.PBRFullTextured,
@@ -424,7 +424,10 @@ exercise_02_02_02_ibl_specular_textured := types.Tableau {
 
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
+
 		gl.DepthFunc(gl.LEQUAL)
 
 		gl.UseProgram(pbr_shader)

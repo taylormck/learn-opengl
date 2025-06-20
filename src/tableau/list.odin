@@ -101,4 +101,10 @@ tableaus :: [?]types.Tableau {
 	chapter_05_advanced_lighting.exercise_08_01_deferred_shading,
 	chapter_05_advanced_lighting.exercise_08_02_deferred_shading_volumes,
 	chapter_05_advanced_lighting.exercise_09_01_ssao,
+	chapter_06_pbr.exercise_01_01_lighting,
+	chapter_06_pbr.exercise_01_02_lighting_textured,
+	chapter_06_pbr.exercise_02_01_01_ibl_irradiance_conversion,
+	chapter_06_pbr.exercise_02_01_02_ibl_irradiance,
+	chapter_06_pbr.exercise_02_02_01_ibl_specular,
+	chapter_06_pbr.exercise_02_02_02_ibl_specular_textured,
 }

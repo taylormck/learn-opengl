@@ -92,7 +92,7 @@ env_capture_fbo, env_capture_rbo: u32
 @(private = "file")
 albedo := types.Vec3{0.5, 0, 0}
 
-exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
+exercise_02_01_01_ibl_irradiance_conversion :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.PBR, .Light, .EquirectangularTexture, .SkyboxHDR)
 
@@ -206,7 +206,10 @@ exercise_02_01_01_ibl_irradiance_conversion := types.Tableau {
 
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
+
 		gl.DepthFunc(gl.LEQUAL)
 
 		gl.UseProgram(pbr_shader)

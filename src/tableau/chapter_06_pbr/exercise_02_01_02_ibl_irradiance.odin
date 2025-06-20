@@ -90,7 +90,7 @@ albedo := types.Vec3{0.7, 0.3, 0.5}
 @(private = "file")
 display_irradiance := false
 
-exercise_02_01_02_ibl_irradiance := types.Tableau {
+exercise_02_01_02_ibl_irradiance :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.PBRIrradiance, .Light, .EquirectangularTexture, .SkyboxHDR, .CubemapConvolution)
 
@@ -268,7 +268,10 @@ exercise_02_01_02_ibl_irradiance := types.Tableau {
 
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
+
 		gl.DepthFunc(gl.LEQUAL)
 
 		gl.UseProgram(pbr_shader)

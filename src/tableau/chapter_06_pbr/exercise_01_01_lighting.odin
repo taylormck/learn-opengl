@@ -62,7 +62,7 @@ light_colors := [NUM_POINT_LIGHTS]types.Vec3{{300, 300, 300}, {300, 300, 300}, {
 @(private = "file")
 albedo := types.Vec3{0.5, 0, 0}
 
-exercise_01_01_lighting := types.Tableau {
+exercise_01_01_lighting :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.PBR, .Light)
 		primitives.sphere_init()
@@ -105,7 +105,9 @@ exercise_01_01_lighting := types.Tableau {
 
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		gl.UseProgram(pbr_shader)
 

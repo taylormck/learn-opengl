@@ -100,7 +100,7 @@ brdf_lut_texture := render.Texture {
 @(private = "file")
 display_irradiance := false
 
-exercise_02_02_01_ibl_specular := types.Tableau {
+exercise_02_02_01_ibl_specular :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(
 			.PBRFull,
@@ -383,7 +383,10 @@ exercise_02_02_01_ibl_specular := types.Tableau {
 
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
+
 		gl.DepthFunc(gl.LEQUAL)
 
 		gl.UseProgram(pbr_shader)

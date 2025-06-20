@@ -65,7 +65,7 @@ pbr_material :: "rusted_iron"
 @(private = "file")
 albedo_map, normal_map, metallic_map, roughness_map, ao_map: render.Texture
 
-exercise_01_02_lighting_textured := types.Tableau {
+exercise_01_02_lighting_textured :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.PBRTexture, .Light)
 		primitives.sphere_init()
@@ -138,7 +138,9 @@ exercise_01_02_lighting_textured := types.Tableau {
 
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, albedo_map.id)
