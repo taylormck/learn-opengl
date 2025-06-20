@@ -93,7 +93,7 @@ shadow_width, shadow_height: i32 = 1024, 1024
 @(private = "file")
 shadow_border_color := types.Vec4{1, 1, 1, 1}
 
-exercise_03_01_03_shadow_mapping := types.Tableau {
+exercise_03_01_03_shadow_mapping :: types.Tableau {
 	init = proc() {
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
 		shaders.init_shaders(.EmptyDepth, .BlinnPhongDirectionalShadow2)
@@ -118,10 +118,10 @@ exercise_03_01_03_shadow_mapping := types.Tableau {
 			gl.FLOAT,
 			nil,
 		)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_BORDER)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_BORDER)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 		gl.TexParameterfv(gl.TEXTURE_2D, gl.TEXTURE_BORDER_COLOR, raw_data(&shadow_border_color))
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 
@@ -152,6 +152,7 @@ exercise_03_01_03_shadow_mapping := types.Tableau {
 		gl.Clear(gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
 
+		gl.UseProgram(depth_shader)
 		render_scene(depth_shader, &light_projection_view)
 
 		// Render scene
@@ -174,19 +175,14 @@ exercise_03_01_03_shadow_mapping := types.Tableau {
 
 		render.directional_light_set_uniform(&light, scene_shader)
 
-		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "material.diffuse_0"), 0)
-		gl.Uniform1f(gl.GetUniformLocation(scene_shader, "material.shininess"), shininess)
-		gl.Uniform3fv(gl.GetUniformLocation(scene_shader, "material.specular"), 1, raw_data(&material_specular))
+		shaders.set_int(scene_shader, "material.diffuse_0", 0)
+		shaders.set_float(scene_shader, "material.shininess", shininess)
+		shaders.set_vec3(scene_shader, "material.specular", raw_data(&material_specular))
 
-		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "shadow_map"), 1)
-		gl.Uniform3fv(gl.GetUniformLocation(scene_shader, "view_position"), 1, raw_data(&camera.position))
+		shaders.set_int(scene_shader, "shadow_map", 1)
+		shaders.set_vec3(scene_shader, "view_position", raw_data(&camera.position))
 
-		gl.UniformMatrix4fv(
-			gl.GetUniformLocation(scene_shader, "light_projection_view"),
-			1,
-			false,
-			raw_data(&light_projection_view),
-		)
+		shaders.set_mat_4x4(scene_shader, "light_projection_view", raw_data(&light_projection_view))
 
 		render_scene(scene_shader, &projection_view)
 	},
@@ -203,16 +199,17 @@ exercise_03_01_03_shadow_mapping := types.Tableau {
 
 @(private = "file")
 render_scene :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
-	gl.UseProgram(shader)
 
 	// Draw cubes
 	for &model, i in cube_transforms {
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 		transform := projection_view^ * model
 
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(shader, "mit"), 1, false, raw_data(&mit))
+		shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
+		if shader != shaders.shaders[.EmptyDepth] {
+			shaders.set_mat_4x4(shader, "model", raw_data(&model))
+			shaders.set_mat_3x3(shader, "mit", raw_data(&mit))
+		}
 
 		primitives.cube_draw()
 	}
@@ -222,9 +219,11 @@ render_scene :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
 		model := linalg.identity(types.TransformMatrix)
 		mit := linalg.identity(types.SubTransformMatrix)
 
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "transform"), 1, false, raw_data(projection_view))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(shader, "mit"), 1, false, raw_data(&mit))
+		shaders.set_mat_4x4(shader, "transform", raw_data(projection_view))
+		if shader != shaders.shaders[.EmptyDepth] {
+			shaders.set_mat_4x4(shader, "model", raw_data(&model))
+			shaders.set_mat_3x3(shader, "mit", raw_data(&mit))
+		}
 
 		primitives.plane_draw()
 	}

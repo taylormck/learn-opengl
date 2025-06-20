@@ -92,7 +92,7 @@ plane_material_specular := types.Vec3{0.5, 0.5, 0.5}
 @(private = "file")
 gamma: bool = true
 
-exercise_02_01_gamma_correction := types.Tableau {
+exercise_02_01_gamma_correction :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.BlinnPhongDiffuseSampledMultilights, .TransformTexture)
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, flip_vertically = true)
@@ -147,17 +147,17 @@ exercise_02_01_gamma_correction := types.Tableau {
 
 		gl.UseProgram(shader)
 
-		gl.Uniform1i(gl.GetUniformLocation(shader, "num_point_lights"), len(lights))
-		gl.Uniform1i(gl.GetUniformLocation(shader, "gamma"), i32(gamma))
+		shaders.set_int(shader, "num_point_lights", len(lights))
+		shaders.set_int(shader, "gamma", i32(gamma))
 
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "view_position"), 1, raw_data(&camera.position))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(shader, "mit"), 1, false, raw_data(&mit))
+		shaders.set_vec3(shader, "view_position", raw_data(&camera.position))
+		shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(shader, "model", raw_data(&model))
+		shaders.set_mat_3x3(shader, "mit", raw_data(&mit))
 
-		gl.Uniform1i(gl.GetUniformLocation(shader, "material.diffuse_0"), 0)
-		gl.Uniform1f(gl.GetUniformLocation(shader, "material.shininess"), shininess)
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "material.specular"), 1, raw_data(&plane_material_specular))
+		shaders.set_int(shader, "material.diffuse_0", 0)
+		shaders.set_float(shader, "material.shininess", shininess)
+		shaders.set_vec3(shader, "material.specular", raw_data(&plane_material_specular))
 
 		for &light, i in lights do render.point_light_array_set_uniform(&light, shader, u32(i))
 

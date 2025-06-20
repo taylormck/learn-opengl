@@ -85,4 +85,11 @@ tableaus :: [?]types.Tableau {
 	chapter_04_advanced_opengl.exercise_10_03_asteroids_instanced,
 	chapter_04_advanced_opengl.exercise_11_01_anti_aliasing_msaa,
 	chapter_04_advanced_opengl.exercise_11_02_anti_aliasing_offscreen,
+	chapter_05_advanced_lighting.exercise_01_01_advanced_lighting,
+	chapter_05_advanced_lighting.exercise_02_01_gamma_correction,
+	chapter_05_advanced_lighting.exercise_03_01_01_shadow_mapping_depth,
+	chapter_05_advanced_lighting.exercise_03_01_02_shadow_mapping_base,
+	chapter_05_advanced_lighting.exercise_03_01_03_shadow_mapping,
+	chapter_05_advanced_lighting.exercise_03_02_01_point_shadows,
+	chapter_05_advanced_lighting.exercise_03_02_02_point_shadows_soft,
 }

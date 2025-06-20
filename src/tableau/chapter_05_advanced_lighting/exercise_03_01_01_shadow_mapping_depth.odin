@@ -54,7 +54,7 @@ depth_fbo, depth_fb_texture: u32
 @(private = "file")
 shadow_width, shadow_height: i32 = 1024, 1024
 
-exercise_03_01_01_shadow_mapping_depth := types.Tableau {
+exercise_03_01_01_shadow_mapping_depth :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.EmptyDepth, .DepthR)
 		primitives.plane_send_to_gpu()
@@ -80,16 +80,14 @@ exercise_03_01_01_shadow_mapping_depth := types.Tableau {
 		)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 
 		gl.FramebufferTexture2D(gl.FRAMEBUFFER, gl.DEPTH_ATTACHMENT, gl.TEXTURE_2D, depth_fb_texture, 0)
 		gl.DrawBuffer(gl.NONE)
 		gl.ReadBuffer(gl.NONE)
 
-		// NOTE: we're not running this ensure because this framebuffer is actually incomplete.
-		// ensure(gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE, "Framebuffer incomplete!")
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	},
 	update = proc(delta: f64) {},
@@ -102,6 +100,7 @@ exercise_03_01_01_shadow_mapping_depth := types.Tableau {
 		gl.BindFramebuffer(gl.FRAMEBUFFER, depth_fbo)
 		gl.ClearColor(0, 0, 0, 1)
 		gl.Clear(gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
 
 		render_scene(depth_shader, &light_projection_view)
@@ -117,10 +116,10 @@ exercise_03_01_01_shadow_mapping_depth := types.Tableau {
 		gl.BindTexture(gl.TEXTURE_2D, depth_fb_texture)
 
 		gl.UseProgram(texture_shader)
-		gl.Uniform1f(gl.GetUniformLocation(texture_shader, "near"), near)
-		gl.Uniform1f(gl.GetUniformLocation(texture_shader, "far"), far)
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "linearize"), 0)
-		gl.Uniform1i(gl.GetUniformLocation(texture_shader, "depth_map"), 0)
+		shaders.set_float(texture_shader, "near", near)
+		shaders.set_float(texture_shader, "far", far)
+		shaders.set_int(texture_shader, "linearize", 0)
+		shaders.set_int(texture_shader, "depth_map", 0)
 		primitives.full_screen_draw()
 	},
 	teardown = proc() {
@@ -140,14 +139,14 @@ render_scene :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
 	// Draw cubes
 	for model, i in cube_transforms {
 		transform := projection_view^ * model
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "transform"), 1, false, raw_data(&transform))
+		shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
 
 		primitives.cube_draw()
 	}
 
 	// Render plane
 	{
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "transform"), 1, false, raw_data(projection_view))
+		shaders.set_mat_4x4(shader, "transform", raw_data(projection_view))
 		primitives.plane_draw()
 	}
 }

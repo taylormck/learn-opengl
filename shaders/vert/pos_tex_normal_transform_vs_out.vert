@@ -23,6 +23,6 @@ void main() {
 	vs_out.normal = mit * aNormal;
 
 	if (reverse_normals) {
-		vs_out.normal = -vs_out.
+		vs_out.normal = -vs_out.normal;
 	}
 }

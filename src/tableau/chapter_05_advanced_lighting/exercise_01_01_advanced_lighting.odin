@@ -60,7 +60,7 @@ plane_material_specular := types.Vec3{0.5, 0.5, 0.5}
 @(private = "file")
 use_blinn: bool = true
 
-exercise_01_01_advanced_lighting := types.Tableau {
+exercise_01_01_advanced_lighting :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.PhongDiffuseSampled, .BlinnPhongDiffuseSampled)
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
@@ -110,17 +110,17 @@ exercise_01_01_advanced_lighting := types.Tableau {
 		shininess := blinn_phong_shininess if use_blinn else phong_shininess
 
 		gl.UseProgram(shader)
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "view_position"), 1, raw_data(&camera.position))
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "light.position"), 1, raw_data(&light.position))
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "light.ambient"), 1, raw_data(&light.ambient))
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "light.diffuse"), 1, raw_data(&light.diffuse))
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "light.specular"), 1, raw_data(&light.specular))
-		gl.Uniform1i(gl.GetUniformLocation(shader, "material.diffuse_0"), 0)
-		gl.Uniform1f(gl.GetUniformLocation(shader, "material.shininess"), shininess)
-		gl.Uniform3fv(gl.GetUniformLocation(shader, "material.specular"), 1, raw_data(&plane_material_specular))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(shader, "mit"), 1, false, raw_data(&mit))
+		shaders.set_vec3(shader, "view_position", raw_data(&camera.position))
+		shaders.set_vec3(shader, "light.position", raw_data(&light.position))
+		shaders.set_vec3(shader, "light.ambient", raw_data(&light.ambient))
+		shaders.set_vec3(shader, "light.diffuse", raw_data(&light.diffuse))
+		shaders.set_vec3(shader, "light.specular", raw_data(&light.specular))
+		shaders.set_int(shader, "material.diffuse", 0)
+		shaders.set_float(shader, "material.shininess", shininess)
+		shaders.set_vec3(shader, "material.specular", raw_data(&plane_material_specular))
+		shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
+		shaders.set_mat_4x4(shader, "model", raw_data(&model))
+		shaders.set_mat_3x3(shader, "mit", raw_data(&mit))
 
 		primitives.plane_draw()
 	},

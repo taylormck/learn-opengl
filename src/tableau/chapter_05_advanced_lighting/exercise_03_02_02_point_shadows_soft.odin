@@ -131,7 +131,7 @@ shadow_transforms := [?]types.TransformMatrix {
 @(private = "file")
 debug := false
 
-exercise_03_02_02_point_shadows_soft := types.Tableau {
+exercise_03_02_02_point_shadows_soft :: types.Tableau {
 	init = proc() {
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
 		shaders.init_shaders(.DepthCube, .BlinnPhongDirectionalShadow4)
@@ -155,8 +155,8 @@ exercise_03_02_02_point_shadows_soft := types.Tableau {
 			)
 		}
 
-		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
-		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
 		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 		gl.TexParameteri(gl.TEXTURE_CUBE_MAP, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
@@ -190,17 +190,22 @@ exercise_03_02_02_point_shadows_soft := types.Tableau {
 		gl.BindFramebuffer(gl.FRAMEBUFFER, depth_fbo)
 		gl.ClearColor(0, 0, 0, 1)
 		gl.Clear(gl.DEPTH_BUFFER_BIT)
+
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
+
+		gl.Enable(gl.CULL_FACE)
+		defer gl.Disable(gl.CULL_FACE)
 
 		gl.UseProgram(depth_shader)
 		for &transform, i in shadow_transforms {
 			uniform_name := fmt.ctprintf("shadow_matrices[{}]", i)
-			gl.UniformMatrix4fv(gl.GetUniformLocation(depth_shader, uniform_name), 1, false, raw_data(&transform))
+			shaders.set_mat_4x4(depth_shader, uniform_name, raw_data(&transform))
 		}
 
 		fake_pv := linalg.identity(types.TransformMatrix)
-		gl.Uniform1f(gl.GetUniformLocation(depth_shader, "far_plane"), far)
-		gl.Uniform3fv(gl.GetUniformLocation(depth_shader, "light_position"), 1, raw_data(&light.position))
+		shaders.set_float(depth_shader, "far_plane", far)
+		shaders.set_vec3(depth_shader, "light_position", raw_data(&light.position))
 
 		render_scene(depth_shader, &fake_pv)
 
@@ -224,14 +229,14 @@ exercise_03_02_02_point_shadows_soft := types.Tableau {
 
 		render.point_light_set_uniform(&light, scene_shader)
 
-		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "material.diffuse_0"), 0)
-		gl.Uniform1f(gl.GetUniformLocation(scene_shader, "material.shininess"), shininess)
-		gl.Uniform3fv(gl.GetUniformLocation(scene_shader, "material.specular"), 1, raw_data(&material_specular))
+		shaders.set_int(scene_shader, "material.diffuse_0", 0)
+		shaders.set_float(scene_shader, "material.shininess", shininess)
+		shaders.set_vec3(scene_shader, "material.specular", raw_data(&material_specular))
 
-		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "debug"), i32(debug))
-		gl.Uniform1i(gl.GetUniformLocation(scene_shader, "depth_map"), 1)
-		gl.Uniform1f(gl.GetUniformLocation(scene_shader, "far_plane"), far)
-		gl.Uniform3fv(gl.GetUniformLocation(scene_shader, "view_position"), 1, raw_data(&camera.position))
+		shaders.set_int(scene_shader, "debug", i32(debug))
+		shaders.set_int(scene_shader, "depth_map", 1)
+		shaders.set_float(scene_shader, "far_plane", far)
+		shaders.set_vec3(scene_shader, "view_position", raw_data(&camera.position))
 
 		render_scene(scene_shader, &projection_view)
 	},
@@ -249,16 +254,19 @@ exercise_03_02_02_point_shadows_soft := types.Tableau {
 render_scene :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
 	gl.UseProgram(shader)
 
-	gl.Uniform1i(gl.GetUniformLocation(shader, "reverse_normals"), 0)
-	gl.CullFace(gl.BACK)
+	if shader != shaders.shaders[.DepthCube] do shaders.set_int(shader, "reverse_normals", 0)
+
 	// Draw cubes
 	for &model, i in cube_transforms {
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 		transform := projection_view^ * model
 
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(shader, "mit"), 1, false, raw_data(&mit))
+		shaders.set_mat_4x4(shader, "model", raw_data(&model))
+
+		if shader != shaders.shaders[.DepthCube] {
+			shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
+			shaders.set_mat_3x3(shader, "mit", raw_data(&mit))
+		}
 
 		primitives.cube_draw()
 	}
@@ -269,16 +277,18 @@ render_scene :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 		transform := projection_view^ * model
 
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "transform"), 1, false, raw_data(&transform))
-		gl.UniformMatrix4fv(gl.GetUniformLocation(shader, "model"), 1, false, raw_data(&model))
-		gl.UniformMatrix3fv(gl.GetUniformLocation(shader, "mit"), 1, false, raw_data(&mit))
+		shaders.set_mat_4x4(shader, "model", raw_data(&model))
 
-		gl.Enable(gl.CULL_FACE)
+		if shader != shaders.shaders[.DepthCube] {
+			shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
+			shaders.set_mat_3x3(shader, "mit", raw_data(&mit))
+		}
+
 		gl.CullFace(gl.FRONT)
 		defer gl.CullFace(gl.BACK)
 
-		gl.Uniform1i(gl.GetUniformLocation(shader, "reverse_normals"), 1)
-		defer gl.Uniform1i(gl.GetUniformLocation(shader, "reverse_normals"), 0)
+		if shader != shaders.shaders[.DepthCube] do shaders.set_int(shader, "reverse_normals", 1)
+		defer if shader != shaders.shaders[.DepthCube] do shaders.set_int(shader, "reverse_normals", 0)
 
 		primitives.cube_draw()
 	}
