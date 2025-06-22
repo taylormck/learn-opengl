@@ -1,6 +1,7 @@
 package tableau
 
 import "../types"
+import "bonus"
 import "chapter_01_getting_started"
 import "chapter_02_lighting"
 import "chapter_03_model_loading"
@@ -108,4 +109,5 @@ tableaus :: [?]types.Tableau {
 	chapter_06_pbr.exercise_02_02_01_ibl_specular,
 	chapter_06_pbr.exercise_02_02_02_ibl_specular_textured,
 	chapter_07_in_practice.exercise_02_text_rendering,
+	bonus.noise_01,
 }
