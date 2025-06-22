@@ -37,6 +37,7 @@ cube_transforms := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({0.6, 1, 0}),
 	linalg.matrix4_translate_f32({1.2, 1, 0}),
 	linalg.matrix4_translate_f32({1.8, 1, 0}),
+	linalg.matrix4_translate_f32({-1.8, 0, 0}),
 }
 
 @(private = "file")
@@ -51,14 +52,17 @@ noise_01 :: types.Tableau {
 		defer delete(noise_base)
 		gl.GenTextures(len(cube_textures), raw_data(cube_textures[:]))
 
+		log.info("Generating stripe texture")
 		stripe_data := generate_stripe_data()
 		defer delete(stripe_data)
 		send_texture_3d_to_gpu(cube_textures[0], stripe_data)
 
+		log.info("Generating checkerboard texture")
 		checkerboard_data := generate_checker_board_data()
 		defer delete(checkerboard_data)
 		send_texture_3d_to_gpu(cube_textures[1], checkerboard_data)
 
+		log.info("Generating noise textures")
 		for i in 2 ..= 3 {
 			texture_id := cube_textures[i]
 			random_data := make([]u8, noise.NOISE_LENGTH * 4)
@@ -70,6 +74,7 @@ noise_01 :: types.Tableau {
 			send_texture_3d_to_gpu(texture_id, random_data)
 		}
 
+		log.info("Generating smooth noise textures")
 		for i in 4 ..= 5 {
 			texture_id := cube_textures[i]
 			random_data := make([]u8, noise.NOISE_LENGTH * 4)
@@ -81,6 +86,7 @@ noise_01 :: types.Tableau {
 			send_texture_3d_to_gpu(texture_id, random_data)
 		}
 
+		log.info("Generating turbulence texture")
 		{
 			texture_id := cube_textures[6]
 			random_data := make([]u8, noise.NOISE_LENGTH * 4)
@@ -90,6 +96,17 @@ noise_01 :: types.Tableau {
 			noise.fill_data_array_bytes_turbulence(noise_base, random_data, zoom)
 
 			send_texture_3d_to_gpu(texture_id, random_data)
+		}
+
+		log.info("Generating marble texture")
+		{
+			texture_id := cube_textures[7]
+
+			zoom: f64 = 64
+			marble_data := generate_marble_data(noise_base, vein_frequency = 2, turbulence_power = 1.5, max_zoom = zoom)
+			defer delete(marble_data)
+
+			send_texture_3d_to_gpu(texture_id, marble_data)
 		}
 
 		utils.print_gl_errors()
@@ -211,6 +228,38 @@ generate_checker_board_data :: proc() -> []u8 {
 					data[index + 2] = 255
 					data[index + 3] = 255
 				}
+			}
+		}
+	}
+
+	return data
+}
+
+@(private = "file")
+generate_marble_data :: proc(input_noise: []f64, vein_frequency, turbulence_power, max_zoom: f64) -> []u8 {
+	data := make([]u8, noise.NOISE_LENGTH * 4)
+
+	for i in 0 ..< noise.NOISE_WIDTH {
+		for j in 0 ..< noise.NOISE_HEIGHT {
+			for k in 0 ..< noise.NOISE_DEPTH {
+				x := f64(i)
+				y := f64(j)
+				z := f64(k)
+
+				xyz :=
+					x / noise.NOISE_WIDTH +
+					y / noise.NOISE_HEIGHT +
+					z / noise.NOISE_DEPTH +
+					turbulence_power * noise.get_turbulence(input_noise, x, y, z, max_zoom) / 256
+
+				sine_value := math.abs(math.sin(xyz * math.PI * vein_frequency))
+				color := u8(255 * sine_value)
+
+				index := noise.get_noise_index(i, j, k) * 4
+				data[index] = color
+				data[index + 1] = color
+				data[index + 2] = color
+				data[index + 3] = 255
 			}
 		}
 	}
