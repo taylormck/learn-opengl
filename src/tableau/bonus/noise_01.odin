@@ -59,7 +59,7 @@ noise_01 :: types.Tableau {
 		defer delete(checkerboard_data)
 		send_texture_3d_to_gpu(cube_textures[1], checkerboard_data)
 
-		for i in 2 ..= 4 {
+		for i in 2 ..= 3 {
 			texture_id := cube_textures[i]
 			random_data := make([]u8, noise.NOISE_LENGTH * 4)
 			defer delete(random_data)
@@ -70,13 +70,24 @@ noise_01 :: types.Tableau {
 			send_texture_3d_to_gpu(texture_id, random_data)
 		}
 
-		for i in 5 ..= 6 {
+		for i in 4 ..= 5 {
 			texture_id := cube_textures[i]
 			random_data := make([]u8, noise.NOISE_LENGTH * 4)
 			defer delete(random_data)
 
 			zoom := math.pow(2, f64(i - 1))
 			noise.fill_data_array_bytes_smooth(noise_base, random_data, zoom)
+
+			send_texture_3d_to_gpu(texture_id, random_data)
+		}
+
+		{
+			texture_id := cube_textures[6]
+			random_data := make([]u8, noise.NOISE_LENGTH * 4)
+			defer delete(random_data)
+
+			zoom: f64 = 16
+			noise.fill_data_array_bytes_turbulence(noise_base, random_data, zoom)
 
 			send_texture_3d_to_gpu(texture_id, random_data)
 		}

@@ -106,6 +106,49 @@ get_smooth_noise :: proc(noise: []f64, zoom, x, y, z: f64) -> f64 {
 	return value
 }
 
+fill_data_array_bytes_turbulence :: proc(noise: []f64, data: []u8, zoom: f64 = 1) {
+	ensure(len(noise) == NOISE_LENGTH, "provided noise has incorrect size")
+	ensure(len(data) == NOISE_LENGTH * 4, "provided data array has incorrect size")
+
+	for x in 0 ..< NOISE_WIDTH {
+		for y in 0 ..< NOISE_HEIGHT {
+			for z in 0 ..< NOISE_DEPTH {
+				xd := f64(x)
+				yd := f64(y)
+				zd := f64(z)
+
+				noise_value := u8(get_turbulence(noise, xd, yd, zd, zoom))
+
+				data_start_index := get_noise_index(x, y, z) * 4
+				for data_index in data_start_index ..< data_start_index + 3 {
+					data[data_index] = noise_value
+				}
+				data[data_start_index + 3] = 255
+			}
+		}
+	}
+}
+
+get_turbulence :: proc(noise: []f64, x, y, z, max_zoom: f64) -> f64 {
+	ensure(max_zoom >= 1 && max_zoom <= 64, "provided max_zoom is outside of valid range")
+	zoom := max_zoom
+
+	result: f64 = 0
+
+	for zoom >= 1 {
+		x_zoom := f64(x) / zoom
+		y_zoom := f64(y) / zoom
+		z_zoom := f64(z) / zoom
+
+		result += get_smooth_noise(noise, zoom, x_zoom, y_zoom, z_zoom) * zoom
+		zoom /= 2
+	}
+
+	result = 128 * result / max_zoom
+
+	return result
+}
+
 get_noise_index :: proc(i, j, k: int) -> int {
 	ensure(i < NOISE_WIDTH, "noise index out of bounds")
 	ensure(j < NOISE_HEIGHT, "noise index out of bounds")
