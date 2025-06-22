@@ -196,6 +196,29 @@ noise_01 :: types.Tableau {
 			send_texture_3d_to_gpu(texture_id, wood_data)
 		}
 
+		log.info("Generating misty cloud texture")
+		{
+			i := 18
+			texture_id := cube_textures[i]
+
+			cloud_data := generate_misty_cloud_data(noise_base, 32)
+			defer delete(cloud_data)
+
+			send_texture_3d_to_gpu(texture_id, cloud_data)
+		}
+
+		log.info("Generating misty cloud texture")
+		for i in 19 ..= 20 {
+			texture_id := cube_textures[i]
+
+			zoom: f64 = 32 * f64(i - 18)
+			cloud_data := generate_cloud_data(noise_base, zoom)
+			defer delete(cloud_data)
+
+			send_texture_3d_to_gpu(texture_id, cloud_data)
+		}
+
+
 		utils.print_gl_errors()
 	},
 	update = proc(delta: f64) {
@@ -468,4 +491,81 @@ generate_wood_data :: proc(input_noise: []f64, ring_frequency, turbulence, max_z
 	}
 
 	return data
+}
+
+@(private = "file")
+generate_misty_cloud_data :: proc(input_noise: []f64, max_zoom: f64) -> []u8 {
+	data := make([]u8, noise.NOISE_LENGTH * 4)
+
+	for i in 0 ..< noise.NOISE_WIDTH {
+		for j in 0 ..< noise.NOISE_HEIGHT {
+			for k in 0 ..< noise.NOISE_DEPTH {
+
+				brightness := 1 - noise.get_turbulence(input_noise, f64(i), f64(j), f64(k), max_zoom) / 256
+				cloud_coverage := u8(brightness * 255)
+
+				index := noise.get_noise_index(i, j, k) * 4
+				data[index] = cloud_coverage
+				data[index + 1] = cloud_coverage
+				data[index + 2] = 255
+				data[index + 3] = 255
+			}
+		}
+	}
+
+	return data
+}
+
+
+@(private = "file")
+generate_cloud_data :: proc(input_noise: []f64, max_zoom: f64) -> []u8 {
+	data := make([]u8, noise.NOISE_LENGTH * 4)
+
+	for i in 0 ..< noise.NOISE_WIDTH {
+		for j in 0 ..< noise.NOISE_HEIGHT {
+			for k in 0 ..< noise.NOISE_DEPTH {
+
+				brightness := 1 - get_cloud_turbulence(input_noise, f64(i), f64(j), f64(k), max_zoom) / 256
+				cloud_coverage := u8(brightness * 255)
+
+				index := noise.get_noise_index(i, j, k) * 4
+				data[index] = cloud_coverage
+				data[index + 1] = cloud_coverage
+				data[index + 2] = 255
+				data[index + 3] = 255
+			}
+		}
+	}
+
+	return data
+}
+
+@(private = "file")
+get_cloud_turbulence :: proc(input_noise: []f64, x, y, z, max_zoom: f64) -> f64 {
+	ensure(max_zoom >= 1 && max_zoom <= 64, "provided max_zoom is outside of valid range")
+
+	logistic :: proc(a: f64) -> f64 {
+		return 1 / (1 + math.pow(2.718, -0.2 * a))
+	}
+
+	cloud_quant :: 130
+
+	zoom := max_zoom
+
+	result: f64 = 0
+
+	for zoom >= 0.9 {
+		x_zoom := f64(x) / zoom
+		y_zoom := f64(y) / zoom
+		z_zoom := f64(z) / zoom
+
+		result += noise.get_smooth_noise(input_noise, zoom, x_zoom, y_zoom, z_zoom) * zoom
+		zoom /= 2
+	}
+
+	result = 128 * result / max_zoom
+	result = 256 * logistic(result - cloud_quant)
+
+	return result
+
 }
