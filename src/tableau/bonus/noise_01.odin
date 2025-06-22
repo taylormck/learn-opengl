@@ -38,6 +38,7 @@ cube_transforms := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({1.2, 1, 0}),
 	linalg.matrix4_translate_f32({1.8, 1, 0}),
 	linalg.matrix4_translate_f32({-1.8, 0, 0}),
+	linalg.matrix4_translate_f32({-1.2, 0, 0}),
 }
 
 @(private = "file")
@@ -98,12 +99,17 @@ noise_01 :: types.Tableau {
 			send_texture_3d_to_gpu(texture_id, random_data)
 		}
 
-		log.info("Generating marble texture")
-		{
-			texture_id := cube_textures[7]
+		log.info("Generating marble textures")
+		for i in 7 ..= 8 {
+			texture_id := cube_textures[i]
+			j := f64(i - 6)
 
 			zoom: f64 = 64
-			marble_data := generate_marble_data(noise_base, vein_frequency = 2, turbulence_power = 1.5, max_zoom = zoom)
+			vein_frequency := math.pow(1.5, j)
+			turbulence_power := math.pow(1.5, j)
+
+			marble_data := generate_marble_data(noise_base, vein_frequency, turbulence_power, zoom)
+
 			defer delete(marble_data)
 
 			send_texture_3d_to_gpu(texture_id, marble_data)
