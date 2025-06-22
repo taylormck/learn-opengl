@@ -39,6 +39,18 @@ cube_transforms := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({1.8, 1, 0}),
 	linalg.matrix4_translate_f32({-1.8, 0, 0}),
 	linalg.matrix4_translate_f32({-1.2, 0, 0}),
+	linalg.matrix4_translate_f32({-0.6, 0, 0}),
+	linalg.matrix4_translate_f32({0, 0, 0}),
+	linalg.matrix4_translate_f32({0.6, 0, 0}),
+	linalg.matrix4_translate_f32({1.2, 0, 0}),
+	linalg.matrix4_translate_f32({1.8, 0, 0}),
+	linalg.matrix4_translate_f32({-1.8, -1, 0}),
+	linalg.matrix4_translate_f32({-1.2, -1, 0}),
+	linalg.matrix4_translate_f32({-0.6, -1, 0}),
+	linalg.matrix4_translate_f32({0, -1, 0}),
+	linalg.matrix4_translate_f32({0.6, -1, 0}),
+	linalg.matrix4_translate_f32({1.2, -1, 0}),
+	linalg.matrix4_translate_f32({1.8, -1, 0}),
 }
 
 @(private = "file")
@@ -104,7 +116,7 @@ noise_01 :: types.Tableau {
 			texture_id := cube_textures[i]
 			j := f64(i - 6)
 
-			zoom: f64 = 64
+			zoom: f64 = j * 32
 			vein_frequency := math.pow(1.5, j)
 			turbulence_power := math.pow(1.5, j)
 
@@ -114,6 +126,43 @@ noise_01 :: types.Tableau {
 
 			send_texture_3d_to_gpu(texture_id, marble_data)
 		}
+
+		log.info("Generating logistic marble textures")
+		for i in 9 ..= 10 {
+			texture_id := cube_textures[i]
+			j := f64(i - 8)
+
+			zoom: f64 = j * 32
+			vein_frequency := math.pow(1.5, j)
+			turbulence_power := math.pow(1.5, j)
+
+			marble_data := generate_logistic_marble_data(noise_base, vein_frequency, turbulence_power, zoom)
+
+			defer delete(marble_data)
+
+			send_texture_3d_to_gpu(texture_id, marble_data)
+		}
+
+		log.info("Generating colored logistic marble textures")
+		for i in 11 ..= 12 {
+			texture_id := cube_textures[i]
+			j := f64(i - 10)
+
+			zoom: f64 = j * 32
+			vein_frequency := math.pow(1.5, j)
+			turbulence_power := math.pow(1.5, j)
+
+			custom_color_fn :: proc(a: f64) -> [3]u8 {
+				return [3]u8{u8(255 * a), u8(min(a * 1.5 - 0.25, 1) * 255), u8(255 * a)}
+			}
+
+			marble_data := generate_logistic_marble_data(noise_base, vein_frequency, turbulence_power, zoom, custom_color_fn)
+
+			defer delete(marble_data)
+
+			send_texture_3d_to_gpu(texture_id, marble_data)
+		}
+
 
 		utils.print_gl_errors()
 	},
@@ -242,7 +291,20 @@ generate_checker_board_data :: proc() -> []u8 {
 }
 
 @(private = "file")
-generate_marble_data :: proc(input_noise: []f64, vein_frequency, turbulence_power, max_zoom: f64) -> []u8 {
+ColorFn :: #type proc(a: f64) -> [3]u8
+
+@(private = "file")
+default_color_fn :: proc(a: f64) -> [3]u8 {
+	value := u8(255 * a)
+	return [3]u8{value, value, value}
+}
+
+@(private = "file")
+generate_marble_data :: proc(
+	input_noise: []f64,
+	vein_frequency, turbulence_power, max_zoom: f64,
+	color_fn: ColorFn = default_color_fn,
+) -> []u8 {
 	data := make([]u8, noise.NOISE_LENGTH * 4)
 
 	for i in 0 ..< noise.NOISE_WIDTH {
@@ -259,12 +321,55 @@ generate_marble_data :: proc(input_noise: []f64, vein_frequency, turbulence_powe
 					turbulence_power * noise.get_turbulence(input_noise, x, y, z, max_zoom) / 256
 
 				sine_value := math.abs(math.sin(xyz * math.PI * vein_frequency))
-				color := u8(255 * sine_value)
+
+				color := color_fn(sine_value)
 
 				index := noise.get_noise_index(i, j, k) * 4
-				data[index] = color
-				data[index + 1] = color
-				data[index + 2] = color
+				data[index] = color.r
+				data[index + 1] = color.g
+				data[index + 2] = color.b
+				data[index + 3] = 255
+			}
+		}
+	}
+
+	return data
+}
+
+@(private = "file")
+generate_logistic_marble_data :: proc(
+	input_noise: []f64,
+	vein_frequency, turbulence_power, max_zoom: f64,
+	color_fn: ColorFn = default_color_fn,
+) -> []u8 {
+	data := make([]u8, noise.NOISE_LENGTH * 4)
+
+	// A magic function that mostly returns values close to 0 or 1
+	logistic :: proc(a: f64) -> f64 {
+		return 1.0 / (1.0 + math.pow(2.718, -3 * a))
+	}
+
+	for i in 0 ..< noise.NOISE_WIDTH {
+		for j in 0 ..< noise.NOISE_HEIGHT {
+			for k in 0 ..< noise.NOISE_DEPTH {
+				x := f64(i)
+				y := f64(j)
+				z := f64(k)
+
+				xyz :=
+					x / noise.NOISE_WIDTH +
+					y / noise.NOISE_HEIGHT +
+					z / noise.NOISE_DEPTH +
+					turbulence_power * noise.get_turbulence(input_noise, x, y, z, max_zoom) / 256
+
+				sine_value := logistic(math.abs(math.sin(xyz * math.PI * vein_frequency))) * 1.25 - 0.2
+				sine_value = clamp(sine_value, -1, 1)
+				color := color_fn(sine_value)
+
+				index := noise.get_noise_index(i, j, k) * 4
+				data[index] = color.r
+				data[index + 1] = color.g
+				data[index + 2] = color.b
 				data[index + 3] = 255
 			}
 		}
