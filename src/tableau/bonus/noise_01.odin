@@ -56,6 +56,15 @@ cube_transforms := [?]types.TransformMatrix {
 @(private = "file")
 cube_textures: [len(cube_transforms)]u32
 
+@(private = "file")
+custom_color_fns := [?]ColorFn{proc(a: f64) -> [3]u8 {
+		return [3]u8{u8(255 * a), u8(min(a * 1.5 - 0.25, 1) * 255), u8(255 * a)}
+	}, proc(a: f64) -> [3]u8 {
+		return [3]u8{u8(min(a * 1.5 - 0.25, 1) * 255), u8(255 * a), u8(255 * a)}
+	}, proc(a: f64) -> [3]u8 {
+		return [3]u8{u8(255 * a), u8(255 * a), u8(min(a * 1.5 - 0.25, 1) * 255)}
+	}}
+
 noise_01 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Texture3D)
@@ -144,25 +153,48 @@ noise_01 :: types.Tableau {
 		}
 
 		log.info("Generating colored logistic marble textures")
-		for i in 11 ..= 12 {
+		for i in 11 ..= 13 {
 			texture_id := cube_textures[i]
 			j := f64(i - 10)
 
-			zoom: f64 = j * 32
-			vein_frequency := math.pow(1.5, j)
+			zoom: f64 = j * 16
+			vein_frequency := math.pow(1.25, j)
 			turbulence_power := math.pow(1.5, j)
+			color_fn := custom_color_fns[i - 11]
 
-			custom_color_fn :: proc(a: f64) -> [3]u8 {
-				return [3]u8{u8(255 * a), u8(min(a * 1.5 - 0.25, 1) * 255), u8(255 * a)}
-			}
-
-			marble_data := generate_logistic_marble_data(noise_base, vein_frequency, turbulence_power, zoom, custom_color_fn)
+			marble_data := generate_logistic_marble_data(noise_base, vein_frequency, turbulence_power, zoom, color_fn)
 
 			defer delete(marble_data)
 
 			send_texture_3d_to_gpu(texture_id, marble_data)
 		}
 
+		log.info("Generating ring texture")
+		{
+			i := 14
+			texture_id := cube_textures[i]
+
+			wood_data := generate_ring_data(ring_density = 20)
+			defer delete(wood_data)
+
+			send_texture_3d_to_gpu(texture_id, wood_data)
+		}
+
+		log.info("Generating wood textures")
+		turbulence_powers := [3]f64{0.05, 0.1, 0.2}
+		for i in 15 ..= 17 {
+			texture_id := cube_textures[i]
+
+			zoom: f64 = 32
+			ring_frequency: f64 = 10
+			turbulence_power := turbulence_powers[i - 15]
+
+			wood_data := generate_wood_data(noise_base, ring_frequency, turbulence_power, zoom)
+
+			defer delete(wood_data)
+
+			send_texture_3d_to_gpu(texture_id, wood_data)
+		}
 
 		utils.print_gl_errors()
 	},
@@ -370,6 +402,66 @@ generate_logistic_marble_data :: proc(
 				data[index] = color.r
 				data[index + 1] = color.g
 				data[index + 2] = color.b
+				data[index + 3] = 255
+			}
+		}
+	}
+
+	return data
+}
+
+@(private = "file")
+generate_ring_data :: proc(ring_density: f64) -> []u8 {
+	data := make([]u8, noise.NOISE_LENGTH * 4)
+
+	for i in 0 ..< noise.NOISE_WIDTH {
+		for j in 0 ..< noise.NOISE_HEIGHT {
+			for k in 0 ..< noise.NOISE_DEPTH {
+				x := (f64(i) - noise.NOISE_WIDTH / 2) / noise.NOISE_WIDTH
+				y := (f64(j) - noise.NOISE_WIDTH / 2) / noise.NOISE_WIDTH
+				z_dist := math.sqrt(x * x + y * y)
+
+				sine_value := 128 * abs(math.sin(2 * ring_density * z_dist * math.PI))
+				sine_floor := math.floor(sine_value)
+
+				red := u8(80 + sine_floor)
+				green := u8(30 + sine_floor)
+
+				index := noise.get_noise_index(i, j, k) * 4
+				data[index] = red
+				data[index + 1] = green
+				data[index + 2] = 0
+				data[index + 3] = 255
+			}
+		}
+	}
+
+	return data
+}
+
+@(private = "file")
+generate_wood_data :: proc(input_noise: []f64, ring_frequency, turbulence, max_zoom: f64) -> []u8 {
+	data := make([]u8, noise.NOISE_LENGTH * 4)
+
+	for i in 0 ..< noise.NOISE_WIDTH {
+		for j in 0 ..< noise.NOISE_HEIGHT {
+			for k in 0 ..< noise.NOISE_DEPTH {
+				x := (f64(i) - noise.NOISE_WIDTH / 2) / noise.NOISE_WIDTH
+				y := (f64(j) - noise.NOISE_WIDTH / 2) / noise.NOISE_WIDTH
+
+				z_offset := turbulence * noise.get_turbulence(input_noise, f64(i), f64(j), f64(k), max_zoom) / 256
+				z_dist := math.sqrt(x * x + y * y) + z_offset
+
+				sine_value := 128 * abs(math.sin(2 * ring_frequency * z_dist * math.PI))
+				sine_floor := math.floor(sine_value)
+
+				red := u8(80 + sine_floor)
+				green := u8(30 + sine_floor)
+
+				index := noise.get_noise_index(i, j, k) * 4
+				data[index] = red
+				data[index + 1] = green
+				data[index + 2] = 0
 				data[index + 3] = 255
 			}
 		}
