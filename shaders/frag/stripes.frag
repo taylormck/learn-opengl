@@ -12,8 +12,7 @@ uniform vec3 color_02;
 uniform float frequency;
 
 void main() {
-	float stripe = fs_in.tex_coords.y * frequency;
-	int stripe_i = int(stripe);
-	vec3 color = mix(color_01, color_02, float(stripe_i % 2));
+	float y = step(fract(fs_in.tex_coords.y * frequency / 2), 0.5);
+	vec3 color = mix(color_01, color_02, y);
 	frag_color = vec4(color, 1.0);
 }
