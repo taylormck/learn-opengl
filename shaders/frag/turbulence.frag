@@ -10,11 +10,10 @@ fs_in;
 uniform float zoom;
 uniform sampler3D noise;
 
-void main() {
-	vec3 texture_size = textureSize(noise, 0) / zoom;
+vec3 get_smooth_value(vec3 co, vec3 texture_size) {
 	vec3 texel_size = 1.0 / texture_size;
 
-	vec3 tex_coords = fs_in.tex_coords * texture_size;
+	vec3 tex_coords = co * texture_size;
 	vec3 rounded_coords = floor(tex_coords);
 	vec3 fractions = tex_coords - rounded_coords;
 	vec3 inverse = vec3(1.0) - fractions;
@@ -34,5 +33,28 @@ void main() {
 	value += fractions.x * inverse.y * inverse.z * texture(noise, vec3(fract_coords.x, offset.yz)).rgb;
 	value += inverse.x * inverse.y * inverse.z * texture(noise, offset).rgb;
 
+	return value;
+}
+
+vec3 turbulence(vec3 co) {
+	vec3 texture_size = textureSize(noise, 0);
+
+	float current_zoom = zoom;
+	vec3 result = vec3(0.0);
+	float count;
+
+	while (current_zoom >= 1.0) {
+		result += get_smooth_value(co / current_zoom, texture_size / current_zoom);
+		current_zoom /= 2.0;
+		count += 1.0;
+	}
+
+	result = result / count;
+
+	return result;
+}
+
+void main() {
+	vec3 value = turbulence(fs_in.tex_coords);
 	frag_color = vec4(value, 1.0);
 }

@@ -703,8 +703,21 @@ create_textures_framebuffer :: proc() {
 		shaders.set_float(shader, "zoom", zoom)
 
 		generate_3d_texture(shader, texture_id, noise_texture)
+
 	}
 
+	log.info("Generating turbulence texture")
+	{
+		texture_id := cube_textures[6]
+		shaders.init_shader(.Turbulence)
+		shader := shaders.shaders[.Turbulence]
+		gl.UseProgram(shader)
+
+		zoom: f32 = 32
+		shaders.set_float(shader, "zoom", zoom)
+
+		generate_3d_texture(shader, texture_id, noise_texture)
+	}
 
 }
 
