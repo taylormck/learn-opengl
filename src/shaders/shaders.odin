@@ -92,6 +92,8 @@ Shader :: enum {
 	Texture3D,
 	Stripes3D,
 	Checkerboard3D,
+	GenNoise3D,
+	Noise3D,
 }
 
 ShaderMap :: map[Shader]u32
@@ -725,6 +727,20 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex_instanced.vert"),
 				#load("../../shaders/frag/checkerboard.frag"),
 			) or_else panic("Failed to load the 3D stripes texture shader")
+
+	case .GenNoise3D:
+		shaders[.GenNoise3D] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_instanced.vert"),
+				#load("../../shaders/frag/gen_noise.frag"),
+			) or_else panic("Failed to load the 3D noise texture shader")
+
+	case .Noise3D:
+		shaders[.Noise3D] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_instanced.vert"),
+				#load("../../shaders/frag/noise.frag"),
+			) or_else panic("Failed to load the 3D noise texture shader")
 
 
 	}

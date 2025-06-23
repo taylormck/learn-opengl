@@ -694,6 +694,105 @@ create_textures_framebuffer :: proc() {
 		gl.ClearColor(0, 0, 0, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
+
 	}
 
+	noise_texture: u32
+	gl.GenTextures(1, &noise_texture)
+	defer gl.DeleteTextures(1, &noise_texture)
+
+	{
+		log.info("Generating input noise texture")
+		shaders.init_shader(.GenNoise3D)
+		shader := shaders.shaders[.GenNoise3D]
+		gl.UseProgram(shader)
+		shaders.set_int(shader, "depth", noise.NOISE_DEPTH)
+
+		gl.BindTexture(gl.TEXTURE_3D, noise_texture)
+
+		gl.TexImage3D(
+			gl.TEXTURE_3D,
+			0,
+			gl.RGBA32F,
+			noise.NOISE_WIDTH,
+			noise.NOISE_HEIGHT,
+			noise.NOISE_DEPTH,
+			0,
+			gl.RGBA,
+			gl.FLOAT,
+			nil,
+		)
+
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, noise_texture, 0)
+		utils.print_gl_errors()
+
+		log.ensuref(
+			gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
+			"framebuffer error: {}",
+			utils.get_framebuffer_status(),
+		)
+
+		gl.ClearColor(0, 0, 0, 1)
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+		primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
+	}
+
+	log.info("Generating noise textures")
+	for i in 2 ..= 3 {
+		texture_id := cube_textures[i]
+		zoom := math.pow(2, f32(i + 1))
+
+		shaders.init_shader(.Noise3D)
+		shader := shaders.shaders[.Noise3D]
+		gl.UseProgram(shader)
+
+		color_01 := types.Vec3{1, 1, 0}
+		color_02 := types.Vec3{0, 0, 1}
+
+		shaders.set_float(shader, "zoom", zoom)
+		shaders.set_int(shader, "depth", noise.NOISE_DEPTH)
+
+		gl.BindTexture(gl.TEXTURE_3D, texture_id)
+		gl.TexImage3D(
+			gl.TEXTURE_3D,
+			0,
+			gl.RGBA8,
+			noise.NOISE_WIDTH,
+			noise.NOISE_HEIGHT,
+			noise.NOISE_DEPTH,
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			nil,
+		)
+
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture_id, 0)
+		utils.print_gl_errors()
+
+		log.ensuref(
+			gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
+			"framebuffer error: {}",
+			utils.get_framebuffer_status(),
+		)
+
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_3D, noise_texture)
+		shaders.set_int(shader, "noise", 0)
+
+		gl.ClearColor(0, 0, 0, 1)
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+		primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
+	}
 }
