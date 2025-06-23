@@ -8,6 +8,8 @@ in VS_OUT {
 fs_in;
 
 uniform float zoom;
+uniform float turbulence_power;
+uniform float vein_frequency;
 uniform sampler3D noise;
 
 vec3 get_smooth_value(vec3 co, vec3 texture_size) {
@@ -52,8 +54,35 @@ vec3 turbulence(vec3 co, float max_zoom) {
 	return result;
 }
 
+/*
+x := f64(i)
+y := f64(j)
+z := f64(k)
+
+xyz :=
+	x / noise.NOISE_WIDTH +
+	y / noise.NOISE_HEIGHT +
+	z / noise.NOISE_DEPTH +
+	turbulence_power * noise.get_turbulence(input_noise, x, y, z, max_zoom) / 256
+
+sine_value := math.abs(math.sin(xyz * math.PI * vein_frequency))
+
+color := color_fn(sine_value)
+
+index := noise.get_noise_index(i, j, k) * 4
+data[index] = color.r
+data[index + 1] = color.g
+data[index + 2] = color.b
+data[index + 3] = 255
+
+*/
+
 void main() {
-	float max_zoom = clamp(zoom, 1.0, 64.0);
-	vec3 value = turbulence(fs_in.tex_coords, max_zoom);
+	float max_zoom = clamp(zoom, 2.0, 64.0);
+	vec3 turbulence = turbulence_power * turbulence(fs_in.tex_coords, max_zoom);
+
+	vec3 value = fs_in.tex_coords.x + fs_in.tex_coords.y + fs_in.tex_coords.z + turbulence;
+	value = abs(sin(value * 3.14159 * vein_frequency));
+
 	frag_color = vec4(value, 1.0);
 }

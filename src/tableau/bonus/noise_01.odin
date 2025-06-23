@@ -719,6 +719,27 @@ create_textures_framebuffer :: proc() {
 		generate_3d_texture(shader, texture_id, noise_texture)
 	}
 
+	log.info("Generating marble textures")
+	for i in 7 ..= 8 {
+		texture_id := cube_textures[i]
+		j := f32(i - 6)
+
+		shaders.init_shader(.Marble)
+		shader := shaders.shaders[.Marble]
+		gl.UseProgram(shader)
+
+		zoom: f32 = j * 16
+		shaders.set_float(shader, "zoom", zoom)
+
+		vein_frequency := math.pow(1.25, j)
+		shaders.set_float(shader, "vein_frequency", vein_frequency)
+
+		turbulence_power := math.pow(1.5, j)
+		shaders.set_float(shader, "turbulence_power", turbulence_power)
+
+		generate_3d_texture(shader, texture_id, noise_texture)
+	}
+
 }
 
 generate_3d_texture :: proc(shader, texture_id: u32, noise_texture: u32 = 0) {
