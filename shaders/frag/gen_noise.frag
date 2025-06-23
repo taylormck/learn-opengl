@@ -7,6 +7,8 @@ in VS_OUT {
 }
 fs_in;
 
+uniform uvec2 seed;
+
 // Taken from: https://stackoverflow.com/questions/4200224/random-noise-functions-for-glsl
 // A single iteration of Bob Jenkins' One-At-A-Time hashing algorithm.
 uint hash(uint x) {
@@ -40,6 +42,8 @@ float random(vec3 v) {
 }
 
 void main() {
-	float val = random(fs_in.frag_position);
+	vec3 offset_position = fs_in.frag_position * vec3(uintBitsToFloat(seed[0]) + 1.0) + vec3(uintBitsToFloat(seed[1]));
+	float val = random(offset_position);
+
 	frag_color = vec4(vec3(val), 1.0);
 }

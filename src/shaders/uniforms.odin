@@ -42,6 +42,12 @@ set_int :: proc(shader: u32, uniform: cstring, value: i32, caller_location := #c
 	return true
 }
 
+set_uvec2 :: proc(shader: u32, uniform: cstring, data: [^]u32, caller_location := #caller_location) -> (ok: bool) {
+	uniform_location := get_uniform_location(shader, uniform, caller_location) or_return
+	gl.Uniform2uiv(uniform_location, 1, data)
+	return true
+}
+
 set_float :: proc(shader: u32, uniform: cstring, value: f32, caller_location := #caller_location) -> (ok: bool) {
 	uniform_location := get_uniform_location(shader, uniform, caller_location) or_return
 	gl.Uniform1f(uniform_location, value)

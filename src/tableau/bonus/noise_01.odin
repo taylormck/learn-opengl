@@ -10,6 +10,7 @@ import "../../window"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
+import "core:time"
 import gl "vendor:OpenGL"
 
 @(private = "file")
@@ -26,7 +27,7 @@ camera := render.Camera {
 }
 
 @(private = "file")
-time: f64 = 0
+app_time: f64 = 0
 
 @(private = "file")
 cube_transforms := [?]types.TransformMatrix {
@@ -78,7 +79,7 @@ noise_01 :: types.Tableau {
 		utils.print_gl_errors()
 	},
 	update = proc(delta: f64) {
-		time += delta
+		app_time += delta
 		camera.aspect_ratio = window.aspect_ratio()
 	},
 	draw = proc() {
@@ -93,12 +94,11 @@ noise_01 :: types.Tableau {
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
-		rotation := linalg.matrix4_rotate_f32(f32(time) * f32(linalg.to_radians(50.0)), {0.5, 1, 0})
-		// rotation := linalg.identity(types.TransformMatrix)
+		rotation := linalg.matrix4_rotate_f32(f32(app_time) * f32(linalg.to_radians(50.0)), {0.5, 1, 0})
 		scale := linalg.matrix4_scale_f32(0.35)
 
 		gl.ActiveTexture(gl.TEXTURE0)
-		// shaders.set_int(texture_shader, "diffuse_0", 0)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
 
 		for &model, i in cube_transforms {
 			gl.BindTexture(gl.TEXTURE_3D, cube_textures[i])
@@ -642,6 +642,10 @@ create_textures_framebuffer :: proc() {
 		shader := shaders.shaders[.GenNoise3D]
 		gl.UseProgram(shader)
 		shaders.set_int(shader, "depth", noise.NOISE_DEPTH)
+
+		current_time := time.time_to_unix(time.now())
+		seed := transmute([2]u32)current_time
+		shaders.set_uvec2(shader, "seed", raw_data(&seed))
 
 		gl.BindTexture(gl.TEXTURE_3D, noise_texture)
 
