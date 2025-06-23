@@ -97,6 +97,7 @@ Shader :: enum {
 	SmoothNoise3D,
 	Turbulence,
 	Marble,
+	Wood,
 }
 
 ShaderMap :: map[Shader]u32
@@ -764,7 +765,14 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_instanced.vert"),
 				#load("../../shaders/frag/marble.frag"),
-			) or_else panic("Failed to load the turbulence texture shader")
+			) or_else panic("Failed to load the marble texture shader")
+
+	case .Wood:
+		shaders[.Wood] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_instanced.vert"),
+				#load("../../shaders/frag/wood.frag"),
+			) or_else panic("Failed to load the wood texture shader")
 
 	}
 }

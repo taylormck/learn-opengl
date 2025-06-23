@@ -69,7 +69,7 @@ float enhance_color(float a) {
 }
 
 void main() {
-	float max_zoom = clamp(zoom, 2.0, 64.0);
+	float max_zoom = clamp(zoom, 1.0, 64.0);
 	vec3 turbulence = turbulence_power * turbulence(fs_in.tex_coords, max_zoom);
 
 	vec3 value = fs_in.tex_coords.x + fs_in.tex_coords.y + fs_in.tex_coords.z + turbulence;

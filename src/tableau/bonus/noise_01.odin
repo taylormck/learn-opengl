@@ -788,7 +788,31 @@ create_textures_framebuffer :: proc() {
 		shaders.set_float(shader, "turbulence_power", turbulence_power)
 
 		generate_3d_texture(shader, texture_id, noise_texture)
+
 	}
+
+	log.info("Generating wood textures")
+	turbulence_powers := [?]f32{0, 0.05, 0.1, 0.2}
+	for i in 14 ..= 17 {
+		texture_id := cube_textures[i]
+
+		shaders.init_shader(.Wood)
+		shader := shaders.shaders[.Wood]
+		gl.UseProgram(shader)
+
+		zoom: f32 = 32
+		shaders.set_float(shader, "zoom", zoom)
+
+		ring_frequency: f32 = 10
+		shaders.set_float(shader, "ring_frequency", ring_frequency)
+
+		turbulence_power := turbulence_powers[i - 14]
+		shaders.set_float(shader, "turbulence_power", turbulence_power)
+
+		generate_3d_texture(shader, texture_id, noise_texture)
+	}
+
+
 }
 
 generate_3d_texture :: proc(shader, texture_id: u32, noise_texture: u32 = 0) {
