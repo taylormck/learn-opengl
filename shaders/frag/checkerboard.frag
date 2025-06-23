@@ -3,7 +3,7 @@ out vec4 frag_color;
 
 in VS_OUT {
 	vec3 frag_position;
-	vec2 tex_coords;
+	vec3 tex_coords;
 }
 fs_in;
 
@@ -14,7 +14,7 @@ uniform float frequency;
 void main() {
 	int x = int(fs_in.tex_coords.x * frequency) % 2;
 	int y = int(fs_in.tex_coords.y * frequency) % 2;
-	int z = int(fs_in.frag_position.z * frequency) % 2;
+	int z = int(fs_in.tex_coords.z * frequency) % 2;
 
 	int divider = x + y + z;
 

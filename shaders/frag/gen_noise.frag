@@ -3,7 +3,7 @@ out vec4 frag_color;
 
 in VS_OUT {
 	vec3 frag_position;
-	vec2 tex_coords;
+	vec3 tex_coords;
 }
 fs_in;
 

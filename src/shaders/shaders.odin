@@ -94,6 +94,7 @@ Shader :: enum {
 	Checkerboard3D,
 	GenNoise3D,
 	Noise3D,
+	SmoothNoise3D,
 }
 
 ShaderMap :: map[Shader]u32
@@ -742,6 +743,12 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/frag/noise.frag"),
 			) or_else panic("Failed to load the 3D noise texture shader")
 
+	case .SmoothNoise3D:
+		shaders[.SmoothNoise3D] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_instanced.vert"),
+				#load("../../shaders/frag/smooth_noise.frag"),
+			) or_else panic("Failed to load the 3D smooth noise texture shader")
 
 	}
 }

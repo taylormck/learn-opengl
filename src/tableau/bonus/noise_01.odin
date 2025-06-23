@@ -599,51 +599,19 @@ create_textures_framebuffer :: proc() {
 
 	{
 		log.info("Generating stripes texture")
-		stripes_shader := shaders.shaders[.Stripes3D]
-		gl.UseProgram(stripes_shader)
+		shader := shaders.shaders[.Stripes3D]
+		gl.UseProgram(shader)
 
 		color_01 := types.Vec3{1, 1, 0}
 		color_02 := types.Vec3{0, 0, 1}
 
-		shaders.set_vec3(stripes_shader, "color_01", raw_data(&color_01))
-		shaders.set_vec3(stripes_shader, "color_02", raw_data(&color_02))
-		shaders.set_float(stripes_shader, "frequency", 15)
-		shaders.set_int(stripes_shader, "depth", noise.NOISE_DEPTH)
+		shaders.set_vec3(shader, "color_01", raw_data(&color_01))
+		shaders.set_vec3(shader, "color_02", raw_data(&color_02))
+		shaders.set_float(shader, "frequency", 15)
 
 		texture_id := cube_textures[0]
-		gl.BindTexture(gl.TEXTURE_3D, texture_id)
 
-		gl.TexImage3D(
-			gl.TEXTURE_3D,
-			0,
-			gl.RGBA8,
-			noise.NOISE_WIDTH,
-			noise.NOISE_HEIGHT,
-			noise.NOISE_DEPTH,
-			0,
-			gl.RGBA,
-			gl.UNSIGNED_BYTE,
-			nil,
-		)
-
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-
-		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture_id, 0)
-		utils.print_gl_errors()
-
-		log.ensuref(
-			gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
-			"framebuffer error: {}",
-			utils.get_framebuffer_status(),
-		)
-
-		gl.ClearColor(0, 0, 0, 1)
-		gl.Clear(gl.COLOR_BUFFER_BIT)
-		primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
+		generate_3d_texture(shader, texture_id)
 	}
 
 
@@ -658,43 +626,10 @@ create_textures_framebuffer :: proc() {
 		shaders.set_vec3(shader, "color_01", raw_data(&color_01))
 		shaders.set_vec3(shader, "color_02", raw_data(&color_02))
 		shaders.set_float(shader, "frequency", 10)
-		shaders.set_int(shader, "depth", noise.NOISE_DEPTH)
 
 		texture_id := cube_textures[1]
-		gl.BindTexture(gl.TEXTURE_3D, texture_id)
 
-		gl.TexImage3D(
-			gl.TEXTURE_3D,
-			0,
-			gl.RGBA8,
-			noise.NOISE_WIDTH,
-			noise.NOISE_HEIGHT,
-			noise.NOISE_DEPTH,
-			0,
-			gl.RGBA,
-			gl.UNSIGNED_BYTE,
-			nil,
-		)
-
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
-
-		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture_id, 0)
-		utils.print_gl_errors()
-
-		log.ensuref(
-			gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
-			"framebuffer error: {}",
-			utils.get_framebuffer_status(),
-		)
-
-		gl.ClearColor(0, 0, 0, 1)
-		gl.Clear(gl.COLOR_BUFFER_BIT)
-		primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
-
+		generate_3d_texture(shader, texture_id)
 	}
 
 	noise_texture: u32
@@ -752,47 +687,69 @@ create_textures_framebuffer :: proc() {
 		shader := shaders.shaders[.Noise3D]
 		gl.UseProgram(shader)
 
-		color_01 := types.Vec3{1, 1, 0}
-		color_02 := types.Vec3{0, 0, 1}
-
 		shaders.set_float(shader, "zoom", zoom)
-		shaders.set_int(shader, "depth", noise.NOISE_DEPTH)
 
-		gl.BindTexture(gl.TEXTURE_3D, texture_id)
-		gl.TexImage3D(
-			gl.TEXTURE_3D,
-			0,
-			gl.RGBA8,
-			noise.NOISE_WIDTH,
-			noise.NOISE_HEIGHT,
-			noise.NOISE_DEPTH,
-			0,
-			gl.RGBA,
-			gl.UNSIGNED_BYTE,
-			nil,
-		)
+		generate_3d_texture(shader, texture_id, noise_texture)
+	}
 
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
-		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	log.info("Generating smooth noise textures")
+	for i in 4 ..= 5 {
+		texture_id := cube_textures[i]
+		zoom := math.pow(2, f32(i - 1))
 
-		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture_id, 0)
-		utils.print_gl_errors()
+		shaders.init_shader(.SmoothNoise3D)
+		shader := shaders.shaders[.SmoothNoise3D]
+		gl.UseProgram(shader)
+		shaders.set_float(shader, "zoom", zoom)
 
-		log.ensuref(
-			gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
-			"framebuffer error: {}",
-			utils.get_framebuffer_status(),
-		)
+		generate_3d_texture(shader, texture_id, noise_texture)
+	}
 
+
+}
+
+generate_3d_texture :: proc(shader, texture_id: u32, noise_texture: u32 = 0) {
+	gl.UseProgram(shader)
+	shaders.set_int(shader, "depth", noise.NOISE_DEPTH)
+
+	gl.BindTexture(gl.TEXTURE_3D, texture_id)
+
+	gl.TexImage3D(
+		gl.TEXTURE_3D,
+		0,
+		gl.RGBA8,
+		noise.NOISE_WIDTH,
+		noise.NOISE_HEIGHT,
+		noise.NOISE_DEPTH,
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		nil,
+	)
+
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture_id, 0)
+
+	log.ensuref(
+		gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
+		"framebuffer error: {}",
+		utils.get_framebuffer_status(),
+	)
+
+	if noise_texture != 0 {
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_3D, noise_texture)
 		shaders.set_int(shader, "noise", 0)
-
-		gl.ClearColor(0, 0, 0, 1)
-		gl.Clear(gl.COLOR_BUFFER_BIT)
-		primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
 	}
+
+	gl.ClearColor(0, 0, 0, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
+
+	utils.print_gl_errors()
 }
