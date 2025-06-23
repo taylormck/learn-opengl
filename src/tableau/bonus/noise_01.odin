@@ -106,6 +106,9 @@ noise_01 :: types.Tableau {
 			transform := projection * view * model * rotation * scale
 			shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
+			z_offset: f32 = f32(app_time) * 0.2 if i >= 18 && i <= 20 else 0
+			shaders.set_float(texture_shader, "z_offset", z_offset)
+
 			primitives.cube_draw()
 		}
 	},
@@ -606,11 +609,14 @@ create_textures_framebuffer :: proc() {
 
 		shaders.set_vec3(shader, "color_01", raw_data(&color_01))
 		shaders.set_vec3(shader, "color_02", raw_data(&color_02))
-		shaders.set_float(shader, "frequency", 15)
+		shaders.set_float(shader, "frequency", 20)
 
 		texture_id := cube_textures[0]
 
 		generate_3d_texture(shader, texture_id)
+
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	}
 
 
@@ -624,11 +630,14 @@ create_textures_framebuffer :: proc() {
 
 		shaders.set_vec3(shader, "color_01", raw_data(&color_01))
 		shaders.set_vec3(shader, "color_02", raw_data(&color_02))
-		shaders.set_float(shader, "frequency", 10)
+		shaders.set_float(shader, "frequency", 20)
 
 		texture_id := cube_textures[1]
 
 		generate_3d_texture(shader, texture_id)
+
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	}
 
 	noise_texture: u32
