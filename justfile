@@ -16,6 +16,9 @@ build-debug-test: ensure-bin-exists
 test package="src --all-packages":
     odin test {{package}} -out:bin/test
 
+cloc:
+    cloc src shaders
+
 ensure-bin-exists:
     #!/usr/bin/env sh
     if [ ! -d "bin" ]; then
