@@ -98,6 +98,7 @@ Shader :: enum {
 	Turbulence,
 	Marble,
 	Wood,
+	Clouds,
 }
 
 ShaderMap :: map[Shader]u32
@@ -773,6 +774,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex_instanced.vert"),
 				#load("../../shaders/frag/wood.frag"),
 			) or_else panic("Failed to load the wood texture shader")
+
+	case .Clouds:
+		shaders[.Clouds] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_instanced.vert"),
+				#load("../../shaders/frag/clouds.frag"),
+			) or_else panic("Failed to load the clouds texture shader")
 
 	}
 }

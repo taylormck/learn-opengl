@@ -252,7 +252,7 @@ create_textures_cpu :: proc() {
 		send_texture_3d_to_gpu(texture_id, cloud_data)
 	}
 
-	log.info("Generating misty cloud texture")
+	log.info("Generating quanted cloud texture")
 	for i in 19 ..= 20 {
 		texture_id := cube_textures[i]
 
@@ -574,7 +574,6 @@ get_cloud_turbulence :: proc(input_noise: []f64, x, y, z, max_zoom: f64) -> f64 
 	result = 256 * logistic(result - cloud_quant)
 
 	return result
-
 }
 
 @(private = "file")
@@ -810,9 +809,41 @@ create_textures_framebuffer :: proc() {
 		shaders.set_float(shader, "turbulence_power", turbulence_power)
 
 		generate_3d_texture(shader, texture_id, noise_texture)
+
 	}
 
 
+	log.info("Generating misty cloud texture")
+	{
+		i := 18
+		texture_id := cube_textures[i]
+
+		shaders.init_shader(.Clouds)
+		shader := shaders.shaders[.Clouds]
+		gl.UseProgram(shader)
+		shaders.set_bool(shader, "use_logistic", false)
+		shaders.set_float(shader, "zoom", 32)
+		shaders.set_float(shader, "turbulence_power", 1)
+
+		generate_3d_texture(shader, texture_id, noise_texture)
+	}
+
+	log.info("Generating quanted cloud texture")
+	for i in 19 ..= 20 {
+		texture_id := cube_textures[i]
+
+		shaders.init_shader(.Clouds)
+		shader := shaders.shaders[.Clouds]
+		gl.UseProgram(shader)
+		shaders.set_bool(shader, "use_logistic", true)
+		shaders.set_float(shader, "quant", 0.5)
+		shaders.set_float(shader, "turbulence_power", 1)
+
+		zoom: f32 = 32 * f32(i - 18)
+		shaders.set_float(shader, "zoom", zoom)
+
+		generate_3d_texture(shader, texture_id, noise_texture)
+	}
 }
 
 generate_3d_texture :: proc(shader, texture_id: u32, noise_texture: u32 = 0) {
