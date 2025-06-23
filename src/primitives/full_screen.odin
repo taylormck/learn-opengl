@@ -68,3 +68,10 @@ full_screen_draw :: proc() {
 
 	gl.DrawArrays(gl.TRIANGLES, 0, 3)
 }
+
+full_screen_draw_instanced :: proc(num_instances: i32) {
+	gl.BindVertexArray(vao)
+	defer gl.BindVertexArray(0)
+
+	gl.DrawArraysInstanced(gl.TRIANGLES, 0, 3, num_instances)
+}

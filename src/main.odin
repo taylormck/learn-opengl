@@ -56,6 +56,18 @@ main :: proc() {
 	gl.Viewport(0, 0, INITIAL_WIDTH, INITIAL_HEIGHT)
 	glfw.SetFramebufferSizeCallback(window_handle, framebuffer_size_callback)
 
+	num_extensions: i32
+	gl.GetIntegerv(gl.NUM_EXTENSIONS, &num_extensions)
+	extensions: map[cstring]bool
+
+	for i in 0 ..< num_extensions {
+		ext := gl.GetStringi(gl.EXTENSIONS, u32(i))
+		extensions[ext] = true
+	}
+
+	log.infof("GL_ARB_shader_viewport_layer_array is supported : {}", "GL_ARB_shader_viewport_layer_array" in extensions)
+	utils.print_gl_errors()
+
 	glfw.SetInputMode(window_handle, glfw.CURSOR, glfw.CURSOR_DISABLED)
 	glfw.SetCursorPosCallback(window_handle, mouse_callback)
 	glfw.SetScrollCallback(window_handle, scroll_callback)

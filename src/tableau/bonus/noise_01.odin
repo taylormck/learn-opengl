@@ -70,154 +70,10 @@ noise_01 :: types.Tableau {
 		shaders.init_shaders(.Texture3D)
 		primitives.cube_send_to_gpu()
 
-		noise_base := noise.generate_noise()
-		defer delete(noise_base)
 		gl.GenTextures(len(cube_textures), raw_data(cube_textures[:]))
 
-		log.info("Generating stripe texture")
-		stripe_data := generate_stripe_data()
-		defer delete(stripe_data)
-		send_texture_3d_to_gpu(cube_textures[0], stripe_data)
-
-		log.info("Generating checkerboard texture")
-		checkerboard_data := generate_checker_board_data()
-		defer delete(checkerboard_data)
-		send_texture_3d_to_gpu(cube_textures[1], checkerboard_data)
-
-		log.info("Generating noise textures")
-		for i in 2 ..= 3 {
-			texture_id := cube_textures[i]
-			random_data := make([]u8, noise.NOISE_LENGTH * 4)
-			defer delete(random_data)
-
-			zoom := int(math.pow(2, f64(i + 1)))
-			noise.fill_data_array_bytes(noise_base, random_data, zoom)
-
-			send_texture_3d_to_gpu(texture_id, random_data)
-		}
-
-		log.info("Generating smooth noise textures")
-		for i in 4 ..= 5 {
-			texture_id := cube_textures[i]
-			random_data := make([]u8, noise.NOISE_LENGTH * 4)
-			defer delete(random_data)
-
-			zoom := math.pow(2, f64(i - 1))
-			noise.fill_data_array_bytes_smooth(noise_base, random_data, zoom)
-
-			send_texture_3d_to_gpu(texture_id, random_data)
-		}
-
-		log.info("Generating turbulence texture")
-		{
-			texture_id := cube_textures[6]
-			random_data := make([]u8, noise.NOISE_LENGTH * 4)
-			defer delete(random_data)
-
-			zoom: f64 = 16
-			noise.fill_data_array_bytes_turbulence(noise_base, random_data, zoom)
-
-			send_texture_3d_to_gpu(texture_id, random_data)
-		}
-
-		log.info("Generating marble textures")
-		for i in 7 ..= 8 {
-			texture_id := cube_textures[i]
-			j := f64(i - 6)
-
-			zoom: f64 = j * 32
-			vein_frequency := math.pow(1.5, j)
-			turbulence_power := math.pow(1.5, j)
-
-			marble_data := generate_marble_data(noise_base, vein_frequency, turbulence_power, zoom)
-
-			defer delete(marble_data)
-
-			send_texture_3d_to_gpu(texture_id, marble_data)
-		}
-
-		log.info("Generating logistic marble textures")
-		for i in 9 ..= 10 {
-			texture_id := cube_textures[i]
-			j := f64(i - 8)
-
-			zoom: f64 = j * 32
-			vein_frequency := math.pow(1.5, j)
-			turbulence_power := math.pow(1.5, j)
-
-			marble_data := generate_logistic_marble_data(noise_base, vein_frequency, turbulence_power, zoom)
-
-			defer delete(marble_data)
-
-			send_texture_3d_to_gpu(texture_id, marble_data)
-		}
-
-		log.info("Generating colored logistic marble textures")
-		for i in 11 ..= 13 {
-			texture_id := cube_textures[i]
-			j := f64(i - 10)
-
-			zoom: f64 = j * 16
-			vein_frequency := math.pow(1.25, j)
-			turbulence_power := math.pow(1.5, j)
-			color_fn := custom_color_fns[i - 11]
-
-			marble_data := generate_logistic_marble_data(noise_base, vein_frequency, turbulence_power, zoom, color_fn)
-
-			defer delete(marble_data)
-
-			send_texture_3d_to_gpu(texture_id, marble_data)
-		}
-
-		log.info("Generating ring texture")
-		{
-			i := 14
-			texture_id := cube_textures[i]
-
-			wood_data := generate_ring_data(ring_density = 20)
-			defer delete(wood_data)
-
-			send_texture_3d_to_gpu(texture_id, wood_data)
-		}
-
-		log.info("Generating wood textures")
-		turbulence_powers := [3]f64{0.05, 0.1, 0.2}
-		for i in 15 ..= 17 {
-			texture_id := cube_textures[i]
-
-			zoom: f64 = 32
-			ring_frequency: f64 = 10
-			turbulence_power := turbulence_powers[i - 15]
-
-			wood_data := generate_wood_data(noise_base, ring_frequency, turbulence_power, zoom)
-
-			defer delete(wood_data)
-
-			send_texture_3d_to_gpu(texture_id, wood_data)
-		}
-
-		log.info("Generating misty cloud texture")
-		{
-			i := 18
-			texture_id := cube_textures[i]
-
-			cloud_data := generate_misty_cloud_data(noise_base, 32)
-			defer delete(cloud_data)
-
-			send_texture_3d_to_gpu(texture_id, cloud_data)
-		}
-
-		log.info("Generating misty cloud texture")
-		for i in 19 ..= 20 {
-			texture_id := cube_textures[i]
-
-			zoom: f64 = 32 * f64(i - 18)
-			cloud_data := generate_cloud_data(noise_base, zoom)
-			defer delete(cloud_data)
-
-			send_texture_3d_to_gpu(texture_id, cloud_data)
-		}
-
+		// create_textures_cpu()
+		create_textures_framebuffer()
 
 		utils.print_gl_errors()
 	},
@@ -238,10 +94,11 @@ noise_01 :: types.Tableau {
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
 		rotation := linalg.matrix4_rotate_f32(f32(time) * f32(linalg.to_radians(50.0)), {0.5, 1, 0})
+		// rotation := linalg.identity(types.TransformMatrix)
 		scale := linalg.matrix4_scale_f32(0.35)
 
 		gl.ActiveTexture(gl.TEXTURE0)
-		shaders.set_int(texture_shader, "diffuse_0", 0)
+		// shaders.set_int(texture_shader, "diffuse_0", 0)
 
 		for &model, i in cube_transforms {
 			gl.BindTexture(gl.TEXTURE_3D, cube_textures[i])
@@ -256,6 +113,155 @@ noise_01 :: types.Tableau {
 		primitives.cube_clear_from_gpu()
 		gl.DeleteTextures(len(cube_textures), raw_data(cube_textures[:]))
 	},
+}
+
+create_textures_cpu :: proc() {
+	noise_base := noise.generate_noise()
+	defer delete(noise_base)
+
+	log.info("Generating stripe texture")
+	stripe_data := generate_stripe_data()
+	defer delete(stripe_data)
+	send_texture_3d_to_gpu(cube_textures[0], stripe_data)
+
+	log.info("Generating checkerboard texture")
+	checkerboard_data := generate_checker_board_data()
+	defer delete(checkerboard_data)
+	send_texture_3d_to_gpu(cube_textures[1], checkerboard_data)
+
+	log.info("Generating noise textures")
+	for i in 2 ..= 3 {
+		texture_id := cube_textures[i]
+		random_data := make([]u8, noise.NOISE_LENGTH * 4)
+		defer delete(random_data)
+
+		zoom := int(math.pow(2, f64(i + 1)))
+		noise.fill_data_array_bytes(noise_base, random_data, zoom)
+
+		send_texture_3d_to_gpu(texture_id, random_data)
+	}
+
+	log.info("Generating smooth noise textures")
+	for i in 4 ..= 5 {
+		texture_id := cube_textures[i]
+		random_data := make([]u8, noise.NOISE_LENGTH * 4)
+		defer delete(random_data)
+
+		zoom := math.pow(2, f64(i - 1))
+		noise.fill_data_array_bytes_smooth(noise_base, random_data, zoom)
+
+		send_texture_3d_to_gpu(texture_id, random_data)
+	}
+
+	log.info("Generating turbulence texture")
+	{
+		texture_id := cube_textures[6]
+		random_data := make([]u8, noise.NOISE_LENGTH * 4)
+		defer delete(random_data)
+
+		zoom: f64 = 16
+		noise.fill_data_array_bytes_turbulence(noise_base, random_data, zoom)
+
+		send_texture_3d_to_gpu(texture_id, random_data)
+	}
+
+	log.info("Generating marble textures")
+	for i in 7 ..= 8 {
+		texture_id := cube_textures[i]
+		j := f64(i - 6)
+
+		zoom: f64 = j * 32
+		vein_frequency := math.pow(1.5, j)
+		turbulence_power := math.pow(1.5, j)
+
+		marble_data := generate_marble_data(noise_base, vein_frequency, turbulence_power, zoom)
+
+		defer delete(marble_data)
+
+		send_texture_3d_to_gpu(texture_id, marble_data)
+	}
+
+	log.info("Generating logistic marble textures")
+	for i in 9 ..= 10 {
+		texture_id := cube_textures[i]
+		j := f64(i - 8)
+
+		zoom: f64 = j * 32
+		vein_frequency := math.pow(1.5, j)
+		turbulence_power := math.pow(1.5, j)
+
+		marble_data := generate_logistic_marble_data(noise_base, vein_frequency, turbulence_power, zoom)
+
+		defer delete(marble_data)
+
+		send_texture_3d_to_gpu(texture_id, marble_data)
+	}
+
+	log.info("Generating colored logistic marble textures")
+	for i in 11 ..= 13 {
+		texture_id := cube_textures[i]
+		j := f64(i - 10)
+
+		zoom: f64 = j * 16
+		vein_frequency := math.pow(1.25, j)
+		turbulence_power := math.pow(1.5, j)
+		color_fn := custom_color_fns[i - 11]
+
+		marble_data := generate_logistic_marble_data(noise_base, vein_frequency, turbulence_power, zoom, color_fn)
+
+		defer delete(marble_data)
+
+		send_texture_3d_to_gpu(texture_id, marble_data)
+	}
+
+	log.info("Generating ring texture")
+	{
+		i := 14
+		texture_id := cube_textures[i]
+
+		wood_data := generate_ring_data(ring_density = 20)
+		defer delete(wood_data)
+
+		send_texture_3d_to_gpu(texture_id, wood_data)
+	}
+
+	log.info("Generating wood textures")
+	turbulence_powers := [3]f64{0.05, 0.1, 0.2}
+	for i in 15 ..= 17 {
+		texture_id := cube_textures[i]
+
+		zoom: f64 = 32
+		ring_frequency: f64 = 10
+		turbulence_power := turbulence_powers[i - 15]
+
+		wood_data := generate_wood_data(noise_base, ring_frequency, turbulence_power, zoom)
+
+		defer delete(wood_data)
+
+		send_texture_3d_to_gpu(texture_id, wood_data)
+	}
+
+	log.info("Generating misty cloud texture")
+	{
+		i := 18
+		texture_id := cube_textures[i]
+
+		cloud_data := generate_misty_cloud_data(noise_base, 32)
+		defer delete(cloud_data)
+
+		send_texture_3d_to_gpu(texture_id, cloud_data)
+	}
+
+	log.info("Generating misty cloud texture")
+	for i in 19 ..= 20 {
+		texture_id := cube_textures[i]
+
+		zoom: f64 = 32 * f64(i - 18)
+		cloud_data := generate_cloud_data(noise_base, zoom)
+		defer delete(cloud_data)
+
+		send_texture_3d_to_gpu(texture_id, cloud_data)
+	}
 }
 
 @(private = "file")
@@ -567,5 +573,76 @@ get_cloud_turbulence :: proc(input_noise: []f64, x, y, z, max_zoom: f64) -> f64 
 	result = 256 * logistic(result - cloud_quant)
 
 	return result
+
+}
+
+@(private = "file")
+create_textures_framebuffer :: proc() {
+	primitives.full_screen_send_to_gpu()
+	defer primitives.full_screen_clear_from_gpu()
+
+	fbo: u32
+
+	gl.GenFramebuffers(1, &fbo)
+	defer gl.DeleteFramebuffers(1, &fbo)
+
+	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
+	defer gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+	shaders.init_shaders(.Stripes3D)
+
+	gl.Viewport(0, 0, noise.NOISE_WIDTH, noise.NOISE_HEIGHT)
+	defer gl.Viewport(0, 0, window.width, window.height)
+
+	gl.Disable(gl.DEPTH_TEST)
+
+	{
+		log.info("Generating stripes texture")
+		stripes_shader := shaders.shaders[.Stripes3D]
+		gl.UseProgram(stripes_shader)
+
+		color_01 := types.Vec3{1, 1, 0}
+		color_02 := types.Vec3{0, 0, 1}
+
+		shaders.set_vec3(stripes_shader, "color_01", raw_data(&color_01))
+		shaders.set_vec3(stripes_shader, "color_02", raw_data(&color_02))
+		shaders.set_float(stripes_shader, "frequency", 21)
+		shaders.set_int(stripes_shader, "depth", noise.NOISE_DEPTH)
+
+		texture_id := cube_textures[0]
+		gl.BindTexture(gl.TEXTURE_3D, texture_id)
+
+		gl.TexImage3D(
+			gl.TEXTURE_3D,
+			0,
+			gl.RGBA8,
+			noise.NOISE_WIDTH,
+			noise.NOISE_HEIGHT,
+			noise.NOISE_DEPTH,
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			nil,
+		)
+
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture_id, 0)
+		utils.print_gl_errors()
+
+		log.ensuref(
+			gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
+			"framebuffer error: {}",
+			utils.get_framebuffer_status(),
+		)
+
+		gl.ClearColor(0, 0, 0, 1)
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+		primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
+	}
 
 }
