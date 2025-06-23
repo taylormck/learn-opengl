@@ -11,6 +11,8 @@ uniform float zoom;
 uniform float turbulence_power;
 uniform float vein_frequency;
 uniform sampler3D noise;
+uniform bool use_logistic;
+uniform bvec3 enhance_colors;
 
 vec3 get_smooth_value(vec3 co, vec3 texture_size) {
 	vec3 texel_size = 1.0 / texture_size;
@@ -54,28 +56,17 @@ vec3 turbulence(vec3 co, float max_zoom) {
 	return result;
 }
 
-/*
-x := f64(i)
-y := f64(j)
-z := f64(k)
+float logistic(float a) {
+	return 1.0 / (1.0 + pow(2.718, -3 * a));
+}
 
-xyz :=
-	x / noise.NOISE_WIDTH +
-	y / noise.NOISE_HEIGHT +
-	z / noise.NOISE_DEPTH +
-	turbulence_power * noise.get_turbulence(input_noise, x, y, z, max_zoom) / 256
+vec3 logistic(vec3 v) {
+	return vec3(logistic(v.x), logistic(v.y), logistic(v.z));
+}
 
-sine_value := math.abs(math.sin(xyz * math.PI * vein_frequency))
-
-color := color_fn(sine_value)
-
-index := noise.get_noise_index(i, j, k) * 4
-data[index] = color.r
-data[index + 1] = color.g
-data[index + 2] = color.b
-data[index + 3] = 255
-
-*/
+float enhance_color(float a) {
+	return min(a * 1.5 - 0.25, 1.0);
+}
 
 void main() {
 	float max_zoom = clamp(zoom, 2.0, 64.0);
@@ -83,6 +74,24 @@ void main() {
 
 	vec3 value = fs_in.tex_coords.x + fs_in.tex_coords.y + fs_in.tex_coords.z + turbulence;
 	value = abs(sin(value * 3.14159 * vein_frequency));
+
+	if (use_logistic) {
+		value = logistic(value);
+		value = value * 1.25 - 0.2;
+		value = clamp(value, -1.0, 1.0);
+	}
+
+	if (enhance_colors.x) {
+		value.x = enhance_color(value.x);
+	}
+
+	if (enhance_colors.y) {
+		value.y = enhance_color(value.y);
+	}
+
+	if (enhance_colors.z) {
+		value.z = enhance_color(value.z);
+	}
 
 	frag_color = vec4(value, 1.0);
 }

@@ -28,6 +28,14 @@ set_bool :: proc(shader: u32, uniform: cstring, value: bool, caller_location := 
 	return true
 }
 
+set_bvec3 :: proc(shader: u32, uniform: cstring, data: [3]bool, caller_location := #caller_location) -> (ok: bool) {
+	int_data := [3]i32{i32(data[0]), i32(data[1]), i32(data[2])}
+
+	uniform_location := get_uniform_location(shader, uniform, caller_location) or_return
+	gl.Uniform3iv(uniform_location, 1, raw_data(&int_data))
+	return true
+}
+
 set_int :: proc(shader: u32, uniform: cstring, value: i32, caller_location := #caller_location) -> (ok: bool) {
 	uniform_location := get_uniform_location(shader, uniform, caller_location) or_return
 	gl.Uniform1i(uniform_location, value)
