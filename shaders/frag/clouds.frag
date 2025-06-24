@@ -65,38 +65,11 @@ float turbulence(vec3 co, float max_zoom) {
 	return result;
 }
 
-/*
-
-@(private = "file")
-generate_cloud_data :: proc(input_noise: []f64, max_zoom: f64) -> []u8 {
-	data := make([]u8, noise.NOISE_LENGTH * 4)
-
-	for i in 0 ..< noise.NOISE_WIDTH {
-		for j in 0 ..< noise.NOISE_HEIGHT {
-			for k in 0 ..< noise.NOISE_DEPTH {
-
-				brightness := 1 - get_cloud_turbulence(input_noise, f64(i), f64(j), f64(k), max_zoom) / 256
-				cloud_coverage := u8(brightness * 255)
-
-				index := noise.get_noise_index(i, j, k) * 4
-				data[index] = cloud_coverage
-				data[index + 1] = cloud_coverage
-				data[index + 2] = 255
-				data[index + 3] = 255
-			}
-		}
-	}
-
-	return data
-}
-*/
-
 void main() {
 	float max_zoom = clamp(zoom, 1.0, 64.0);
 	float turbulence = turbulence_power * turbulence(fs_in.tex_coords, max_zoom);
 
 	float value = 1.0 - turbulence;
-	// frag_color = vec4(vec3(turbulence), 1.0);
 
 	float red = value;
 	float green = value;
