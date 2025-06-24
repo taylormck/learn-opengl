@@ -73,8 +73,12 @@ noise_01 :: types.Tableau {
 
 		gl.GenTextures(len(cube_textures), raw_data(cube_textures[:]))
 
-		// create_textures_cpu()
-		create_textures_framebuffer()
+		// Apple hardware doesn't support the gl_Layer extension.
+		when ODIN_OS == .Darwin {
+			create_textures_cpu()
+		} else {
+			create_textures_framebuffer()
+		}
 
 		utils.print_gl_errors()
 	},
