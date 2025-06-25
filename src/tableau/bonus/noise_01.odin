@@ -623,7 +623,6 @@ create_textures_framebuffer :: proc() {
 		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 	}
 
-
 	{
 		log.info("Generating checkerboard texture")
 		shader := shaders.shaders[.Checkerboard3D]
