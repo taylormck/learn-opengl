@@ -110,4 +110,5 @@ tableaus :: [?]types.Tableau {
 	chapter_06_pbr.exercise_02_02_02_ibl_specular_textured,
 	chapter_07_in_practice.exercise_02_text_rendering,
 	bonus.noise_01,
+	bonus.water_01,
 }

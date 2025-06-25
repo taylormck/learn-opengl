@@ -99,6 +99,7 @@ Shader :: enum {
 	Marble,
 	Wood,
 	Clouds,
+	Checkerboard2D,
 }
 
 ShaderMap :: map[Shader]u32
@@ -730,7 +731,7 @@ init_shader :: proc(shader: Shader) {
 		shaders[.Checkerboard3D] =
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_instanced.vert"),
-				#load("../../shaders/frag/checkerboard.frag"),
+				#load("../../shaders/frag/checkerboard_2d.frag"),
 			) or_else panic("Failed to load the 3D stripes texture shader")
 
 	case .GenNoise3D:
@@ -781,6 +782,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex_instanced.vert"),
 				#load("../../shaders/frag/clouds.frag"),
 			) or_else panic("Failed to load the clouds texture shader")
+
+	case .Checkerboard2D:
+		shaders[.Checkerboard2D] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_transform.vert"),
+				#load("../../shaders/frag/checkerboard_2d.frag"),
+			) or_else panic("Failed to load the 3D stripes texture shader")
 
 	}
 }
