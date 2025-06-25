@@ -133,55 +133,63 @@ water_01 :: types.Tableau {
 		gl.Enable(gl.DEPTH_TEST)
 		defer gl.Disable(gl.DEPTH_TEST)
 
-		gl.ActiveTexture(gl.TEXTURE0)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
 		pv := projection * view
 
-		{
-			transform := pv * floor_model
 
-			gl.UseProgram(checkerboard_shader)
-
-			shaders.set_vec3(checkerboard_shader, "view_position", raw_data(&camera.position))
-			shaders.set_mat_4x4(checkerboard_shader, "model", raw_data(&floor_model))
-			shaders.set_mat_3x3(checkerboard_shader, "mit", raw_data(&floor_mit))
-			shaders.set_mat_4x4(checkerboard_shader, "transform", raw_data(&transform))
-
-
-			primitives.plane_draw()
-		}
-
-		{
-			transform := pv * surface_model
-
-			gl.UseProgram(water_shader)
-
-			shaders.set_vec3(water_shader, "view_position", raw_data(&camera.position))
-			shaders.set_mat_4x4(water_shader, "model", raw_data(&surface_model))
-			shaders.set_mat_3x3(water_shader, "mit", raw_data(&surface_mit))
-			shaders.set_mat_4x4(water_shader, "transform", raw_data(&transform))
-
-			primitives.plane_draw()
-		}
-
-		gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap)
-
-		gl.DepthFunc(gl.LEQUAL)
-		gl.UseProgram(skybox_shader)
-
-		cubemap_view := types.TransformMatrix(types.SubTransformMatrix(view))
-		cubemap_pv := projection * cubemap_view
-		shaders.set_mat_4x4(skybox_shader, "projection_view", raw_data(&cubemap_pv))
-		primitives.cubemap_draw(cubemap)
-
-		gl.DepthFunc(gl.LESS)
-
-
+		draw_surface(water_shader, &pv)
+		draw_floor(checkerboard_shader, &pv)
+		draw_skybox(skybox_shader, &projection, &view)
 	},
 	teardown = proc() {
 		primitives.plane_clear_from_gpu()
 		gl.DeleteTextures(1, &cubemap)
 	},
+}
+
+@(private = "file")
+draw_floor :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
+	transform := projection_view^ * floor_model
+
+	gl.UseProgram(shader)
+
+	shaders.set_vec3(shader, "view_position", raw_data(&camera.position))
+	shaders.set_mat_4x4(shader, "model", raw_data(&floor_model))
+	shaders.set_mat_3x3(shader, "mit", raw_data(&floor_mit))
+	shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
+
+
+	primitives.plane_draw()
+}
+
+@(private = "file")
+draw_surface :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
+	transform := projection_view^ * surface_model
+
+	gl.UseProgram(shader)
+
+	shaders.set_vec3(shader, "view_position", raw_data(&camera.position))
+	shaders.set_mat_4x4(shader, "model", raw_data(&surface_model))
+	shaders.set_mat_3x3(shader, "mit", raw_data(&surface_mit))
+	shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
+
+	primitives.plane_draw()
+}
+
+@(private = "file")
+draw_skybox :: proc(shader: u32, projection, view: ^types.TransformMatrix) {
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap)
+
+	gl.DepthFunc(gl.LEQUAL)
+	defer gl.DepthFunc(gl.LESS)
+
+	gl.UseProgram(shader)
+
+	cubemap_view := types.TransformMatrix(types.SubTransformMatrix(view^))
+	cubemap_pv := projection^ * cubemap_view
+	shaders.set_mat_4x4(shader, "projection_view", raw_data(&cubemap_pv))
+	primitives.cubemap_draw(cubemap)
 }
