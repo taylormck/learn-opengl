@@ -100,6 +100,8 @@ Shader :: enum {
 	Wood,
 	Clouds,
 	Checkerboard2D,
+	Checkerboard2DBlinnPhong,
+	Water,
 }
 
 ShaderMap :: map[Shader]u32
@@ -788,7 +790,21 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_tex_transform.vert"),
 				#load("../../shaders/frag/checkerboard_2d.frag"),
-			) or_else panic("Failed to load the 3D stripes texture shader")
+			) or_else panic("Failed to load the 2D checkerboard shader")
+
+	case .Checkerboard2DBlinnPhong:
+		shaders[.Checkerboard2DBlinnPhong] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/checkerboard_2d_blinn_phong.frag"),
+			) or_else panic("Failed to load the 2D checkerboard with specular lighting shader")
+
+	case .Water:
+		shaders[.Water] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
+				#load("../../shaders/frag/water.frag"),
+			) or_else panic("Failed to load the water shader")
 
 	}
 }
