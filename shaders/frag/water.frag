@@ -1,15 +1,11 @@
 #version 330 core
 out vec4 frag_color;
 
-struct PointLight {
-	vec3 position;
+struct DirectionalLight {
+	vec3 direction;
 	vec3 ambient;
 	vec3 diffuse;
 	vec3 specular;
-	vec3 emissive;
-	float constant;
-	float linear;
-	float quadratic;
 };
 
 in vec3 frag_position;
@@ -20,7 +16,7 @@ in vec3 normal;
 uniform vec3 color;
 uniform float shininess;
 uniform vec3 view_position;
-uniform PointLight point_light;
+uniform DirectionalLight directional_light;
 
 uniform sampler3D noise;
 uniform float noise_offset;
@@ -32,13 +28,10 @@ uniform bool is_above;
 const float fog_start = 1.0;
 const float fog_end = 300.0;
 
-vec3 calculate_point_light(PointLight light, vec3 color, vec3 norm) {
+vec3 calculate_directional_light(DirectionalLight light, vec3 color, vec3 norm) {
 	vec3 ambient = light.ambient * color;
 
-	vec3 light_diff = light.position - frag_position;
-	vec3 light_dir = normalize(light_diff);
-	float distance = length(light_diff);
-
+	vec3 light_dir = normalize(-light.direction);
 	float diff = max(dot(norm, light_dir), 0.0);
 	vec3 diffuse = light.diffuse * diff * color;
 
@@ -76,7 +69,7 @@ void main() {
 	vec3 refract_color = texture(refract_map, refract_coords).rgb;
 
 	vec3 norm = calculate_normal(tex_coords / 25.0, 0.0002, 64.0, 16.0);
-	refract_color = calculate_point_light(point_light, refract_color, norm);
+	refract_color = calculate_directional_light(directional_light, refract_color, norm);
 
 	if (is_above) {
 		vec2 reflect_coords =

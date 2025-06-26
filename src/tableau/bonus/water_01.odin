@@ -40,15 +40,11 @@ camera := render.Camera {
 }
 
 @(private = "file")
-light := render.PointLight {
-	position  = {-10, 10, -50},
+light := render.DirectionalLight {
+	direction = {1, -1, 5},
 	ambient   = {0.2, 0.2, 0.2},
 	diffuse   = {0.5, 0.5, 0.5},
 	specular  = {1, 1, 1},
-	emissive  = {1, 1, 1},
-	constant  = 0,
-	linear    = 0,
-	quadratic = 0,
 }
 
 @(private = "file")
@@ -118,7 +114,7 @@ water_01 :: types.Tableau {
 		shaders.set_vec3(checkerboard_shader, "color_03", raw_data(&water_color))
 		shaders.set_float(checkerboard_shader, "tile_scale", PLANE_TILE_SCALE)
 		shaders.set_float(checkerboard_shader, "shininess", FLOOR_SHININESS)
-		render.point_light_set_uniform(&light, checkerboard_shader)
+		render.directional_light_set_uniform(&light, checkerboard_shader)
 
 		generate_turbulence_texture()
 
@@ -129,7 +125,7 @@ water_01 :: types.Tableau {
 		shaders.set_int(water_shader, "reflect_map", 0)
 		shaders.set_int(water_shader, "refract_map", 1)
 		shaders.set_int(water_shader, "noise", 2)
-		render.point_light_set_uniform(&light, water_shader)
+		render.directional_light_set_uniform(&light, water_shader)
 
 		floor_mit = types.SubTransformMatrix(linalg.inverse_transpose(floor_model))
 		surface_mit = types.SubTransformMatrix(linalg.inverse_transpose(surface_model))
