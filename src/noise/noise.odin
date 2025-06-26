@@ -139,7 +139,6 @@ get_turbulence :: proc(noise: []f64, x, y, z, max_zoom: f64) -> f64 {
 		x_zoom := f64(x) / zoom
 		y_zoom := f64(y) / zoom
 		z_zoom := f64(z) / zoom
-
 		result += get_smooth_noise(noise, zoom, x_zoom, y_zoom, z_zoom) * zoom
 		zoom /= 2
 	}
