@@ -78,7 +78,6 @@ void main() {
 			vec2(frag_clip_space_position.x, -frag_clip_space_position.y) / (2.0 * frag_clip_space_position.w) + 0.5;
 		vec3 reflect_color = texture(reflect_map, reflect_coords).rgb;
 
-		// vec3 norm = normalize(normal);
 		vec3 view_dir = normalize(view_position - frag_position);
 		float n_dot_l = max(dot(norm, view_dir), 0.0);
 		float fresnel = acos(n_dot_l);
