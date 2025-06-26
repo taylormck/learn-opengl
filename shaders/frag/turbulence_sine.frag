@@ -43,7 +43,7 @@ vec3 turbulence(vec3 co, float max_zoom) {
 	vec3 texture_size = textureSize(noise, 0);
 
 	float current_zoom = max_zoom;
-	vec3 result = vec3(sin(sine_tune * PI * (co.x + co.y)) + 1.0) * sine_tune;
+	vec3 result = vec3(sin(0.5 * sine_tune * PI * (co.x + co.y)) + 1.0) * sine_tune;
 
 	while (current_zoom >= 1.0) {
 		result += get_smooth_value(co, texture_size / current_zoom) * current_zoom;

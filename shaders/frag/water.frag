@@ -23,6 +23,8 @@ uniform vec3 view_position;
 uniform PointLight point_light;
 
 uniform sampler3D noise;
+uniform float noise_offset;
+
 uniform sampler2D reflect_map;
 uniform sampler2D refract_map;
 uniform bool is_above;
@@ -40,28 +42,22 @@ vec3 calculate_point_light(PointLight light, vec3 color, vec3 norm) {
 	float diff = max(dot(norm, light_dir), 0.0);
 	vec3 diffuse = light.diffuse * diff * color;
 
-	vec3 specular = vec3(0.0);
-
-	if (dot(norm, light_dir) > 0.0) {
-		vec3 view_dir = normalize(view_position - frag_position);
-
-		vec3 halfway_dir = normalize(light_dir + view_dir);
-		float spec = pow(max(dot(norm, halfway_dir), 0.0), shininess);
-
-		specular = light.specular * spec * 0.7;
-	}
+	vec3 view_dir = normalize(view_position - frag_position);
+	vec3 halfway_dir = normalize(light_dir + view_dir);
+	float spec = pow(max(dot(norm, halfway_dir), 0.0), shininess);
+	vec3 specular = light.specular * spec * 0.7;
 
 	return ambient + diffuse + specular;
 }
 
 vec3 calculate_normal(float offset, float map_scale, float height_scale) {
-	float h1 =
-		texture(noise, vec3(tex_coords.s * map_scale, 0.5, (tex_coords.t + offset) * map_scale)).r * height_scale;
+	float y = fract(noise_offset);
+	float h1 = texture(noise, vec3(tex_coords.s * map_scale, y, (tex_coords.t + offset) * map_scale)).r * height_scale;
 
-	float h2 = texture(noise, vec3((tex_coords.s - offset) * map_scale, 0.5, (tex_coords.t - offset) * map_scale)).r *
+	float h2 = texture(noise, vec3((tex_coords.s - offset) * map_scale, y, (tex_coords.t - offset) * map_scale)).r *
 			   height_scale;
 
-	float h3 = texture(noise, vec3((tex_coords.s + offset) * map_scale, 0.5, (tex_coords.t - offset) * map_scale)).r *
+	float h3 = texture(noise, vec3((tex_coords.s + offset) * map_scale, y, (tex_coords.t - offset) * map_scale)).r *
 			   height_scale;
 
 	vec3 v1 = vec3(0.0, h1, -1.0);
@@ -79,10 +75,10 @@ void main() {
 	vec2 refract_coords = frag_clip_space_position.xy / (2.0 * frag_clip_space_position.w) + 0.5;
 	vec3 refract_color = texture(refract_map, refract_coords).rgb;
 
-	if (is_above) {
-		vec3 norm = calculate_normal(0.0002, 16.0, 8.0);
-		refract_color = calculate_point_light(point_light, refract_color, norm);
+	vec3 norm = calculate_normal(0.0002, 32.0, 16.0);
+	refract_color = calculate_point_light(point_light, refract_color, norm);
 
+	if (is_above) {
 		vec2 reflect_coords =
 			vec2(frag_clip_space_position.x, -frag_clip_space_position.y) / (2.0 * frag_clip_space_position.w) + 0.5;
 		vec3 reflect_color = texture(reflect_map, reflect_coords).rgb;
@@ -93,7 +89,7 @@ void main() {
 		float fresnel = acos(n_dot_l);
 
 		// Fine-tuned numbers
-		fresnel = pow(clamp(fresnel - 0.3, 0.0, 1.0), 3);
+		fresnel = pow(clamp(fresnel - 0.5, 0.0, 1.0), 3);
 
 		result = mix(refract_color, reflect_color, fresnel);
 	} else {

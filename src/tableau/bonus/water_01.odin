@@ -21,10 +21,10 @@ background_color := types.Vec3{0, 0, 0}
 cubemap: u32
 
 @(private = "file")
-initial_camera_position := types.Vec3{0, 1, 3}
+initial_camera_position := types.Vec3{0, 0.5, 3}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, -0.5, -3}
+initial_camera_target := types.Vec3{0, -0.5, -5}
 
 @(private = "file")
 camera := render.Camera {
@@ -100,6 +100,9 @@ reflect_fbo, reflect_texture, refract_fbo, refract_texture: u32
 @(private = "file")
 turbulence_texture: u32
 
+@(private = "file")
+app_time: f64
+
 water_01 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Checkerboard2DBlinnPhong, .Skybox, .Water)
@@ -143,6 +146,7 @@ water_01 :: types.Tableau {
 			linalg.to_radians(f32(1)),
 			linalg.to_radians(f32(45)),
 		)
+		app_time += delta
 	},
 	draw = proc() {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
@@ -229,6 +233,7 @@ draw_surface :: proc(is_above: bool, projection_view: ^types.TransformMatrix, vi
 
 	gl.UseProgram(shader)
 
+	shaders.set_float(shader, "noise_offset", f32(app_time * 0.2))
 	shaders.set_bool(shader, "is_above", is_above)
 	shaders.set_vec3(shader, "view_position", raw_data(view_position))
 	shaders.set_mat_4x4(shader, "model", raw_data(&surface_model))
@@ -364,7 +369,7 @@ generate_turbulence_texture :: proc() {
 		shader := shaders.shaders[.TurbulenceSine]
 		gl.UseProgram(shader)
 
-		zoom: f32 = 32
+		zoom: f32 = 64
 		shaders.set_float(shader, "zoom", zoom)
 
 		generate_3d_texture(shader, turbulence_texture, noise_texture)
