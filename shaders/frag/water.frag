@@ -50,7 +50,7 @@ vec3 calculate_point_light(PointLight light, vec3 color, vec3 norm) {
 	return ambient + diffuse + specular;
 }
 
-vec3 calculate_normal(float offset, float map_scale, float height_scale) {
+vec3 calculate_normal(vec2 tex_coords, float offset, float map_scale, float height_scale) {
 	float y = fract(noise_offset);
 	float h1 = texture(noise, vec3(tex_coords.s * map_scale, y, (tex_coords.t + offset) * map_scale)).r * height_scale;
 
@@ -75,7 +75,7 @@ void main() {
 	vec2 refract_coords = frag_clip_space_position.xy / (2.0 * frag_clip_space_position.w) + 0.5;
 	vec3 refract_color = texture(refract_map, refract_coords).rgb;
 
-	vec3 norm = calculate_normal(0.0002, 32.0, 16.0);
+	vec3 norm = calculate_normal(tex_coords / 25.0, 0.0002, 64.0, 16.0);
 	refract_color = calculate_point_light(point_light, refract_color, norm);
 
 	if (is_above) {
