@@ -25,7 +25,9 @@ uniform sampler2D reflect_map;
 uniform sampler2D refract_map;
 uniform bool is_above;
 
-const float fog_start = 1.0;
+uniform mat3 mit;
+
+const float fog_start = 10.0;
 const float fog_end = 300.0;
 
 vec3 calculate_directional_light(DirectionalLight light, vec3 color, vec3 norm) {
@@ -59,7 +61,7 @@ vec3 calculate_normal(vec2 tex_coords, float offset, float map_scale, float heig
 	vec3 v4 = v2 - v1;
 	vec3 v5 = v3 - v1;
 
-	return normalize(cross(v4, v5));
+	return mit * normalize(cross(v4, v5));
 }
 
 void main() {
@@ -68,7 +70,7 @@ void main() {
 	vec2 refract_coords = frag_clip_space_position.xy / (2.0 * frag_clip_space_position.w) + 0.5;
 	vec3 refract_color = texture(refract_map, refract_coords).rgb;
 
-	vec3 norm = calculate_normal(tex_coords / 25.0, 0.0002, 64.0, 16.0);
+	vec3 norm = calculate_normal(tex_coords / 25.0, 0.0002, 64.0, 32.0);
 	refract_color = calculate_directional_light(directional_light, refract_color, norm);
 
 	if (is_above) {

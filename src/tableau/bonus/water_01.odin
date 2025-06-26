@@ -15,7 +15,7 @@ import "core:time"
 import gl "vendor:OpenGL"
 
 @(private = "file")
-background_color := types.Vec3{0, 0, 0}
+background_color := types.Vec3{0, 0.25, 1} * 0.1
 
 @(private = "file")
 cubemap: u32
@@ -42,8 +42,8 @@ camera := render.Camera {
 @(private = "file")
 light := render.DirectionalLight {
 	direction = {1, -1, 5},
-	ambient   = {0.2, 0.2, 0.2},
-	diffuse   = {0.5, 0.5, 0.5},
+	ambient   = {0.5, 0.5, 0.5},
+	diffuse   = {0.8, 0.8, 0.8},
 	specular  = {1, 1, 1},
 }
 
@@ -229,11 +229,11 @@ draw_surface :: proc(is_above: bool, projection_view: ^types.TransformMatrix, vi
 
 	gl.UseProgram(shader)
 
-	shaders.set_float(shader, "noise_offset", f32(app_time * 0.2))
+	shaders.set_float(shader, "noise_offset", f32(app_time * 0.05))
 	shaders.set_bool(shader, "is_above", is_above)
 	shaders.set_vec3(shader, "view_position", raw_data(view_position))
 	shaders.set_mat_4x4(shader, "model", raw_data(&surface_model))
-	// shaders.set_mat_3x3(shader, "mit", raw_data(&surface_mit))
+	shaders.set_mat_3x3(shader, "mit", raw_data(&surface_mit))
 	shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
 
 	primitives.plane_draw()
