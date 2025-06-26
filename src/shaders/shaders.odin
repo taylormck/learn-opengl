@@ -102,6 +102,7 @@ Shader :: enum {
 	Checkerboard2D,
 	Checkerboard2DBlinnPhong,
 	Water,
+	TurbulenceSine,
 }
 
 ShaderMap :: map[Shader]u32
@@ -805,6 +806,13 @@ init_shader :: proc(shader: Shader) {
 				#load("../../shaders/vert/pos_tex_normal_transform.vert"),
 				#load("../../shaders/frag/water.frag"),
 			) or_else panic("Failed to load the water shader")
+
+	case .TurbulenceSine:
+		shaders[.TurbulenceSine] =
+			gl.load_shaders_source(
+				#load("../../shaders/vert/pos_tex_instanced.vert"),
+				#load("../../shaders/frag/turbulence_sine.frag"),
+			) or_else panic("Failed to load the turbulence texture shader")
 
 	}
 }

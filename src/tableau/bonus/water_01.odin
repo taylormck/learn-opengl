@@ -1,6 +1,7 @@
 package bonus
 
 import "../../input"
+import "../../noise"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
@@ -10,6 +11,7 @@ import "../../window"
 import "core:log"
 import "core:math"
 import "core:math/linalg"
+import "core:time"
 import gl "vendor:OpenGL"
 
 @(private = "file")
@@ -95,6 +97,9 @@ surface_mit: types.SubTransformMatrix
 @(private = "file")
 reflect_fbo, reflect_texture, refract_fbo, refract_texture: u32
 
+@(private = "file")
+turbulence_texture: u32
+
 water_01 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Checkerboard2DBlinnPhong, .Skybox, .Water)
@@ -112,12 +117,15 @@ water_01 :: types.Tableau {
 		shaders.set_float(checkerboard_shader, "shininess", FLOOR_SHININESS)
 		render.point_light_set_uniform(&light, checkerboard_shader)
 
+		generate_turbulence_texture()
+
 		water_shader := shaders.shaders[.Water]
 		gl.UseProgram(water_shader)
 		shaders.set_vec3(water_shader, "color", raw_data(&water_color))
 		shaders.set_float(water_shader, "shininess", WATER_SHININESS)
 		shaders.set_int(water_shader, "reflect_map", 0)
 		shaders.set_int(water_shader, "refract_map", 1)
+		shaders.set_int(water_shader, "noise", 2)
 		render.point_light_set_uniform(&light, water_shader)
 
 		floor_mit = types.SubTransformMatrix(linalg.inverse_transpose(floor_model))
@@ -170,6 +178,8 @@ water_01 :: types.Tableau {
 		gl.BindTexture(gl.TEXTURE_2D, reflect_texture)
 		gl.ActiveTexture(gl.TEXTURE1)
 		gl.BindTexture(gl.TEXTURE_2D, refract_texture)
+		gl.ActiveTexture(gl.TEXTURE2)
+		gl.BindTexture(gl.TEXTURE_3D, turbulence_texture)
 
 		draw_surface(is_above, &pv, &camera.position)
 		draw_floor(is_above, &pv, &camera.position)
@@ -185,6 +195,8 @@ water_01 :: types.Tableau {
 
 		gl.DeleteFramebuffers(1, &refract_fbo)
 		gl.DeleteTextures(1, &refract_texture)
+
+		gl.DeleteTextures(1, &turbulence_texture)
 	},
 	framebuffer_size_callback = proc() {
 		gl.BindTexture(gl.TEXTURE_2D, reflect_texture)
@@ -220,7 +232,7 @@ draw_surface :: proc(is_above: bool, projection_view: ^types.TransformMatrix, vi
 	shaders.set_bool(shader, "is_above", is_above)
 	shaders.set_vec3(shader, "view_position", raw_data(view_position))
 	shaders.set_mat_4x4(shader, "model", raw_data(&surface_model))
-	shaders.set_mat_3x3(shader, "mit", raw_data(&surface_mit))
+	// shaders.set_mat_3x3(shader, "mit", raw_data(&surface_mit))
 	shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
 
 	primitives.plane_draw()
@@ -275,4 +287,133 @@ get_reflect_camera :: proc() -> (reflect_camera: render.Camera) {
 	reflect_camera.direction.y *= -1
 
 	return reflect_camera
+}
+
+@(private = "file")
+generate_turbulence_texture :: proc() {
+	primitives.full_screen_send_to_gpu()
+	defer primitives.full_screen_clear_from_gpu()
+
+	fbo: u32
+
+	gl.GenFramebuffers(1, &fbo)
+	defer gl.DeleteFramebuffers(1, &fbo)
+
+	gl.BindFramebuffer(gl.FRAMEBUFFER, fbo)
+	defer gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+	gl.Viewport(0, 0, noise.NOISE_WIDTH, noise.NOISE_HEIGHT)
+	defer gl.Viewport(0, 0, window.width, window.height)
+
+	gl.Disable(gl.DEPTH_TEST)
+
+	noise_texture: u32
+	gl.GenTextures(1, &noise_texture)
+	defer gl.DeleteTextures(1, &noise_texture)
+
+	{
+		log.info("Generating input noise texture")
+		shaders.init_shader(.GenNoise3D)
+		shader := shaders.shaders[.GenNoise3D]
+		gl.UseProgram(shader)
+		shaders.set_int(shader, "depth", noise.NOISE_DEPTH)
+
+		current_time := time.time_to_unix(time.now())
+		seed := transmute([2]u32)current_time
+		shaders.set_uvec2(shader, "seed", raw_data(&seed))
+
+		gl.BindTexture(gl.TEXTURE_3D, noise_texture)
+
+		gl.TexImage3D(
+			gl.TEXTURE_3D,
+			0,
+			gl.RGBA32F,
+			noise.NOISE_WIDTH,
+			noise.NOISE_HEIGHT,
+			noise.NOISE_DEPTH,
+			0,
+			gl.RGBA,
+			gl.FLOAT,
+			nil,
+		)
+
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+		gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, noise_texture, 0)
+		utils.print_gl_errors()
+
+		log.ensuref(
+			gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
+			"framebuffer error: {}",
+			utils.get_framebuffer_status(),
+		)
+
+		gl.ClearColor(0, 0, 0, 1)
+		gl.Clear(gl.COLOR_BUFFER_BIT)
+		primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
+	}
+
+	log.info("Generating turbulence texture")
+	{
+		gl.GenTextures(1, &turbulence_texture)
+		shaders.init_shader(.TurbulenceSine)
+		shader := shaders.shaders[.TurbulenceSine]
+		gl.UseProgram(shader)
+
+		zoom: f32 = 32
+		shaders.set_float(shader, "zoom", zoom)
+
+		generate_3d_texture(shader, turbulence_texture, noise_texture)
+	}
+}
+
+@(private = "file")
+generate_3d_texture :: proc(shader, texture_id: u32, noise_texture: u32 = 0) {
+	gl.UseProgram(shader)
+	shaders.set_int(shader, "depth", noise.NOISE_DEPTH)
+
+	gl.BindTexture(gl.TEXTURE_3D, texture_id)
+
+	gl.TexImage3D(
+		gl.TEXTURE_3D,
+		0,
+		gl.RGBA8,
+		noise.NOISE_WIDTH,
+		noise.NOISE_HEIGHT,
+		noise.NOISE_DEPTH,
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		nil,
+	)
+
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_R, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_S, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_WRAP_T, gl.REPEAT)
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_3D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+
+	gl.FramebufferTexture(gl.FRAMEBUFFER, gl.COLOR_ATTACHMENT0, texture_id, 0)
+
+	log.ensuref(
+		gl.CheckFramebufferStatus(gl.FRAMEBUFFER) == gl.FRAMEBUFFER_COMPLETE,
+		"framebuffer error: {}",
+		utils.get_framebuffer_status(),
+	)
+
+	if noise_texture != 0 {
+		gl.ActiveTexture(gl.TEXTURE0)
+		gl.BindTexture(gl.TEXTURE_3D, noise_texture)
+		shaders.set_int(shader, "noise", 0)
+	}
+
+	gl.ClearColor(0, 0, 0, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+	primitives.full_screen_draw_instanced(noise.NOISE_DEPTH)
+
+	utils.print_gl_errors()
 }

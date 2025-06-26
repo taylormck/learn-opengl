@@ -22,6 +22,7 @@ uniform float shininess;
 uniform vec3 view_position;
 uniform PointLight point_light;
 
+uniform sampler3D noise;
 uniform sampler2D reflect_map;
 uniform sampler2D refract_map;
 uniform bool is_above;
@@ -29,10 +30,9 @@ uniform bool is_above;
 const float fog_start = 1.0;
 const float fog_end = 300.0;
 
-vec3 calculate_point_light(PointLight light, vec3 color) {
+vec3 calculate_point_light(PointLight light, vec3 color, vec3 norm) {
 	vec3 ambient = light.ambient * color;
 
-	vec3 norm = normalize(normal);
 	vec3 light_diff = light.position - frag_position;
 	vec3 light_dir = normalize(light_diff);
 	float distance = length(light_diff);
@@ -54,6 +54,25 @@ vec3 calculate_point_light(PointLight light, vec3 color) {
 	return ambient + diffuse + specular;
 }
 
+vec3 calculate_normal(float offset, float map_scale, float height_scale) {
+	float h1 =
+		texture(noise, vec3(tex_coords.s * map_scale, 0.5, (tex_coords.t + offset) * map_scale)).r * height_scale;
+
+	float h2 = texture(noise, vec3((tex_coords.s - offset) * map_scale, 0.5, (tex_coords.t - offset) * map_scale)).r *
+			   height_scale;
+
+	float h3 = texture(noise, vec3((tex_coords.s + offset) * map_scale, 0.5, (tex_coords.t - offset) * map_scale)).r *
+			   height_scale;
+
+	vec3 v1 = vec3(0.0, h1, -1.0);
+	vec3 v2 = vec3(-1.0, h2, 1.0);
+	vec3 v3 = vec3(1.0, h3, 1.0);
+	vec3 v4 = v2 - v1;
+	vec3 v5 = v3 - v1;
+
+	return normalize(cross(v4, v5));
+}
+
 void main() {
 	vec3 result;
 
@@ -61,13 +80,14 @@ void main() {
 	vec3 refract_color = texture(refract_map, refract_coords).rgb;
 
 	if (is_above) {
-		refract_color = calculate_point_light(point_light, refract_color);
+		vec3 norm = calculate_normal(0.0002, 16.0, 8.0);
+		refract_color = calculate_point_light(point_light, refract_color, norm);
 
 		vec2 reflect_coords =
 			vec2(frag_clip_space_position.x, -frag_clip_space_position.y) / (2.0 * frag_clip_space_position.w) + 0.5;
 		vec3 reflect_color = texture(reflect_map, reflect_coords).rgb;
 
-		vec3 norm = normalize(normal);
+		// vec3 norm = normalize(normal);
 		vec3 view_dir = normalize(view_position - frag_position);
 		float n_dot_l = max(dot(norm, view_dir), 0.0);
 		float fresnel = acos(n_dot_l);

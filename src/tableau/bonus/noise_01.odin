@@ -858,6 +858,7 @@ create_textures_framebuffer :: proc() {
 	}
 }
 
+@(private = "file")
 generate_3d_texture :: proc(shader, texture_id: u32, noise_texture: u32 = 0) {
 	gl.UseProgram(shader)
 	shaders.set_int(shader, "depth", noise.NOISE_DEPTH)
