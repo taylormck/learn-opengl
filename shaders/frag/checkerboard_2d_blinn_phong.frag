@@ -22,7 +22,7 @@ uniform vec3 view_position;
 uniform bool is_above;
 uniform DirectionalLight directional_light;
 
-const float fog_start = 1.0;
+const float fog_start = 10.0;
 const float fog_end = 300.0;
 
 vec3 calculate_directional_light(DirectionalLight light, vec3 color, vec3 norm) {
@@ -53,7 +53,7 @@ void main() {
 	float dist = length(view_position - frag_position);
 	float fog_factor = clamp(((fog_end - dist) / (fog_end - fog_start)), 0.0, 1.0);
 
-	color = mix(color_03 * 0.2, color, pow(fog_factor, 5));
+	color = mix(color_03 * 0.1, color, pow(fog_factor, 5));
 
 	frag_color = vec4(color, 1.0);
 }

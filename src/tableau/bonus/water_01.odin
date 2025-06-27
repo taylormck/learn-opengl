@@ -18,6 +18,9 @@ import gl "vendor:OpenGL"
 background_color := types.Vec3{0, 0.25, 1} * 0.1
 
 @(private = "file")
+underwater_background_color: types.Vec3
+
+@(private = "file")
 cubemap: u32
 
 @(private = "file")
@@ -145,9 +148,6 @@ water_01 :: types.Tableau {
 		app_time += delta
 	},
 	draw = proc() {
-		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
 		gl.Enable(gl.DEPTH_TEST)
 		defer gl.Disable(gl.DEPTH_TEST)
 
@@ -159,6 +159,10 @@ water_01 :: types.Tableau {
 
 		if is_above {
 			gl.BindFramebuffer(gl.FRAMEBUFFER, refract_fbo)
+
+			gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 			draw_floor(is_above, &pv, &camera.position)
 
 			reflect_camera := get_reflect_camera()
@@ -167,13 +171,25 @@ water_01 :: types.Tableau {
 			reflect_view := render.camera_get_view(&reflect_camera)
 
 			gl.BindFramebuffer(gl.FRAMEBUFFER, reflect_fbo)
+
+			gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 			draw_skybox(&reflect_projection, &reflect_view)
 		} else {
 			gl.BindFramebuffer(gl.FRAMEBUFFER, refract_fbo)
+
+			gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 			draw_skybox(&projection, &view)
 		}
 
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
+
+		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 		gl.ActiveTexture(gl.TEXTURE0)
 		gl.BindTexture(gl.TEXTURE_2D, reflect_texture)
 		gl.ActiveTexture(gl.TEXTURE1)

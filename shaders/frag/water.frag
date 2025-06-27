@@ -61,7 +61,7 @@ vec3 calculate_normal(vec2 tex_coords, float offset, float map_scale, float heig
 	vec3 v4 = v2 - v1;
 	vec3 v5 = v3 - v1;
 
-	return mit * normalize(cross(v4, v5));
+	return normalize(mit * cross(v4, v5));
 }
 
 void main() {
@@ -92,7 +92,7 @@ void main() {
 		float dist = length(view_position - frag_position);
 		float fog_factor = clamp(((fog_end - dist) / (fog_end - fog_start)), 0.0, 1.0);
 
-		result = mix(color * 0.2, result, pow(fog_factor, 5));
+		result = mix(color * 0.1, result, pow(fog_factor, 5));
 	}
 
 	frag_color = vec4(result, 1.0);
