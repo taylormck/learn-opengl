@@ -117,6 +117,7 @@ water_01 :: types.Tableau {
 		shaders.set_vec3(checkerboard_shader, "color_03", raw_data(&water_color))
 		shaders.set_float(checkerboard_shader, "tile_scale", PLANE_TILE_SCALE)
 		shaders.set_float(checkerboard_shader, "shininess", FLOOR_SHININESS)
+		shaders.set_int(checkerboard_shader, "noise", 2)
 		render.directional_light_set_uniform(&light, checkerboard_shader)
 
 		generate_turbulence_texture()
@@ -228,12 +229,17 @@ draw_floor :: proc(is_above: bool, projection_view: ^types.TransformMatrix, view
 	shader := shaders.shaders[.Checkerboard2DBlinnPhong]
 	transform := projection_view^ * floor_model
 
+	gl.ActiveTexture(gl.TEXTURE2)
+	gl.BindTexture(gl.TEXTURE_3D, turbulence_texture)
+
 	gl.UseProgram(shader)
 
+	shaders.set_float(shader, "noise_offset", f32(app_time * 0.05))
 	shaders.set_vec3(shader, "view_position", raw_data(view_position))
 	shaders.set_mat_4x4(shader, "model", raw_data(&floor_model))
 	shaders.set_mat_3x3(shader, "mit", raw_data(&floor_mit))
 	shaders.set_mat_4x4(shader, "transform", raw_data(&transform))
+	shaders.set_bool(shader, "is_above", is_above)
 
 	primitives.plane_draw()
 }
@@ -242,6 +248,13 @@ draw_floor :: proc(is_above: bool, projection_view: ^types.TransformMatrix, view
 draw_surface :: proc(is_above: bool, projection_view: ^types.TransformMatrix, view_position: ^types.Vec3) {
 	shader := shaders.shaders[.Water]
 	transform := projection_view^ * surface_model
+
+	gl.ActiveTexture(gl.TEXTURE0)
+	gl.BindTexture(gl.TEXTURE_2D, reflect_texture)
+	gl.ActiveTexture(gl.TEXTURE1)
+	gl.BindTexture(gl.TEXTURE_2D, refract_texture)
+	gl.ActiveTexture(gl.TEXTURE2)
+	gl.BindTexture(gl.TEXTURE_3D, turbulence_texture)
 
 	gl.UseProgram(shader)
 
