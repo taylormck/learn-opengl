@@ -28,7 +28,17 @@ uniform mat3 mit;
 
 const float fog_start = 10.0;
 const float fog_end = 300.0;
-const float distortion_strengh = 2.0;
+const float distortion_strengh = 0.1;
+const float PI = 3.14159;
+const float caustic_strength = 4.0;
+const vec3 causit_multiplier = vec3(8.0, 1.0, 8.0);
+
+float get_caustic_value(vec3 coords) {
+	float noise = texture(noise, coords * causit_multiplier).r;
+	noise = pow((1.0 - abs(sin(noise * 2.0 * PI))), caustic_strength);
+
+	return noise;
+}
 
 vec3 calculate_directional_light(DirectionalLight light, vec3 color, vec3 norm) {
 	vec3 ambient = light.ambient * color;
@@ -82,6 +92,10 @@ void main() {
 
 	vec3 color = mix(color_01, color_02, decider);
 	color = calculate_directional_light(directional_light, color, norm);
+
+	vec2 reduced_tc = tc / 25.0;
+	vec3 caustic_color = vec3(get_caustic_value(vec3(reduced_tc.s, noise_offset, reduced_tc.t)));
+	color = clamp(caustic_color + color, 0.0, 1.0);
 
 	float dist = length(view_position - frag_position);
 	float fog_factor = clamp(((fog_end - dist) / (fog_end - fog_start)), 0.0, 1.0);
