@@ -65,12 +65,13 @@ vec3 calculate_wave_normal(vec2 tex_coords, float offset, float map_scale, float
 }
 
 void main() {
-	vec3 norm = normalize(normal);
+	vec3 wave_normal = calculate_wave_normal(tex_coords / 25.0, 0.05, 32.0, 0.05);
+	vec2 distortion = wave_normal.xz * distortion_strengh;
+	vec3 norm = normalize(normalize(normal) + vec3(distortion.x, 0.0, distortion.y) * 5.0);
+
 	vec2 tc = tex_coords;
 
 	if (is_above) {
-		vec3 wave_normal = calculate_wave_normal(tex_coords / 25.0, 0.05, 32.0, 0.05);
-		vec2 distortion = wave_normal.xz * distortion_strengh;
 		tc += distortion;
 	}
 
