@@ -117,6 +117,7 @@ main :: proc() {
 	defer shaders.delete_shaders()
 
 	prev_time := glfw.GetTime()
+	tableau_changed_prev_frame := false
 
 	log.info("Entering main loop")
 	for !glfw.WindowShouldClose(window_handle) {
@@ -126,9 +127,14 @@ main :: proc() {
 		glfw.PollEvents()
 		process_input(window_handle, delta)
 
-		tableau_changed: bool
-		current_tableau, tableau_changed = update_tableau(window_handle)
-		if tableau_changed do clear_input()
+		if tableau_changed_prev_frame {
+			clear_input()
+			tableau_changed_prev_frame = false
+		} else {
+			tableau_changed: bool
+			current_tableau, tableau_changed = update_tableau(window_handle)
+			tableau_changed_prev_frame = tableau_changed
+		}
 
 		if current_tableau.update != nil do current_tableau.update(delta)
 
