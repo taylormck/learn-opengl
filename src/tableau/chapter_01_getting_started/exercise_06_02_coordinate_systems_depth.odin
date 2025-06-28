@@ -27,17 +27,20 @@ get_initial_camera :: proc() -> render.Camera {
 camera: render.Camera
 
 @(private = "file")
-time: f64 = 0
+time: f64
 
 @(private = "file")
 container_texture, awesome_texture: render.Texture
 
 exercise_06_02_coordinate_systems_depth :: types.Tableau {
+	title = "Cube",
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		awesome_texture = render.prepare_texture("textures/awesomeface.png", .Diffuse, true)
 		primitives.cube_send_to_gpu()
+		time = 0
+		camera = get_initial_camera()
 	},
 	update = proc(delta: f64) {
 		time += delta

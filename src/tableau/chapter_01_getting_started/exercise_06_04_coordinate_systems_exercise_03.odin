@@ -9,23 +9,31 @@ import "core:math/linalg"
 import gl "vendor:OpenGL"
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = {0, 0, 3},
-	direction    = {0, 0, -1},
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+time: f64
+
+@(private = "file")
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = {0, 0, 3},
+		direction = {0, 0, -1},
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
+
+@(private = "file")
+camera: render.Camera
 
 @(private = "file")
 container_texture, awesome_texture: render.Texture
 
 @(private = "file")
-models := [?]types.TransformMatrix {
+INITIAL_MODELS := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({0, 0, 0}),
 	linalg.matrix4_translate_f32({2, 5, -15}),
 	linalg.matrix4_translate_f32({-1.5, -2.2, -2.5}),
@@ -38,26 +46,29 @@ models := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({-1.3, 1, -1.5}),
 }
 
+@(private = "file")
+models: [len(INITIAL_MODELS)]types.TransformMatrix
+
 exercise_06_04_coordinate_systems_exercise_03 :: types.Tableau {
+	title = "Spinning cubes",
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		awesome_texture = render.prepare_texture("textures/awesomeface.png", .Diffuse, true)
 		primitives.cube_send_to_gpu()
 
+		models = INITIAL_MODELS
 		for &model, i in models {
 			angle := f32(20 * i)
 			model *= linalg.matrix4_rotate_f32(angle, {1, 0.3, 0.5})
 		}
+
+		camera = get_initial_camera()
+		time = 0
 	},
 	update = proc(delta: f64) {
 		camera.aspect_ratio = window.aspect_ratio()
-
-		for &model, i in models {
-			if i % 3 != 0 do continue
-
-			model *= linalg.matrix4_rotate_f32(f32(delta), {1, 0.3, 0.5})
-		}
+		time += delta
 	},
 	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
@@ -81,7 +92,13 @@ exercise_06_04_coordinate_systems_exercise_03 :: types.Tableau {
 		shaders.set_int(texture_shader, "diffuse_0", 0)
 		shaders.set_int(texture_shader, "diffuse_1", 1)
 
-		for model in models {
+		for model, i in models {
+			model := model
+
+			if i % 3 == 0 {
+				model *= linalg.matrix4_rotate_f32(f32(time), {1, 0.3, 0.5})
+			}
+
 			transform := projection * view * model
 			shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
