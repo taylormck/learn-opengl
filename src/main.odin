@@ -1,6 +1,7 @@
 package main
 
 import "base:runtime"
+import "core:fmt"
 import "core:log"
 import "font"
 import "input"
@@ -124,9 +125,11 @@ main :: proc() {
 
 		glfw.PollEvents()
 		process_input(window_handle, delta)
-		update_tableau()
 
-		current_tableau = &tableau_list[current_tableau_index]
+		tableau_changed: bool
+		current_tableau, tableau_changed = update_tableau(window_handle)
+		if tableau_changed do clear_input()
+
 		if current_tableau.update != nil do current_tableau.update(delta)
 
 		clear_input()
@@ -148,7 +151,7 @@ main :: proc() {
 
 	log.info("Exiting main loop")
 
-	if teardown := tableau_list[current_tableau_index].teardown; teardown != nil {
+	if teardown := current_tableau.teardown; teardown != nil {
 		log.info("Tearing down tableau")
 		teardown()
 	}
@@ -164,12 +167,14 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 	if callback := tableau_list[current_tableau_index].framebuffer_size_callback; callback != nil do callback()
 }
 
-update_tableau :: proc() -> (current_tableau: ^types.Tableau) {
+update_tableau :: proc(window_handle: glfw.WindowHandle) -> (current_tableau: ^types.Tableau, updated: bool) {
 	tableau_offset := 0
 	if .LeftArrow in input.input_state.pressed_keys do tableau_offset -= 1
 	if .RightArrow in input.input_state.pressed_keys do tableau_offset += 1
 
 	if tableau_offset != 0 {
+		updated = true
+
 		if teardown := tableau_list[current_tableau_index].teardown; teardown != nil {
 			log.info("Tearing down tableau")
 			teardown()
@@ -179,6 +184,8 @@ update_tableau :: proc() -> (current_tableau: ^types.Tableau) {
 		current_tableau_index %= len(tableau_list)
 
 		current_tableau = &tableau_list[current_tableau_index]
+
+		draw_tableau_change_filler(window_handle, current_tableau)
 
 		if init := current_tableau.init; init != nil {
 			log.infof("Initializing tableau: {}", current_tableau.title)
@@ -190,5 +197,18 @@ update_tableau :: proc() -> (current_tableau: ^types.Tableau) {
 		current_tableau = &tableau_list[current_tableau_index]
 	}
 
-	return current_tableau
+	return current_tableau, updated
+}
+
+draw_tableau_change_filler :: proc(window_handle: glfw.WindowHandle, current_tableau: ^types.Tableau) {
+	title := fmt.tprintf("Loading tableau: {}", current_tableau.title)
+	help_text := "Please wait..."
+
+	gl.ClearColor(0, 0, 0, 1)
+	gl.Clear(gl.COLOR_BUFFER_BIT)
+
+	font.font_write(&title_font, title, TITLE_START_POSITION, TITLE_COLOR)
+	font.font_write(&help_font, help_text, HELP_START_POSITION, HELP_COLOR)
+
+	glfw.SwapBuffers(window_handle)
 }
