@@ -70,7 +70,6 @@ exercise_04_01_normal_mapping :: types.Tableau {
 		shaders.init_shaders(.BlinnPhongPointLightNormalMap, .Light)
 		brick_wall_texture = render.prepare_texture("textures/brickwall.png", .Diffuse, true)
 		brick_wall_normal_texture = render.prepare_texture("textures/brickwall_normal.png", .Normal, true)
-		primitives.quad_send_to_gpu()
 		primitives.cube_send_to_gpu()
 
 		wall_mit = types.SubTransformMatrix(linalg.inverse_transpose(wall_model))
@@ -143,7 +142,6 @@ exercise_04_01_normal_mapping :: types.Tableau {
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.quad_clear_from_gpu()
 		gl.DeleteTextures(1, &brick_wall_texture.id)
 		gl.DeleteTextures(1, &brick_wall_normal_texture.id)
 	},

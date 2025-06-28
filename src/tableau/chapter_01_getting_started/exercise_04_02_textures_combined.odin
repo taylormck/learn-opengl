@@ -14,7 +14,6 @@ exercise_04_02_textures_combined :: types.Tableau {
 		shaders.init_shaders(.DoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		awesome_texture = render.prepare_texture("textures/awesomeface.png", .Diffuse, true)
-		primitives.quad_send_to_gpu()
 	},
 	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
@@ -36,6 +35,7 @@ exercise_04_02_textures_combined :: types.Tableau {
 		primitives.quad_draw()
 	},
 	teardown = proc() {
-		primitives.quad_clear_from_gpu()
+		gl.DeleteTextures(1, &container_texture.id)
+		gl.DeleteTextures(1, &awesome_texture.id)
 	},
 }

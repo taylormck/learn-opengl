@@ -73,7 +73,6 @@ exercise_05_01_parallax_mapping :: types.Tableau {
 		brick_wall_texture = render.prepare_texture("textures/bricks2.png", .Diffuse, true)
 		brick_wall_normal_texture = render.prepare_texture("textures/bricks2_normal.png", .Normal, true)
 		brick_wall_displacement_texture = render.prepare_texture("textures/bricks2_disp.png", .Displacement, true)
-		primitives.quad_send_to_gpu()
 		primitives.cube_send_to_gpu()
 
 		wall_mit = types.SubTransformMatrix(linalg.inverse_transpose(wall_model))
@@ -151,7 +150,6 @@ exercise_05_01_parallax_mapping :: types.Tableau {
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.quad_clear_from_gpu()
 		gl.DeleteTextures(1, &brick_wall_texture.id)
 		gl.DeleteTextures(1, &brick_wall_normal_texture.id)
 		gl.DeleteTextures(1, &brick_wall_displacement_texture.id)

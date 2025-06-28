@@ -14,7 +14,6 @@ exercise_04_01_textures :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Texture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
-		primitives.quad_send_to_gpu()
 	},
 	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
@@ -31,7 +30,7 @@ exercise_04_01_textures :: types.Tableau {
 		primitives.quad_draw()
 	},
 	teardown = proc() {
-		primitives.quad_clear_from_gpu()
+		gl.DeleteTextures(1, &container_texture.id)
 	},
 }
 
@@ -39,7 +38,6 @@ exercise_04_01_textures_color :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.ColorTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
-		primitives.quad_send_to_gpu()
 	},
 	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
@@ -57,7 +55,6 @@ exercise_04_01_textures_color :: types.Tableau {
 		primitives.quad_draw()
 	},
 	teardown = proc() {
-		primitives.quad_clear_from_gpu()
 		gl.DeleteTextures(1, &container_texture.id)
 	},
 }

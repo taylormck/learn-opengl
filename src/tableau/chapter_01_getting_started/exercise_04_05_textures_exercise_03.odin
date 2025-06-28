@@ -30,8 +30,6 @@ exercise_04_05_textures_exercise_03 :: types.Tableau {
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 		gl.BindTexture(gl.TEXTURE_2D, 0)
-
-		primitives.quad_send_to_gpu()
 	},
 	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
@@ -52,6 +50,7 @@ exercise_04_05_textures_exercise_03 :: types.Tableau {
 		primitives.quad_draw()
 	},
 	teardown = proc() {
-		primitives.quad_clear_from_gpu()
+		gl.DeleteTextures(1, &container_texture.id)
+		gl.DeleteTextures(1, &awesome_texture.id)
 	},
 }

@@ -2,7 +2,9 @@ package main
 
 import "base:runtime"
 import "core:log"
+import "font"
 import "input"
+import "primitives"
 import "shaders"
 import "tableau"
 import "utils"
@@ -17,8 +19,12 @@ GL_MAJOR_VERSION :: 3
 GL_MINOR_VERSION :: 3
 NUM_SAMPLES :: 4
 
+FONT_PATH :: "../fonts/Crimson_Text/CrimsonText-Regular.ttf"
+FONT_SCALE :: 125
+
 tableau_list := tableau.tableaus
 current_tableau_index := len(tableau_list) - 1
+main_font: font.Font
 
 main :: proc() {
 	when ODIN_DEBUG {
@@ -86,9 +92,18 @@ main :: proc() {
 		init()
 	}
 
+	// We need the quad to render text for all of the scenes, so let's just load it up now.
+	primitives.quad_send_to_gpu()
+	defer primitives.quad_clear_from_gpu()
+
+	font_data := #load(FONT_PATH)
+	main_font = font.font_init("CrimsonText", font_data, FONT_SCALE)
+	defer font.font_deinit(&main_font)
+
 	utils.print_gl_errors()
 
 	defer shaders.delete_shaders()
+
 
 	prev_time := glfw.GetTime()
 

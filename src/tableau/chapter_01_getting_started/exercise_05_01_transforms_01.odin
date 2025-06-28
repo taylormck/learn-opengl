@@ -18,7 +18,6 @@ exercise_05_01_transforms :: types.Tableau {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		awesome_texture = render.prepare_texture("textures/awesomeface.png", .Diffuse, true)
-		primitives.quad_send_to_gpu()
 	},
 	update = proc(delta: f64) {
 		time += delta
@@ -45,6 +44,7 @@ exercise_05_01_transforms :: types.Tableau {
 		primitives.quad_draw()
 	},
 	teardown = proc() {
-		primitives.quad_clear_from_gpu()
+		gl.DeleteTextures(1, &container_texture.id)
+		gl.DeleteTextures(1, &awesome_texture.id)
 	},
 }

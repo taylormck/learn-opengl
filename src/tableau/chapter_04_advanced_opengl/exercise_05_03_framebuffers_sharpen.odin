@@ -44,7 +44,6 @@ exercise_05_03_framebuffers_sharpen :: types.Tableau {
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		metal_texture = render.prepare_texture("textures/metal.png", .Diffuse, true)
 		primitives.cube_send_to_gpu()
-		primitives.quad_send_to_gpu()
 		primitives.full_screen_send_to_gpu()
 
 		gl.GenFramebuffers(1, &fbo)
@@ -141,7 +140,6 @@ exercise_05_03_framebuffers_sharpen :: types.Tableau {
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.quad_clear_from_gpu()
 		primitives.full_screen_clear_from_gpu()
 		gl.DeleteTextures(1, &container_texture.id)
 		gl.DeleteTextures(1, &metal_texture.id)

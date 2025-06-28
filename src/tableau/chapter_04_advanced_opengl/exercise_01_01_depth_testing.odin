@@ -41,7 +41,6 @@ exercise_01_01_depth :: types.Tableau {
 		marble_texture = render.prepare_texture("textures/marble.png", .Diffuse, true)
 		metal_texture = render.prepare_texture("textures/metal.png", .Diffuse, true)
 		primitives.cube_send_to_gpu()
-		primitives.quad_send_to_gpu()
 	},
 	update = proc(delta: f64) {
 		camera.aspect_ratio = window.aspect_ratio()
@@ -103,7 +102,6 @@ exercise_01_01_depth :: types.Tableau {
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.quad_clear_from_gpu()
 		gl.DeleteTextures(1, &marble_texture.id)
 		gl.DeleteTextures(1, &metal_texture.id)
 	},

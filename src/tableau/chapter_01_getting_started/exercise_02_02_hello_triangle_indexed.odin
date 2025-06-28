@@ -8,7 +8,6 @@ import gl "vendor:OpenGL"
 exercise_02_02_hello_triangle_indexed :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Orange)
-		primitives.quad_send_to_gpu()
 	},
 	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)
@@ -16,15 +15,11 @@ exercise_02_02_hello_triangle_indexed :: types.Tableau {
 		gl.UseProgram(shaders.shaders[.Orange])
 		primitives.quad_draw()
 	},
-	teardown = proc() {
-		primitives.quad_clear_from_gpu()
-	},
 }
 
 exercise_02_02_hello_triangle_indexed_wireframe := types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Orange)
-		primitives.quad_send_to_gpu()
 	},
 	draw = proc() {
 		gl.PolygonMode(gl.FRONT_AND_BACK, gl.LINE)
@@ -34,8 +29,5 @@ exercise_02_02_hello_triangle_indexed_wireframe := types.Tableau {
 		gl.Clear(gl.COLOR_BUFFER_BIT)
 		gl.UseProgram(shaders.shaders[.Orange])
 		primitives.quad_draw()
-	},
-	teardown = proc() {
-		primitives.quad_clear_from_gpu()
 	},
 }

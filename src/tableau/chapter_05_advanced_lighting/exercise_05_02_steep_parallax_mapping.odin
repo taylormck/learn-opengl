@@ -92,7 +92,6 @@ exercise_05_02_steep_parallax_mapping :: types.Tableau {
 			desired_channels = 4,
 		)
 
-		primitives.quad_send_to_gpu()
 		primitives.cube_send_to_gpu()
 
 		toy_box_mit = types.SubTransformMatrix(linalg.inverse_transpose(toy_box_model))
@@ -169,7 +168,6 @@ exercise_05_02_steep_parallax_mapping :: types.Tableau {
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.quad_clear_from_gpu()
 		gl.DeleteTextures(1, &toy_box_diffuse.id)
 		gl.DeleteTextures(1, &toy_box_normal.id)
 		gl.DeleteTextures(1, &toy_box_disp.id)

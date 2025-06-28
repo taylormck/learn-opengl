@@ -36,7 +36,6 @@ exercise_01_02_depth_testing_view :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Depth)
 		primitives.cube_send_to_gpu()
-		primitives.quad_send_to_gpu()
 	},
 	update = proc(delta: f64) {
 		camera.aspect_ratio = window.aspect_ratio()
@@ -90,6 +89,5 @@ exercise_01_02_depth_testing_view :: types.Tableau {
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.quad_clear_from_gpu()
 	},
 }

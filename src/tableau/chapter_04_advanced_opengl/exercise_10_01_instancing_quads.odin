@@ -27,7 +27,6 @@ OFFSET :: 0.1
 
 exercise_10_01_instancing_quads :: types.Tableau {
 	init = proc() {
-		primitives.quad_send_to_gpu()
 		shaders.init_shaders(.InstancedRect)
 
 		index := 0
@@ -56,6 +55,6 @@ exercise_10_01_instancing_quads :: types.Tableau {
 		primitives.quad_draw_instanced(NUM_INSTANCES, instanced_rect_offset_vbo)
 	},
 	teardown = proc() {
-		primitives.quad_clear_from_gpu()
+		gl.DeleteBuffers(1, &instanced_rect_offset_vbo)
 	},
 }

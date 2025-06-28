@@ -53,7 +53,6 @@ exercise_03_01_blending_discard :: types.Tableau {
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
 		primitives.cube_send_to_gpu()
-		primitives.quad_send_to_gpu()
 	},
 	update = proc(delta: f64) {
 		camera.aspect_ratio = window.aspect_ratio()
@@ -126,7 +125,6 @@ exercise_03_01_blending_discard :: types.Tableau {
 	},
 	teardown = proc() {
 		primitives.cube_clear_from_gpu()
-		primitives.quad_clear_from_gpu()
 		gl.DeleteTextures(1, &marble_texture.id)
 		gl.DeleteTextures(1, &metal_texture.id)
 		gl.DeleteTextures(1, &grass_texture.id)
