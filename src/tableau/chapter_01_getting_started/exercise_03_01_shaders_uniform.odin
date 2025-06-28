@@ -11,6 +11,7 @@ import gl "vendor:OpenGL"
 tableau_time: f64 = 0
 
 exercise_03_01_shaders_uniform :: types.Tableau {
+	title = "Triangle with uniform color",
 	init = proc() {
 		shaders.init_shaders(.UniformColor)
 		primitives.triangle_send_to_gpu()

@@ -11,6 +11,7 @@ import gl "vendor:OpenGL"
 container_texture: render.Texture
 
 exercise_04_01_textures :: types.Tableau {
+	title = "Textured quad",
 	init = proc() {
 		shaders.init_shaders(.Texture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
@@ -35,6 +36,7 @@ exercise_04_01_textures :: types.Tableau {
 }
 
 exercise_04_01_textures_color :: types.Tableau {
+	title = "Textured quad with color",
 	init = proc() {
 		shaders.init_shaders(.ColorTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)

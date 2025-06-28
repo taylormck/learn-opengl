@@ -6,6 +6,7 @@ import "../../types"
 import gl "vendor:OpenGL"
 
 exercise_03_03_shaders_exercise_01 :: types.Tableau {
+	title = "Upside-down triangle",
 	init = proc() {
 		shaders.init_shaders(.UpsideDown)
 		primitives.triangle_send_to_gpu()

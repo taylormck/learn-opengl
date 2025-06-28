@@ -67,6 +67,7 @@ custom_color_fns := [?]ColorFn{proc(a: f64) -> [3]u8 {
 	}}
 
 noise_01 :: types.Tableau {
+	title = "Noise textures",
 	init = proc() {
 		shaders.init_shaders(.Texture3D)
 		primitives.cube_send_to_gpu()

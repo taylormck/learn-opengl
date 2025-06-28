@@ -12,6 +12,8 @@ VoidProc :: #type proc()
 DeltaProc :: #type proc(delta: f64)
 
 Tableau :: struct {
+	title:                     string,
+	help_text:                 string,
 	init:                      VoidProc,
 	update:                    DeltaProc,
 	draw:                      VoidProc,

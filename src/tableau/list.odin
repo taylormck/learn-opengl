@@ -14,10 +14,9 @@ tableaus :: [?]types.Tableau {
 	chapter_01_getting_started.exercise_01_02_hello_window_clear,
 	chapter_01_getting_started.exercise_02_01_hello_triangle,
 	chapter_01_getting_started.exercise_02_02_hello_triangle_indexed,
+	chapter_01_getting_started.exercise_02_02_hello_triangle_indexed_wireframe,
 	chapter_01_getting_started.exercise_02_03_hello_triangle_exercise_01,
-
-	// This one looks exactly the same as the previous exercise
-	// chapter_01_getting_started.exercise_02_04_hello_triangle_exercise_02,
+	chapter_01_getting_started.exercise_02_04_hello_triangle_exercise_02,
 	chapter_01_getting_started.exercise_02_05_hello_triangle_exercise_03,
 	chapter_01_getting_started.exercise_03_01_shaders_uniform,
 	chapter_01_getting_started.exercise_03_02_shaders_interpolation,

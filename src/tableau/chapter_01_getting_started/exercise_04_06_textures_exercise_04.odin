@@ -8,16 +8,22 @@ import "../../types"
 import gl "vendor:OpenGL"
 
 @(private = "file")
-ratio: f32 = 0.5
+INITIAL_RATIO :: 0.5
+
+@(private = "file")
+ratio: f32
 
 @(private = "file")
 container_texture, awesome_texture: render.Texture
 
 exercise_04_06_textures_exercise_04 :: types.Tableau {
+	title = "Multi-textured quad with adjustable ratio",
+	help_text = "Press W or S to adjust ratio",
 	init = proc() {
 		shaders.init_shaders(.Exercise_04_06)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		awesome_texture = render.prepare_texture("textures/awesomeface.png", .Diffuse, true)
+		ratio = INITIAL_RATIO
 	},
 	update = proc(delta: f64) {
 		ratio_scale :: 0.4

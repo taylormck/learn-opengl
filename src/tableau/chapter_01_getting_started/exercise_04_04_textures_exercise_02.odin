@@ -10,6 +10,7 @@ import gl "vendor:OpenGL"
 container_texture, awesome_texture: render.Texture
 
 exercise_04_04_textures_exercise_02 :: types.Tableau {
+	title = "Quad with repeated texture",
 	init = proc() {
 		shaders.init_shaders(.Exercise_04_04)
 

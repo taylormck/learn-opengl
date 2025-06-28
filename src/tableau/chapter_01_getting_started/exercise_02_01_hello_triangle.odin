@@ -6,6 +6,7 @@ import "../../types"
 import gl "vendor:OpenGL"
 
 exercise_02_01_hello_triangle :: types.Tableau {
+	title = "Hello triangle",
 	init = proc() {
 		shaders.init_shaders(.Orange)
 		primitives.triangle_send_to_gpu()

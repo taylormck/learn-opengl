@@ -103,6 +103,7 @@ turbulence_texture: u32
 app_time: f64
 
 water_01 :: types.Tableau {
+	title = "Water effects",
 	init = proc() {
 		shaders.init_shaders(.Checkerboard2DBlinnPhong, .Skybox, .Water)
 		primitives.plane_send_to_gpu()

@@ -19,6 +19,7 @@ vertices := [6]types.Vec3 {
 }
 
 exercise_02_03_hello_triangle_exercise_01 :: types.Tableau {
+	title = "Multiple triangles with shared VAO",
 	init = proc() {
 		shaders.init_shaders(.Orange)
 

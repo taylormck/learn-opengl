@@ -10,6 +10,7 @@ import gl "vendor:OpenGL"
 container_texture, awesome_texture: render.Texture
 
 exercise_04_03_textures_exercise_01 :: types.Tableau {
+	title = "Flipped quad",
 	init = proc() {
 		shaders.init_shaders(.Exercise_04_03)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)

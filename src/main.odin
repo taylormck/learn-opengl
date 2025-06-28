@@ -7,6 +7,7 @@ import "input"
 import "primitives"
 import "shaders"
 import "tableau"
+import "types"
 import "utils"
 import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
@@ -20,11 +21,17 @@ GL_MINOR_VERSION :: 3
 NUM_SAMPLES :: 4
 
 FONT_PATH :: "../fonts/Crimson_Text/CrimsonText-Regular.ttf"
-FONT_SCALE :: 125
+TITLE_FONT_SCALE :: 65
+HELP_FONT_SCALE :: 45
+title_font: font.Font
+help_font: font.Font
+TITLE_START_POSITION :: types.Vec2{-0.95, 0.85}
+TITLE_COLOR :: types.Vec3{1, 1, 1}
+HELP_START_POSITION :: types.Vec2{-0.95, -0.85}
+HELP_COLOR :: types.Vec3{1, 1, 1}
 
 tableau_list := tableau.tableaus
 current_tableau_index := len(tableau_list) - 1
-main_font: font.Font
 
 main :: proc() {
 	when ODIN_DEBUG {
@@ -87,8 +94,9 @@ main :: proc() {
 
 	gl.Enable(gl.MULTISAMPLE)
 
-	if init := tableau_list[current_tableau_index].init; init != nil {
-		log.info("Initializing tableau")
+	current_tableau := &tableau_list[current_tableau_index]
+	if init := current_tableau.init; init != nil {
+		log.infof("Initializing tableau: {}", current_tableau.title)
 		init()
 	}
 
@@ -97,13 +105,15 @@ main :: proc() {
 	defer primitives.quad_clear_from_gpu()
 
 	font_data := #load(FONT_PATH)
-	main_font = font.font_init("CrimsonText", font_data, FONT_SCALE)
-	defer font.font_deinit(&main_font)
+	title_font = font.font_init("CrimsonText", font_data, TITLE_FONT_SCALE)
+	defer font.font_deinit(&title_font)
+
+	help_font = font.font_init("CrimsonText", font_data, HELP_FONT_SCALE)
+	defer font.font_deinit(&help_font)
 
 	utils.print_gl_errors()
 
 	defer shaders.delete_shaders()
-
 
 	prev_time := glfw.GetTime()
 
@@ -116,13 +126,21 @@ main :: proc() {
 		process_input(window_handle, delta)
 		update_tableau()
 
-		current_tableau := &tableau_list[current_tableau_index]
+		current_tableau = &tableau_list[current_tableau_index]
 		if current_tableau.update != nil do current_tableau.update(delta)
 
 		clear_input()
 
 		current_tableau.draw()
 		utils.print_gl_errors()
+
+		if title := current_tableau.title; len(title) > 0 {
+			font.font_write(&title_font, title, TITLE_START_POSITION, TITLE_COLOR)
+		}
+
+		if help_text := current_tableau.help_text; len(help_text) > 0 {
+			font.font_write(&help_font, help_text, HELP_START_POSITION, HELP_COLOR)
+		}
 
 		glfw.SwapBuffers(window_handle)
 		prev_time = new_time
@@ -146,7 +164,7 @@ framebuffer_size_callback :: proc "cdecl" (window_handle: glfw.WindowHandle, wid
 	if callback := tableau_list[current_tableau_index].framebuffer_size_callback; callback != nil do callback()
 }
 
-update_tableau :: proc() {
+update_tableau :: proc() -> (current_tableau: ^types.Tableau) {
 	tableau_offset := 0
 	if .LeftArrow in input.input_state.pressed_keys do tableau_offset -= 1
 	if .RightArrow in input.input_state.pressed_keys do tableau_offset += 1
@@ -160,11 +178,17 @@ update_tableau :: proc() {
 		current_tableau_index += len(tableau_list) + tableau_offset
 		current_tableau_index %= len(tableau_list)
 
-		if init := tableau_list[current_tableau_index].init; init != nil {
-			log.info("Initializing tableau")
+		current_tableau = &tableau_list[current_tableau_index]
+
+		if init := current_tableau.init; init != nil {
+			log.infof("Initializing tableau: {}", current_tableau.title)
 			init()
 		}
 
 		utils.print_gl_errors()
+	} else {
+		current_tableau = &tableau_list[current_tableau_index]
 	}
+
+	return current_tableau
 }

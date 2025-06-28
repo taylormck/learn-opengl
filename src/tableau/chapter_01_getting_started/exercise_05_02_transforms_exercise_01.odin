@@ -14,10 +14,12 @@ time: f64 = 0
 container_texture, awesome_texture: render.Texture
 
 exercise_05_02_transforms_exercise_01 :: types.Tableau {
+	title = "Revolving quad",
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)
 		awesome_texture = render.prepare_texture("textures/awesomeface.png", .Diffuse, true)
+		time = 0
 	},
 	update = proc(delta: f64) {
 		time += delta

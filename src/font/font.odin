@@ -33,6 +33,7 @@ font_init :: proc(name: string, font_data: []u8, font_scale: f32) -> (result: Fo
 	font: tt.fontinfo
 	tt.InitFont(info = &font, data = raw_data(font_data), offset = 0)
 
+	result.name = name
 	result.scale = font_scale
 	char_scale := tt.ScaleForPixelHeight(&font, result.scale)
 
@@ -100,7 +101,7 @@ font_init :: proc(name: string, font_data: []u8, font_scale: f32) -> (result: Fo
 }
 
 font_deinit :: proc(font: ^Font) {
-	log.infof("Deleteing the {} font.", font.name)
+	log.infof("Deleteing the {}:{} font.", font.name, font.scale)
 
 	for _, &texture in font.glyph_textures {
 		gl.DeleteTextures(1, &texture.texture_id)

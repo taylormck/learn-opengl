@@ -9,6 +9,7 @@ import "core:math"
 import gl "vendor:OpenGL"
 
 exercise_03_05_shaders_exercise_03 :: types.Tableau {
+	title = "Triangle with position as color",
 	init = proc() {
 		shaders.init_shaders(.PositionAsColor)
 		primitives.triangle_send_to_gpu()

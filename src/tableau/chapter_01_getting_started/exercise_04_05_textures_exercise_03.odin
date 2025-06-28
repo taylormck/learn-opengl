@@ -11,6 +11,7 @@ import gl "vendor:OpenGL"
 container_texture, awesome_texture: render.Texture
 
 exercise_04_05_textures_exercise_03 :: types.Tableau {
+	title = "Quad with pixelated texture",
 	init = proc() {
 		shaders.init_shaders(.DoubleTexture)
 

@@ -6,6 +6,7 @@ import "../../types"
 import gl "vendor:OpenGL"
 
 exercise_02_02_hello_triangle_indexed :: types.Tableau {
+	title = "Quad",
 	init = proc() {
 		shaders.init_shaders(.Orange)
 	},
@@ -17,7 +18,8 @@ exercise_02_02_hello_triangle_indexed :: types.Tableau {
 	},
 }
 
-exercise_02_02_hello_triangle_indexed_wireframe := types.Tableau {
+exercise_02_02_hello_triangle_indexed_wireframe :: types.Tableau {
+	title = "Quad wireframe",
 	init = proc() {
 		shaders.init_shaders(.Orange)
 	},

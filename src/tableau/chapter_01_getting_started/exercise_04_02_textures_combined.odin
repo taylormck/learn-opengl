@@ -10,6 +10,7 @@ import gl "vendor:OpenGL"
 container_texture, awesome_texture: render.Texture
 
 exercise_04_02_textures_combined :: types.Tableau {
+	title = "Multi-textured quad",
 	init = proc() {
 		shaders.init_shaders(.DoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)

@@ -9,17 +9,22 @@ import "core:math/linalg"
 import gl "vendor:OpenGL"
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = {0, 0, 3},
-	direction    = {0, 0, -1},
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = {0, 0, 3},
+		direction = {0, 0, -1},
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
+
+@(private = "file")
+camera: render.Camera
 
 @(private = "file")
 time: f64 = 0

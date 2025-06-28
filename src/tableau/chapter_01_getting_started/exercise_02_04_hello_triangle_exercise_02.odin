@@ -23,6 +23,7 @@ vertices := [2][3]types.Vec3 {
 }
 
 exercise_02_04_hello_triangle_exercise_02 :: types.Tableau {
+	title = "Multiple triangles with separate VAOs",
 	init = proc() {
 		shaders.init_shaders(.Orange)
 

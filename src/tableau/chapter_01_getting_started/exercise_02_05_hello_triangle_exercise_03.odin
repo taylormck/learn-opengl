@@ -23,6 +23,7 @@ vertices := [2][3]types.Vec3 {
 }
 
 exercise_02_05_hello_triangle_exercise_03 :: types.Tableau {
+	title = "Triangles with different colors",
 	init = proc() {
 		shaders.init_shaders(.Orange, .Yellow)
 
