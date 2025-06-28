@@ -5,6 +5,7 @@ import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
+import "../../utils"
 import "../../window"
 import "core:math"
 import "core:math/linalg"
@@ -72,15 +73,7 @@ exercise_07_03_camera_mouse_zoom :: types.Tableau {
 	},
 	update = proc(delta: f64) {
 		time += delta
-		camera.aspect_ratio = window.aspect_ratio()
-
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 	},
 	draw = proc() {
 		gl.ClearColor(0.2, 0.3, 0.3, 1)

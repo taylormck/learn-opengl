@@ -11,23 +11,31 @@ import "core:math/linalg"
 import gl "vendor:OpenGL"
 
 @(private = "file")
-initial_camera_position := types.Vec3{1, 1.5, 4}
+INITIAL_CAMERA_POSITION :: types.Vec3{1, 1.5, 4}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = linalg.normalize(-initial_camera_position),
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = linalg.normalize(-INITIAL_CAMERA_POSITION),
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
 
 @(private = "file")
-light_position := types.Vec3{1.2, 1, 2}
+camera: render.Camera
+
+@(private = "file")
+INITIAL_LIGHT_POSITION := types.Vec3{1.2, 1, 2}
+
+@(private = "file")
+light_position: types.Vec3
 
 @(private = "file")
 light_color := types.Vec3{1, 1, 1}
@@ -39,19 +47,15 @@ obj_color := types.Vec3{1, 0.5, 0.31}
 cube_position := types.Vec3{}
 
 exercise_02_01_basic_lighting_diffuse :: types.Tableau {
+	title = "Diffuse lighting",
 	init = proc() {
 		shaders.init_shaders(.Light, .Diffuse)
 		primitives.cube_send_to_gpu()
+		camera = get_initial_camera()
+		light_position = INITIAL_LIGHT_POSITION
 	},
 	update = proc(delta: f64) {
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 	},
 	draw = proc() {
 		gl.ClearColor(0, 0, 0, 1)

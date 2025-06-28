@@ -1,6 +1,8 @@
 package render
 
+import "../input"
 import "../types"
+import "../window"
 import "core:math"
 import "core:math/linalg"
 
@@ -58,4 +60,16 @@ camera_move :: proc(camera: ^Camera, direction: types.Vec3, delta: f32) {
 	}
 
 	camera.position += movement * camera.speed * delta
+}
+
+camera_common_update :: proc(camera: ^Camera, delta: f64) {
+	camera.aspect_ratio = window.aspect_ratio()
+
+	camera_move(camera, input.input_state.movement, f32(delta))
+	camera_update_direction(camera, input.input_state.mouse.offset)
+	camera.fov = clamp(
+		camera.fov - input.input_state.mouse.scroll_offset,
+		linalg.to_radians(f32(1)),
+		linalg.to_radians(f32(45)),
+	)
 }

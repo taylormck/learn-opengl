@@ -14,26 +14,34 @@ import gl "vendor:OpenGL"
 time: f64 = 0
 
 @(private = "file")
-initial_camera_position := types.Vec3{-2, -1, 3}
+INITIAL_CAMERA_POSITION :: types.Vec3{-2, -1, 3}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0.45, 0.45, 0.8}
+INITIAL_CAMERA_TARGET :: types.Vec3{0.45, 0.45, 0.8}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = linalg.normalize(initial_camera_target - initial_camera_position),
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = linalg.normalize(INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION),
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
 
 @(private = "file")
-light_position := types.Vec3{1.2, 1, 2}
+camera: render.Camera
+
+@(private = "file")
+INITIAL_LIGHT_POSITION :: types.Vec3{1.2, 1, 2}
+
+@(private = "file")
+light_position: types.Vec3
 
 @(private = "file")
 coral_color :: types.Vec3{1, 0.5, 0.31}
@@ -50,9 +58,12 @@ coral_material := render.MaterialCalculated {
 cube_position := types.Vec3{}
 
 exercise_03_02_materials_exercise_01 :: types.Tableau {
+	title = "Material with matching light",
 	init = proc() {
 		shaders.init_shaders(.Light, .Phong)
 		primitives.cube_send_to_gpu()
+		light_position = INITIAL_LIGHT_POSITION
+		camera = get_initial_camera()
 	},
 	update = proc(delta: f64) {
 		time += delta
