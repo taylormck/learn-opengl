@@ -11,47 +11,46 @@ import "core:math/linalg"
 import "core:slice"
 import gl "vendor:OpenGL"
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
 @(private = "file")
-initial_camera_position := types.Vec3{2, 1.5, 3}
+INITIAL_CAMERA_POSITION :: types.Vec3{2, 1.5, 3}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, 0, 0}
+INITIAL_CAMERA_TARGET :: types.Vec3{0, 0, 0}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = initial_camera_target - initial_camera_position,
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION,
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
+
+@(private = "file")
+camera: render.Camera
 
 @(private = "file")
 marble_texture: render.Texture
 
 exercise_04_01_face_culling :: types.Tableau {
+	title = "Face culling",
 	init = proc() {
 		shaders.init_shaders(.TransformTexture)
 		marble_texture = render.prepare_texture("textures/marble.png", .Diffuse, true)
 		primitives.cube_send_to_gpu()
+		camera = get_initial_camera()
 	},
 	update = proc(delta: f64) {
-		camera.aspect_ratio = window.aspect_ratio()
-
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 	},
 	draw = proc() {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
