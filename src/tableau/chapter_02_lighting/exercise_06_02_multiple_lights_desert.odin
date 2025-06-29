@@ -10,35 +10,37 @@ import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0.75, 0.52, 0.3}
 
 @(private = "file")
-container_texture: render.Texture
+container_texture, container_specular_texture: render.Texture
 
 @(private = "file")
-container_specular_texture: render.Texture
+INITIAL_CAMERA_POSITION :: types.Vec3{2.5, 0, 5}
 
 @(private = "file")
-initial_camera_position := types.Vec3{2.5, 0, 5}
+INITIAL_CAMERA_TARGET :: types.Vec3{0, 0, -2.25}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, 0, -2.25}
-
-@(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = linalg.normalize(initial_camera_target - initial_camera_position),
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = linalg.normalize(INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION),
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
 
 @(private = "file")
+camera: render.Camera
+
+@(private = "file", rodata)
 point_lights := [?]render.PointLight {
 	{
 		position = {0.4, 0.2, 2},
@@ -82,7 +84,7 @@ point_lights := [?]render.PointLight {
 	},
 }
 
-@(private = "file")
+@(private = "file", rodata)
 directional_light := render.DirectionalLight {
 	direction = {-0.2, -1, -0.3},
 	ambient   = {0.3, 0.24, 0.14},
@@ -102,13 +104,13 @@ spot_light := render.SpotLight {
 	quadratic    = 0.032,
 }
 
-@(private = "file")
+@(private = "file", rodata)
 obj_material := render.MaterialSampled {
 	shininess = 32,
 }
 
 @(private = "file")
-models := [?]types.TransformMatrix {
+INITIAL_MODELS := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({0, 0, 0}),
 	linalg.matrix4_translate_f32({2, 5, -15}),
 	linalg.matrix4_translate_f32({-1.5, -2.2, -2.5}),
@@ -121,27 +123,27 @@ models := [?]types.TransformMatrix {
 	linalg.matrix4_translate_f32({-1.3, 1, -1.5}),
 }
 
+@(private = "file")
+models: [len(INITIAL_MODELS)]types.TransformMatrix
+
 exercise_06_02_multiple_lights_desert :: types.Tableau {
+	title = "Desert",
 	init = proc() {
 		shaders.init_shaders(.Light, .PhongMultiLight)
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
 		container_specular_texture = render.prepare_texture("textures/container2_specular.png", .Specular, true)
 		primitives.cube_send_to_gpu()
 
+		models = INITIAL_MODELS
 		for &model, i in models {
 			angle := f32(20 * i)
 			model *= linalg.matrix4_rotate_f32(angle, {1, 0.3, 0.5})
 		}
+
+		camera = get_initial_camera()
 	},
 	update = proc(delta: f64) {
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 	},
 	draw = proc() {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
