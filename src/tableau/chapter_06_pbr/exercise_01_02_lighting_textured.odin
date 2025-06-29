@@ -28,35 +28,40 @@ transforms: [NUM_ROWS * NUM_COLUMNS]types.TransformMatrix
 @(private = "file")
 mits: [NUM_ROWS * NUM_COLUMNS]types.SubTransformMatrix
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
 @(private = "file")
-initial_camera_position := types.Vec3{-1, -1, 22}
+INITIAL_CAMERA_POSITION :: types.Vec3{-1, -1, 22}
 
 @(private = "file")
-initial_camera_target := types.Vec3{-1, -1, 0}
+INITIAL_CAMERA_TARGET :: types.Vec3{-1, -1, 0}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = linalg.normalize(initial_camera_target - initial_camera_position),
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = linalg.normalize(INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION),
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
+
+@(private = "file")
+camera: render.Camera
 
 @(private = "file")
 NUM_POINT_LIGHTS :: 4
 
-@(private = "file")
+@(private = "file", rodata)
 light_positions := [NUM_POINT_LIGHTS]types.Vec3{{-10, 10, 10}, {10, 10, 10}, {-10, -10, 10}, {10, -10, 10}}
 
-@(private = "file")
+@(private = "file", rodata)
 light_colors := [NUM_POINT_LIGHTS]types.Vec3{{700, 300, 300}, {300, 700, 300}, {300, 300, 700}, {700, 300, 700}}
 
 @(private = "file")
@@ -66,10 +71,13 @@ pbr_material :: "rusted_iron"
 albedo_map, normal_map, metallic_map, roughness_map, ao_map: render.Texture
 
 exercise_01_02_lighting_textured :: types.Tableau {
+	title = "PBR textured",
 	init = proc() {
 		shaders.init_shaders(.PBRTexture, .Light)
 		primitives.sphere_init()
 		primitives.sphere_send_to_gpu()
+
+		camera = get_initial_camera()
 
 		for row in 0 ..< NUM_ROWS {
 			for column in 0 ..< NUM_COLUMNS {
@@ -119,14 +127,7 @@ exercise_01_02_lighting_textured :: types.Tableau {
 		shaders.set_int(pbr_shader, "ao_map", 4)
 	},
 	update = proc(delta: f64) {
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 	},
 	draw = proc() {
 		pbr_shader := shaders.shaders[.PBRTexture]
