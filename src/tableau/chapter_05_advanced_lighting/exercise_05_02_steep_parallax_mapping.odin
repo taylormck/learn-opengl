@@ -18,23 +18,28 @@ time: f64
 toy_box_diffuse, toy_box_normal, toy_box_disp: render.Texture
 
 @(private = "file")
-initial_camera_position := types.Vec3{-2, 1, 3}
+INITIAL_CAMERA_POSITION :: types.Vec3{-2, 1, 3}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, 0, 0}
+INITIAL_CAMERA_TARGET :: types.Vec3{0, 0, 0}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = linalg.normalize(initial_camera_target - initial_camera_position),
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = linalg.normalize(INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION),
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
+
+@(private = "file")
+camera: render.Camera
 
 @(private = "file")
 light := render.PointLight {
@@ -58,7 +63,7 @@ obj_specular := types.Vec3{0.5, 0.5, 0.5}
 
 @(private = "file")
 toy_box_model :=
-	linalg.matrix4_translate_f32(initial_camera_target) *
+	linalg.matrix4_translate_f32(INITIAL_CAMERA_TARGET) *
 	linalg.matrix4_rotate_f32(linalg.to_radians(f32(-45)), types.Vec3{1, 0, 0}) *
 	linalg.matrix4_scale_f32(2)
 
@@ -69,6 +74,7 @@ toy_box_mit: types.SubTransformMatrix
 height_scale: f32 = 0.1
 
 exercise_05_02_steep_parallax_mapping :: types.Tableau {
+	title = "Steep parallax mapping",
 	init = proc() {
 		shaders.init_shaders(.BlinnDisplacementSteep, .Light)
 		toy_box_diffuse = render.prepare_texture(
@@ -94,19 +100,16 @@ exercise_05_02_steep_parallax_mapping :: types.Tableau {
 
 		primitives.cube_send_to_gpu()
 
+		camera = get_initial_camera()
+		time = 0
+
 		toy_box_mit = types.SubTransformMatrix(linalg.inverse_transpose(toy_box_model))
 	},
 	update = proc(delta: f64) {
 		time += delta
 
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
+
 		light.position.x = math.sin(f32(time))
 		light.position.y = math.cos(f32(time)) * 0.5 + 0.5
 		light.position.z = -light.position.y + 1
