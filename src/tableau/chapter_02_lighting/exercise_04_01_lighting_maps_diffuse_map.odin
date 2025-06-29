@@ -37,26 +37,20 @@ get_initial_camera :: proc() -> render.Camera {
 @(private = "file")
 camera: render.Camera
 
-@(private = "file")
-INITIAL_LIGHT_POSITION :: types.Vec3{1.2, 1, 2}
+@(private = "file", rodata)
+light_position := types.Vec3{1.2, 1, 2}
 
-@(private = "file")
-light_position: types.Vec3
+@(private = "file", rodata)
+light_color := types.Vec3{1, 1, 1}
 
-@(private = "file")
-INITIAL_LIGHT_COLOR :: types.Vec3{1, 1, 1}
-
-@(private = "file")
-light_color: types.Vec3
-
-@(private = "file")
+@(private = "file", rodata)
 obj_material := render.MaterialCalculated {
 	specular  = types.Vec3{1, 1, 1},
 	shininess = 32,
 }
 
-@(private = "file")
-cube_position := types.Vec3{}
+@(private = "file", rodata)
+cube_position := types.Vec3{0, 0, 0}
 
 exercise_04_01_lighting_maps_diffuse_map :: types.Tableau {
 	title = "Diffuse map",
@@ -65,8 +59,6 @@ exercise_04_01_lighting_maps_diffuse_map :: types.Tableau {
 		container_texture = render.prepare_texture("textures/container2.png", .Diffuse, true)
 		primitives.cube_send_to_gpu()
 		camera = get_initial_camera()
-		light_position = INITIAL_LIGHT_POSITION
-		light_color = INITIAL_LIGHT_COLOR
 	},
 	update = proc(delta: f64) {
 		render.camera_common_update(&camera, delta)

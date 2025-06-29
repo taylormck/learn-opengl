@@ -37,20 +37,17 @@ get_initial_camera :: proc() -> render.Camera {
 @(private = "file")
 camera: render.Camera
 
-@(private = "file")
-INITIAL_LIGHT_POSITION :: types.Vec3{1.2, 1, 2}
+@(private = "file", rodata)
+light_position := types.Vec3{1.2, 1, 2}
 
 @(private = "file")
-light_position: types.Vec3
-
-@(private = "file")
-coral_color :: types.Vec3{1, 0.5, 0.31}
+CORAL :: types.Vec3{1, 0.5, 0.31}
 
 @(private = "file")
 coral_material := render.MaterialCalculated {
-	ambient   = coral_color * 0.2,
-	diffuse   = coral_color,
-	specular  = coral_color,
+	ambient   = CORAL * 0.2,
+	diffuse   = CORAL,
+	specular  = CORAL,
 	shininess = 32,
 }
 
@@ -62,21 +59,11 @@ exercise_03_02_materials_exercise_01 :: types.Tableau {
 	init = proc() {
 		shaders.init_shaders(.Light, .Phong)
 		primitives.cube_send_to_gpu()
-		light_position = INITIAL_LIGHT_POSITION
 		camera = get_initial_camera()
 	},
 	update = proc(delta: f64) {
 		time += delta
-
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
-
+		render.camera_common_update(&camera, delta)
 	},
 	draw = proc() {
 		gl.ClearColor(0, 0, 0, 1)

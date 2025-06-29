@@ -31,25 +31,25 @@ get_initial_camera := proc() -> render.Camera {
 @(private = "file")
 camera: render.Camera
 
-@(private = "file")
+@(private = "file", rodata)
 light_position := types.Vec3{1.2, 1, 2}
 
-@(private = "file")
+@(private = "file", rodata)
 light_color := types.Vec3{1, 1, 1}
 
 @(private = "file")
-coral_color :: types.Vec3{1, 0.5, 0.31}
+CORAL :: types.Vec3{1, 0.5, 0.31}
 
 @(private = "file")
 coral_material := render.MaterialCalculated {
-	ambient   = coral_color * 0.2,
-	diffuse   = coral_color,
-	specular  = coral_color,
+	ambient   = CORAL * 0.2,
+	diffuse   = CORAL,
+	specular  = CORAL,
 	shininess = 32,
 }
 
 @(private = "file")
-cube_position := types.Vec3{}
+cube_position := types.Vec3{0, 0, 0}
 
 exercise_02_02_basic_lighting_specular :: types.Tableau {
 	title = "Specular lighting",

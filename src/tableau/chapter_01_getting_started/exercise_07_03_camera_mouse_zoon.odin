@@ -55,7 +55,7 @@ models: [len(INITIAL_MODELS)]types.TransformMatrix
 
 exercise_07_03_camera_mouse_zoom :: types.Tableau {
 	title = "Full camera control",
-	help_text = "Control the camera with the WASD keys and mouse. Zoom in with the scroll wheel.",
+	help_text = "Control the camera with the WASD keys and mouse. Zoom in and out with the scroll wheel.",
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)

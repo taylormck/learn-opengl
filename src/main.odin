@@ -136,7 +136,7 @@ main :: proc() {
 			tableau_changed_prev_frame = tableau_changed
 		}
 
-		if current_tableau.update != nil do current_tableau.update(delta)
+		if update := current_tableau.update; update != nil do update(delta)
 
 		clear_input()
 
@@ -153,6 +153,7 @@ main :: proc() {
 
 		glfw.SwapBuffers(window_handle)
 		prev_time = new_time
+		free_all(context.temp_allocator)
 	}
 
 	log.info("Exiting main loop")

@@ -54,7 +54,7 @@ models: [len(INITIAL_MODELS)]types.TransformMatrix
 
 exercise_07_04_camera_exercise_01 :: types.Tableau {
 	title = "FPS camera",
-	help_text = "Control the camera with the WASD keys and mouse. Zoom in with the scroll wheel.",
+	help_text = "Control the camera with the WASD keys and mouse. Zoom in and out with the scroll wheel.",
 	init = proc() {
 		shaders.init_shaders(.TransformDoubleTexture)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)

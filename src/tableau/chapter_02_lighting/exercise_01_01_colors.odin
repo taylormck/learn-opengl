@@ -31,17 +31,17 @@ get_initial_camera := proc() -> render.Camera {
 @(private = "file")
 camera: render.Camera
 
-@(private = "file")
+@(private = "file", rodata)
 light_position := types.Vec3{1.2, 1, 2}
 
-@(private = "file")
+@(private = "file", rodata)
 light_color := types.Vec3{1, 1, 1}
 
-@(private = "file")
+@(private = "file", rodata)
 obj_color := types.Vec3{1, 0.5, 0.31}
 
-@(private = "file")
-cube_position := types.Vec3{}
+@(private = "file", rodata)
+cube_position := types.Vec3{0, 0, 0}
 
 exercise_01_01_colors :: types.Tableau {
 	title = "Lighting colors",
