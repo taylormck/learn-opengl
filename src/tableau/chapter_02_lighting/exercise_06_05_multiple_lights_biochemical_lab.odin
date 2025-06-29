@@ -23,7 +23,7 @@ INITIAL_CAMERA_POSITION :: types.Vec3{2.5, 0, 5}
 INITIAL_CAMERA_TARGET :: types.Vec3{0, 0, -2.25}
 
 @(private = "file")
-get_initial_camera := proc() -> render.Camera {
+get_initial_camera :: proc() -> render.Camera {
 	return {
 		type = .Flying,
 		position = INITIAL_CAMERA_POSITION,
