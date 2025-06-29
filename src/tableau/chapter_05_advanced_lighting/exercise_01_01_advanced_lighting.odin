@@ -11,32 +11,37 @@ import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0, 0, 0}
 
 @(private = "file")
 wood_texture: render.Texture
 
 @(private = "file")
-initial_camera_position := types.Vec3{0, 0, 3}
+INITIAL_CAMERA_POSITION :: types.Vec3{0, 0, 3}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, -0.5, 0}
+INITIAL_CAMERA_TARGET :: types.Vec3{0, -0.5, 0}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = linalg.normalize(initial_camera_target - initial_camera_position),
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = linalg.normalize(INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION),
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
 
 @(private = "file")
+camera: render.Camera
+
+@(private = "file", rodata)
 light := render.PointLight {
 	position  = {0, 0, 0},
 	ambient   = {0.2, 0.2, 0.2},
@@ -49,37 +54,33 @@ light := render.PointLight {
 }
 
 @(private = "file")
-phong_shininess: f32 = 8
+phong_shininess: f32 : 8
 
 @(private = "file")
-blinn_phong_shininess: f32 = 32
+blinn_phong_shininess: f32 : 32
 
-@(private = "file")
+@(private = "file", rodata)
 plane_material_specular := types.Vec3{0.5, 0.5, 0.5}
 
 @(private = "file")
 use_blinn: bool = true
 
 exercise_01_01_advanced_lighting :: types.Tableau {
+	title = "Blinn-Phong lighting",
+	help_text = "Press [SPACE] to toggle between the Blinn-Phong and Phong lighting models.",
 	init = proc() {
 		shaders.init_shaders(.PhongDiffuseSampled, .BlinnPhongDiffuseSampled)
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
 		primitives.plane_send_to_gpu()
+		camera = get_initial_camera()
 
 		if use_blinn do log.info("Enabling Blinn-Phong lighting.")
 		else do log.info("Disabling Blinn-Phong lighting")
 	},
 	update = proc(delta: f64) {
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 
-		if .B in input.input_state.pressed_keys {
+		if .Space in input.input_state.pressed_keys {
 			use_blinn = !use_blinn
 
 			if use_blinn do log.info("Enabling Blinn-Phong lighting.")

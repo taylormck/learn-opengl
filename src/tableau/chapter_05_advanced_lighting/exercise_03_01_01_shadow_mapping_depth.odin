@@ -11,7 +11,7 @@ import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0, 0, 0}
 
 @(private = "file")
@@ -55,6 +55,7 @@ depth_fbo, depth_fb_texture: u32
 shadow_width, shadow_height: i32 = 1024, 1024
 
 exercise_03_01_01_shadow_mapping_depth :: types.Tableau {
+	title = "Shadow map debug view",
 	init = proc() {
 		shaders.init_shaders(.EmptyDepth, .DepthR)
 		primitives.plane_send_to_gpu()

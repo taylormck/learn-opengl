@@ -11,30 +11,35 @@ import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0, 0, 0}
 
 @(private = "file")
 wood_texture: render.Texture
 
 @(private = "file")
-initial_camera_position := types.Vec3{-3, 2, 4}
+INITIAL_CAMERA_POSITION :: types.Vec3{-3, 2, 4}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, -0.5, 0}
+INITIAL_CAMERA_TARGET :: types.Vec3{0, -0.5, 0}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = linalg.normalize(initial_camera_target - initial_camera_position),
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = linalg.normalize(INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION),
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
+
+@(private = "file")
+camera: render.Camera
 
 @(private = "file")
 light_position := types.Vec3{-2, 4, 1}
@@ -91,6 +96,7 @@ depth_fbo, depth_fb_texture: u32
 shadow_width, shadow_height: i32 = 1024, 1024
 
 exercise_03_01_02_shadow_mapping_base :: types.Tableau {
+	title = "Shadow mapping base",
 	init = proc() {
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
 		shaders.init_shaders(.EmptyDepth, .BlinnPhongDirectionalShadow)
@@ -98,6 +104,8 @@ exercise_03_01_02_shadow_mapping_base :: types.Tableau {
 		primitives.plane_send_to_gpu()
 		primitives.cube_send_to_gpu()
 		primitives.full_screen_send_to_gpu()
+
+		camera = get_initial_camera()
 
 		gl.GenFramebuffers(1, &depth_fbo)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, depth_fbo)
@@ -129,14 +137,7 @@ exercise_03_01_02_shadow_mapping_base :: types.Tableau {
 		gl.BindFramebuffer(gl.FRAMEBUFFER, 0)
 	},
 	update = proc(delta: f64) {
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 	},
 	draw = proc() {
 		depth_shader := shaders.shaders[.EmptyDepth]

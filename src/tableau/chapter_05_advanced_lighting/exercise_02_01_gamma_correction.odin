@@ -11,30 +11,35 @@ import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0, 0, 0}
 
 @(private = "file")
 wood_texture, wood_texture_gamma: render.Texture
 
 @(private = "file")
-initial_camera_position := types.Vec3{3, 3, 7}
+INITIAL_CAMERA_POSITION :: types.Vec3{3, 3, 7}
 
 @(private = "file")
-initial_camera_target := types.Vec3{1, -0.5, 2}
+INITIAL_CAMERA_TARGET :: types.Vec3{1, -0.5, 2}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = linalg.normalize(initial_camera_target - initial_camera_position),
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = linalg.normalize(INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION),
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
+
+@(private = "file")
+camera: render.Camera
 
 @(private = "file")
 WHITE :: types.Vec3{1, 1, 1}
@@ -84,15 +89,17 @@ lights := [?]render.PointLight {
 }
 
 @(private = "file")
-shininess: f32 = 64
+shininess: f32 : 64
 
-@(private = "file")
+@(private = "file", rodata)
 plane_material_specular := types.Vec3{0.5, 0.5, 0.5}
 
 @(private = "file")
 gamma: bool = true
 
 exercise_02_01_gamma_correction :: types.Tableau {
+	title = "Gamma correction",
+	help_text = "Press [SPACE] to toggle gamma correction on and off.",
 	init = proc() {
 		shaders.init_shaders(.BlinnPhongDiffuseSampledMultilights, .TransformTexture)
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, flip_vertically = true)
@@ -104,18 +111,13 @@ exercise_02_01_gamma_correction :: types.Tableau {
 		)
 		primitives.plane_send_to_gpu()
 
+		camera = get_initial_camera()
+
 		if gamma do log.info("Enabling gamma correction.")
 		else do log.info("Disabling gamma correction")
 	},
 	update = proc(delta: f64) {
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 
 		if .Space in input.input_state.pressed_keys {
 			gamma = !gamma
