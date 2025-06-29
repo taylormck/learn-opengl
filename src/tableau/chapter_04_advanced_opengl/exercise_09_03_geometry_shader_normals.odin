@@ -12,48 +12,47 @@ import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
 @(private = "file")
-initial_camera_position := types.Vec3{1, 0, 5}
+INITIAL_CAMERA_POSITION :: types.Vec3{1, 0, 5}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, 0, 0}
+INITIAL_CAMERA_TARGET :: types.Vec3{0, 0, 0}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = initial_camera_target - initial_camera_position,
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION,
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
+
+@(private = "file")
+camera: render.Camera
 
 @(private = "file")
 backpack_model: render.Scene
 
 exercise_09_03_geometry_shader_normals :: types.Tableau {
+	title = "Normals",
 	init = proc() {
 		shaders.init_shaders(.TransformTexture, .Normal)
 		backpack_model =
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 		render.scene_send_to_gpu(&backpack_model)
+		camera = get_initial_camera()
 	},
 	update = proc(delta: f64) {
-		camera.aspect_ratio = window.aspect_ratio()
-
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 	},
 	draw = proc() {
 		mesh_shader := shaders.shaders[.TransformTexture]
@@ -62,6 +61,7 @@ exercise_09_03_geometry_shader_normals :: types.Tableau {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Enable(gl.DEPTH_TEST)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)

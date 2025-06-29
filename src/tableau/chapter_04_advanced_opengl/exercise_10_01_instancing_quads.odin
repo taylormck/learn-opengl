@@ -10,7 +10,7 @@ import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
 @(private = "file")
@@ -26,6 +26,7 @@ instanced_rect_translations: [NUM_INSTANCES]types.Vec2
 OFFSET :: 0.1
 
 exercise_10_01_instancing_quads :: types.Tableau {
+	title = "Instanced quads",
 	init = proc() {
 		shaders.init_shaders(.InstancedRect)
 
@@ -43,7 +44,6 @@ exercise_10_01_instancing_quads :: types.Tableau {
 		gl.BindBuffer(gl.ARRAY_BUFFER, instanced_rect_offset_vbo)
 		gl.BufferData(gl.ARRAY_BUFFER, size_of(instanced_rect_translations), &instanced_rect_translations, gl.STATIC_DRAW)
 	},
-	update = proc(delta: f64) {},
 	draw = proc() {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT)

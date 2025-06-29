@@ -213,6 +213,7 @@ draw_tableau_change_filler :: proc(window_handle: glfw.WindowHandle, current_tab
 
 	gl.ClearColor(0, 0, 0, 1)
 	gl.Clear(gl.COLOR_BUFFER_BIT)
+	gl.Disable(gl.DEPTH_TEST)
 
 	font.font_write(&title_font, title, TITLE_START_POSITION, TITLE_COLOR)
 	font.font_write(&help_font, help_text, HELP_START_POSITION, HELP_COLOR)
