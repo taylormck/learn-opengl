@@ -15,27 +15,32 @@ import "core:math/linalg"
 import "core:math/rand"
 import gl "vendor:OpenGL"
 
-@(private = "file")
+@(private = "file", rodata)
 background_color := types.Vec3{0.1, 0.1, 0.1}
 
 @(private = "file")
-initial_camera_position := types.Vec3{-5, -2, 4}
+INITIAL_CAMERA_POSITION :: types.Vec3{-5, -2, 4}
 
 @(private = "file")
-initial_camera_target := types.Vec3{0, -4, 0}
+INITIAL_CAMERA_TARGET :: types.Vec3{0, -4, 0}
 
 @(private = "file")
-camera := render.Camera {
-	type         = .Flying,
-	position     = initial_camera_position,
-	direction    = linalg.normalize(initial_camera_target - initial_camera_position),
-	up           = {0, 1, 0},
-	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
-	near         = 0.1,
-	far          = 1000,
-	speed        = 5,
+get_initial_camera :: proc() -> render.Camera {
+	return {
+		type = .Flying,
+		position = INITIAL_CAMERA_POSITION,
+		direction = linalg.normalize(INITIAL_CAMERA_TARGET - INITIAL_CAMERA_POSITION),
+		up = {0, 1, 0},
+		fov = linalg.to_radians(f32(45)),
+		aspect_ratio = window.aspect_ratio(),
+		near = 0.1,
+		far = 1000,
+		speed = 5,
+	}
 }
+
+@(private = "file")
+camera: render.Camera
 
 @(private = "file")
 backpack_model: render.Scene
@@ -101,8 +106,12 @@ noise_texture: u32
 ssao_fbo, ssao_color_buffer, ssao_blur_fbo, ssao_blur_texture: u32
 
 exercise_09_01_ssao :: types.Tableau {
+	title = "SSAO",
+	help_text = "Press [SPACE] to toggle debug view. Press [UP]/[DOWN] to select the desired G Buffer.",
 	init = proc() {
 		shaders.init_shaders(.SSAOGeometry, .GBufferDebug, .SSAOLighting, .SSAODepth, .SSAOBlur)
+
+		camera = get_initial_camera()
 
 		primitives.cube_send_to_gpu()
 		primitives.full_screen_send_to_gpu()
@@ -185,14 +194,7 @@ exercise_09_01_ssao :: types.Tableau {
 		gl.BindTexture(gl.TEXTURE_2D, 0)
 	},
 	update = proc(delta: f64) {
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
 
 		if .Space in input.input_state.pressed_keys do draw_debug = !draw_debug
 		if .UpArrow in input.input_state.pressed_keys do debug_channel = (debug_channel + 1) % NUM_G_BUFFERS
