@@ -63,6 +63,5 @@ vec3 calculate_spot_light(SpotLight light) {
 
 void main() {
 	vec3 result = calculate_spot_light(spot_light);
-
 	frag_color = vec4(result, 1.0);
 }
