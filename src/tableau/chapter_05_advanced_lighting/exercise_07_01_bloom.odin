@@ -189,6 +189,11 @@ exercise_07_01_bloom :: types.Tableau {
 		primitives.plane_send_to_gpu()
 		primitives.full_screen_send_to_gpu()
 
+		hdr = true
+		reinhard = true
+		bloom = true
+		exposure = 1
+
 		gl.GenFramebuffers(1, &hdr_fbo)
 		gl.BindFramebuffer(gl.FRAMEBUFFER, hdr_fbo)
 

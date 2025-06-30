@@ -53,7 +53,7 @@ exercise_09_02_geometry_shader_exploding :: types.Tableau {
 			obj.load_scene_from_file_obj("models/backpack", "backpack.obj") or_else panic("Failed to load backpack model.")
 		render.scene_send_to_gpu(&backpack_model)
 		camera = get_initial_camera()
-		time = 0
+		time = 3 * math.PI / 2
 	},
 	update = proc(delta: f64) {
 		time += delta

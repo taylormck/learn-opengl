@@ -138,7 +138,7 @@ debug := false
 
 exercise_03_02_02_point_shadows_soft :: types.Tableau {
 	title = "Soft point shadows",
-	help_text = "Press [SPACE] to show debug map",
+	help_text = "Press [SPACE] to show debug map.",
 	init = proc() {
 		wood_texture = render.prepare_texture("textures/wood.png", .Diffuse, true)
 		shaders.init_shaders(.DepthCube, .BlinnPhongDirectionalShadow4)

@@ -107,7 +107,6 @@ tableaus :: [?]types.Tableau {
 	chapter_06_pbr.exercise_02_01_02_ibl_irradiance,
 	chapter_06_pbr.exercise_02_02_01_ibl_specular,
 	chapter_06_pbr.exercise_02_02_02_ibl_specular_textured,
-	chapter_07_in_practice.exercise_02_text_rendering,
 	bonus.noise_01,
 	bonus.water_01,
 }

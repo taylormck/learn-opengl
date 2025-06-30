@@ -125,6 +125,9 @@ exercise_06_01_hdr :: types.Tableau {
 		)
 
 		camera = get_initial_camera()
+		hdr = true
+		reinhard = false
+		exposure = 1
 
 		primitives.cube_send_to_gpu()
 		primitives.full_screen_send_to_gpu()

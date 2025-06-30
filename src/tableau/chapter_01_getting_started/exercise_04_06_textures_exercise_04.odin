@@ -18,7 +18,7 @@ container_texture, awesome_texture: render.Texture
 
 exercise_04_06_textures_exercise_04 :: types.Tableau {
 	title = "Multi-textured quad with adjustable ratio",
-	help_text = "Press W or S to adjust ratio",
+	help_text = "Press W or S to adjust ratio.",
 	init = proc() {
 		shaders.init_shaders(.Exercise_04_06)
 		container_texture = render.prepare_texture("textures/container.png", .Diffuse, true)

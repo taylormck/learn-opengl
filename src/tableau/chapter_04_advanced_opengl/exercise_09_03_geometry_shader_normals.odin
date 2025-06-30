@@ -74,7 +74,7 @@ exercise_09_03_geometry_shader_normals :: types.Tableau {
 		gl.UseProgram(mesh_shader)
 		shaders.set_mat_4x4(mesh_shader, "transform", raw_data(&transform))
 
-		render.scene_draw(&backpack_model, mesh_shader)
+		gl.ActiveTexture(gl.TEXTURE0)
 
 		// We want to set up some of the textures, but not all of them.
 		// Therefore, we use our own custom draw setup here.
