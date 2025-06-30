@@ -1,11 +1,13 @@
 default:
     @just --list
 
+build_arguments := "-o:speed -out:bin/app -vet -sanitize:address"
+
 run: ensure-bin-exists
-    odin run src -o:speed -out:bin/app -vet
+    odin run src {{build_arguments}} -keep-executable
 
 build: ensure-bin-exists
-    odin build src -o:speed -out:bin/app -vet
+    odin build src {{build_arguments}}
 
 build-debug: ensure-bin-exists
     odin build src -debug -out:bin/debug
