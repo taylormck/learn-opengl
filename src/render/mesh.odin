@@ -4,8 +4,6 @@ import "../shaders"
 import "../types"
 import "../utils"
 import "core:fmt"
-import "core:log"
-import "core:os"
 import gl "vendor:OpenGL"
 
 Mesh :: struct {
@@ -58,6 +56,8 @@ mesh_send_to_gpu :: proc(mesh: ^Mesh) {
 
 	gl.EnableVertexAttribArray(2)
 	gl.VertexAttribPointer(2, 3, gl.FLOAT, gl.FALSE, size_of(MeshVertex), offset_of(MeshVertex, normal))
+
+	utils.print_gl_errors()
 }
 
 mesh_send_transforms_to_gpu :: proc(mesh: ^Mesh, transforms: []types.TransformMatrix) {
@@ -89,6 +89,8 @@ mesh_send_transforms_to_gpu :: proc(mesh: ^Mesh, transforms: []types.TransformMa
 
 		gl.VertexAttribDivisor(index, 1)
 	}
+
+	utils.print_gl_errors()
 }
 
 mesh_set_material :: proc(mesh: ^Mesh, shader_id: u32) {
@@ -181,6 +183,8 @@ mesh_gpu_free :: proc(mesh: ^Mesh) {
 	gl.DeleteBuffers(1, &mesh.ebo)
 
 	if mesh.transform_vbo != 0 do gl.DeleteBuffers(1, &mesh.transform_vbo)
+
+	utils.print_gl_errors()
 }
 
 mesh_free :: proc(mesh: ^Mesh) {

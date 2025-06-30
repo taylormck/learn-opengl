@@ -1,6 +1,5 @@
 package chapter_06_pbr
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
@@ -8,8 +7,6 @@ import "../../types"
 import "../../utils"
 import "../../window"
 import "core:fmt"
-import "core:log"
-import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
@@ -125,6 +122,8 @@ exercise_01_02_lighting_textured :: types.Tableau {
 		shaders.set_int(pbr_shader, "metallic_map", 2)
 		shaders.set_int(pbr_shader, "roughness_map", 3)
 		shaders.set_int(pbr_shader, "ao_map", 4)
+
+		utils.print_gl_errors()
 	},
 	update = proc(delta: f64) {
 		render.camera_common_update(&camera, delta)
@@ -166,8 +165,6 @@ exercise_01_02_lighting_textured :: types.Tableau {
 
 		for row in 0 ..< NUM_ROWS {
 			for column in 0 ..< NUM_COLUMNS {
-				roughness := math.lerp(f32(0.5), f32(1.0), f32(column) / f32(NUM_COLUMNS))
-
 				index := row * NUM_COLUMNS + column
 
 				model := &transforms[index]

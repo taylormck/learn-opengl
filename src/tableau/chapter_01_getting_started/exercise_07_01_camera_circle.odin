@@ -1,6 +1,5 @@
 package chapter_01_getting_started
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"

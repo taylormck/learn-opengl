@@ -4,7 +4,6 @@ import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
-import "../../utils"
 import gl "vendor:OpenGL"
 
 @(private = "file")

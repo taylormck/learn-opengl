@@ -3,9 +3,6 @@ package chapter_01_getting_started
 import "../../primitives"
 import "../../shaders"
 import "../../types"
-import "../../utils"
-import "core:log"
-import "core:math"
 import gl "vendor:OpenGL"
 
 exercise_03_05_shaders_exercise_03 :: types.Tableau {

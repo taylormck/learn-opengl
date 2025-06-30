@@ -1,13 +1,10 @@
 package chapter_04_advanced_opengl
 
-import "../../input"
 import "../../parse/obj"
-import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
-import "core:log"
 import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
@@ -72,7 +69,6 @@ exercise_09_02_geometry_shader_exploding :: types.Tableau {
 		pv := projection * view
 		model := linalg.identity(types.TransformMatrix)
 		transform := pv * model
-		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
 		gl.UseProgram(mesh_shader)
 

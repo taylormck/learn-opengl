@@ -8,7 +8,6 @@ import "../../types"
 import "../../utils"
 import "../../window"
 import "core:fmt"
-import "core:log"
 import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
@@ -252,6 +251,8 @@ exercise_02_01_02_ibl_irradiance :: types.Tableau {
 				primitives.cube_draw()
 			}
 		}
+
+		utils.print_gl_errors()
 	},
 	update = proc(delta: f64) {
 		render.camera_common_update(&camera, delta)
@@ -261,7 +262,6 @@ exercise_02_01_02_ibl_irradiance :: types.Tableau {
 	draw = proc() {
 		pbr_shader := shaders.shaders[.PBRIrradiance]
 		light_shader := shaders.shaders[.Light]
-		cubemap_shader := shaders.shaders[.EquirectangularTexture]
 		skybox_shader := shaders.shaders[.SkyboxHDR]
 
 		projection := render.camera_get_projection(&camera)

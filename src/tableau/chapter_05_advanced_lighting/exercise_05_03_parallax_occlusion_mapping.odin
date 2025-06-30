@@ -1,12 +1,10 @@
 package chapter_05_advanced_lighting
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
-import "core:log"
 import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
@@ -108,14 +106,8 @@ exercise_05_03_parallax_occlusion_mapping :: types.Tableau {
 	update = proc(delta: f64) {
 		time += delta
 
-		render.camera_move(&camera, input.input_state.movement, f32(delta))
-		render.camera_update_direction(&camera, input.input_state.mouse.offset)
-		camera.aspect_ratio = window.aspect_ratio()
-		camera.fov = clamp(
-			camera.fov - input.input_state.mouse.scroll_offset,
-			linalg.to_radians(f32(1)),
-			linalg.to_radians(f32(45)),
-		)
+		render.camera_common_update(&camera, delta)
+
 		light.position.x = math.sin(f32(time))
 		light.position.y = math.cos(f32(time)) * 0.5 + 0.5
 		light.position.z = -light.position.y + 1

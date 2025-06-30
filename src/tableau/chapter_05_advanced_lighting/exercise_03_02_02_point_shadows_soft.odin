@@ -7,8 +7,6 @@ import "../../shaders"
 import "../../types"
 import "../../window"
 import "core:fmt"
-import "core:log"
-import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
@@ -259,7 +257,7 @@ render_scene :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
 	if shader != shaders.shaders[.DepthCube] do shaders.set_int(shader, "reverse_normals", 0)
 
 	// Draw cubes
-	for &model, i in cube_transforms {
+	for &model in cube_transforms {
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 		transform := projection_view^ * model
 

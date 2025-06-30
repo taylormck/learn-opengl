@@ -818,7 +818,7 @@ init_shader :: proc(shader: Shader) {
 }
 
 delete_shaders :: proc() {
-	for key, shader in shaders {
+	for _, shader in shaders {
 		if shader != 0 do gl.DeleteProgram(shader)
 	}
 }

@@ -1,6 +1,5 @@
 package noise
 
-import "core:log"
 import "core:math/linalg"
 import "core:math/rand"
 
@@ -55,7 +54,6 @@ fill_data_array_bytes_smooth :: proc(noise: []f64, data: []u8, zoom: f64 = 1) {
 				y_zoom := f64(y) / zoom
 				z_zoom := f64(z) / zoom
 
-				noise_index := get_noise_index(int(x_zoom), int(y_zoom), int(z_zoom))
 				noise_value := u8(get_smooth_noise(noise, zoom, x_zoom, y_zoom, z_zoom) * 255)
 
 				data_start_index := get_noise_index(x, y, z) * 4

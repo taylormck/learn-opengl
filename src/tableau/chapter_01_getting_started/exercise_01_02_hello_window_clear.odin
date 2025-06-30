@@ -1,7 +1,6 @@
 package chapter_01_getting_started
 
 import "../../types"
-import "core:log"
 import gl "vendor:OpenGL"
 
 exercise_01_02_hello_window_clear :: types.Tableau {

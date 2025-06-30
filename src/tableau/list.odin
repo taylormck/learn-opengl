@@ -8,7 +8,6 @@ import "chapter_03_model_loading"
 import "chapter_04_advanced_opengl"
 import "chapter_05_advanced_lighting"
 import "chapter_06_pbr"
-import "chapter_07_in_practice"
 
 tableaus :: [?]types.Tableau {
 	chapter_01_getting_started.exercise_01_02_hello_window_clear,

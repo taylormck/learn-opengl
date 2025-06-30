@@ -1,8 +1,6 @@
 package chapter_04_advanced_opengl
 
-import "../../input"
 import "../../parse/obj"
-import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
@@ -86,7 +84,6 @@ exercise_10_02_asteroids :: types.Tableau {
 		gl.Enable(gl.DEPTH_TEST)
 
 		planet_shader := shaders.shaders[.Planet]
-		asteroid_shader := shaders.shaders[.Planet]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)

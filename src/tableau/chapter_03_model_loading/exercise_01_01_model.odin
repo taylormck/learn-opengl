@@ -1,6 +1,5 @@
 package chapter_03_model_loading
 
-import "../../input"
 import "../../parse/obj"
 import "../../primitives"
 import "../../render"

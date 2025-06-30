@@ -1,9 +1,7 @@
 package render
 
-import "../types"
 import "core:fmt"
 import "core:log"
-import "core:slice"
 import gl "vendor:OpenGL"
 import stbi "vendor:stb/image"
 

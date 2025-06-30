@@ -1,6 +1,5 @@
 package shaders
 
-import "../types"
 import "core:log"
 import gl "vendor:OpenGL"
 

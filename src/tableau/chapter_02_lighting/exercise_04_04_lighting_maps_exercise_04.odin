@@ -1,12 +1,10 @@
 package chapter_02_lighting
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
-import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 

@@ -1,13 +1,8 @@
 package chapter_04_advanced_opengl
 
-import "../../input"
 import "../../primitives"
-import "../../render"
 import "../../shaders"
 import "../../types"
-import "../../window"
-import "core:math"
-import "core:math/linalg"
 import gl "vendor:OpenGL"
 
 @(private = "file", rodata)

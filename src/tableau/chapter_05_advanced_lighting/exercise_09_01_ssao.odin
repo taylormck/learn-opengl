@@ -9,7 +9,6 @@ import "../../types"
 import "../../utils"
 import "../../window"
 import "core:fmt"
-import "core:log"
 import "core:math"
 import "core:math/linalg"
 import "core:math/rand"
@@ -192,6 +191,8 @@ exercise_09_01_ssao :: types.Tableau {
 		gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.REPEAT)
 
 		gl.BindTexture(gl.TEXTURE_2D, 0)
+
+		utils.print_gl_errors()
 	},
 	update = proc(delta: f64) {
 		render.camera_common_update(&camera, delta)
@@ -211,7 +212,6 @@ exercise_09_01_ssao :: types.Tableau {
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
-		pv := projection * view
 
 		gl.Enable(gl.DEPTH_TEST)
 		defer gl.Disable(gl.DEPTH_TEST)

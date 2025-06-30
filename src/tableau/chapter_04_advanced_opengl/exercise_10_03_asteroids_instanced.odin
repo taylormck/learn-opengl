@@ -1,8 +1,6 @@
 package chapter_04_advanced_opengl
 
-import "../../input"
 import "../../parse/obj"
-import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"

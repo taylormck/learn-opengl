@@ -7,7 +7,6 @@ import "../../shaders"
 import "../../types"
 import "../../window"
 import "core:log"
-import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
@@ -134,7 +133,6 @@ exercise_02_01_gamma_correction :: types.Tableau {
 		defer gl.Disable(gl.DEPTH_TEST)
 
 		shader := shaders.shaders[.BlinnPhongDiffuseSampledMultilights]
-		single_color_shader := shaders.shaders[.TransformTexture]
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)

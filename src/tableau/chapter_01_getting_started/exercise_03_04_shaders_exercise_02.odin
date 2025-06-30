@@ -3,8 +3,6 @@ package chapter_01_getting_started
 import "../../primitives"
 import "../../shaders"
 import "../../types"
-import "core:log"
-import "core:math"
 import gl "vendor:OpenGL"
 
 @(private = "file")

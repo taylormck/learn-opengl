@@ -72,7 +72,7 @@ font_init :: proc(name: string, font_data: []u8, font_scale: f32) -> (result: Fo
 		bbox_x := char_scale * f32(box1)
 		bbox_y := char_scale * f32(box2)
 		advance := char_scale * f32(raw_advance)
-		l_bearing := char_scale * f32(raw_l_bearing)
+		// l_bearing := char_scale * f32(raw_l_bearing)
 
 		texture_id: u32
 
@@ -174,8 +174,6 @@ font_write :: proc(font: ^Font, text: string, starting_position: types.Vec2, col
 }
 
 get_text_size :: proc(font: ^Font, text: string) -> types.Vec3 {
-	// window_width := f32(window.width)
-	window_height := f32(window.height)
 	x: f32 = 0
 	descender_height: f32 = 0
 	line_height: i32 = 0

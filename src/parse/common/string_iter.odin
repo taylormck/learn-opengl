@@ -1,8 +1,6 @@
 package common
 
-import "core:log"
 import "core:strings"
-
 
 StringIter :: struct {
 	// TODO: use these properties to provide nicer error messages
@@ -28,7 +26,7 @@ string_iter_peek :: proc(iter: ^StringIter) -> (next_rune: rune) {
 	case rune:
 		next_rune = val
 	case nil:
-		next, size, err := strings.reader_read_rune(&iter.reader)
+		next, _, _ := strings.reader_read_rune(&iter.reader)
 		next_rune = next
 		iter.peeked_value = next_rune
 	}
@@ -48,7 +46,7 @@ string_iter_advance :: proc(iter: ^StringIter) {
 		iter.peeked_value = nil
 	case nil:
 		// TODO: handle the situation when !ok
-		next_rune, size, ok := strings.reader_read_rune(&iter.reader)
+		next_rune, _, _ := strings.reader_read_rune(&iter.reader)
 		iter.previous_value = next_rune
 	}
 }

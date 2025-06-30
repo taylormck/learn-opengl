@@ -1,12 +1,10 @@
 package chapter_02_lighting
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
-import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
@@ -103,14 +101,17 @@ exercise_05_02_light_casters_point :: types.Tableau {
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
 		pv := projection * view
-		model := linalg.matrix4_translate_f32(light.position) * linalg.matrix4_scale_f32(0.2)
-		transform := pv * model
 
-		gl.UseProgram(light_shader)
-		shaders.set_vec3(light_shader, "light_color", raw_data(&light.emissive))
-		shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
+		{
+			model := linalg.matrix4_translate_f32(light.position) * linalg.matrix4_scale_f32(0.2)
+			transform := pv * model
 
-		primitives.cube_draw()
+			gl.UseProgram(light_shader)
+			shaders.set_vec3(light_shader, "light_color", raw_data(&light.emissive))
+			shaders.set_mat_4x4(light_shader, "transform", raw_data(&transform))
+
+			primitives.cube_draw()
+		}
 
 		gl.UseProgram(obj_shader)
 
@@ -133,7 +134,7 @@ exercise_05_02_light_casters_point :: types.Tableau {
 		shaders.set_vec3(obj_shader, "view_position", raw_data(&camera.position))
 
 		for &model in models {
-			transform = pv * model
+			transform := pv * model
 			mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 			shaders.set_mat_4x4(obj_shader, "transform", raw_data(&transform))
 			shaders.set_mat_4x4(obj_shader, "model", raw_data(&model))

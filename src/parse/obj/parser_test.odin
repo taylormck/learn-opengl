@@ -3,7 +3,6 @@ package obj
 import "../../render"
 import "../../types"
 import "../common"
-import "core:log"
 import "core:strings"
 import "core:testing"
 
@@ -214,7 +213,7 @@ parse_obj_should_parse_object_with_material_with_usemtl_after_o :: proc(t: ^test
 	}
 
 	expected_mesh := render.Mesh {
-		material = materials["mymat"]
+		material = materials["mymat"],
 	}
 
 	append(&expected_mesh.vertices, ..expected_vertices[:])
@@ -278,7 +277,7 @@ parse_obj_should_parse_object_with_material_with_usemtl_before_o :: proc(t: ^tes
 	}
 
 	expected_mesh := render.Mesh {
-		material = materials["mymat"]
+		material = materials["mymat"],
 	}
 
 	append(&expected_mesh.vertices, ..expected_vertices[:])

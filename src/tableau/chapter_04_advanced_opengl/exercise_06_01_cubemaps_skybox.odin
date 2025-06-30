@@ -1,12 +1,10 @@
 package chapter_04_advanced_opengl
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
-import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
@@ -74,7 +72,6 @@ exercise_06_01_cubemaps_skybox :: types.Tableau {
 		pv := projection * view
 		model := linalg.identity(types.TransformMatrix)
 		transform := pv * model
-		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
 		gl.UseProgram(texture_shader)
 		gl.ActiveTexture(gl.TEXTURE0)

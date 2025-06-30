@@ -1,6 +1,5 @@
 package render
 
-import "../types"
 import "core:log"
 
 Scene :: struct {
@@ -60,10 +59,10 @@ scene_draw_instanced_with_materials :: proc(
 scene_destroy :: proc(scene: ^Scene, location := #caller_location) {
 	log.info("Deleting scene data", location = location)
 
-	for key, &mesh in scene.meshes do mesh_free(&mesh)
+	for _, &mesh in scene.meshes do mesh_free(&mesh)
 	delete(scene.meshes)
 
-	for key, &material in scene.materials do material_free(&material)
+	for _, &material in scene.materials do material_free(&material)
 	delete(scene.materials)
 
 	delete(scene.textures)

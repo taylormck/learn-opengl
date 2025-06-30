@@ -409,6 +409,8 @@ exercise_02_02_02_ibl_specular_textured :: types.Tableau {
 
 			primitives.full_screen_draw()
 		}
+
+		utils.print_gl_errors()
 	},
 	update = proc(delta: f64) {
 		render.camera_common_update(&camera, delta)

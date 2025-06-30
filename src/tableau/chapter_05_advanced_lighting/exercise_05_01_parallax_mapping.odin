@@ -1,6 +1,5 @@
 package chapter_05_advanced_lighting
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"

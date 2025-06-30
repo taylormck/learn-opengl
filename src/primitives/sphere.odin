@@ -98,6 +98,8 @@ sphere_send_to_gpu :: proc(location := #caller_location) {
 	gl.GenBuffers(1, &ebo)
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ebo)
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, size_of(u32) * len(sphere_indices), raw_data(sphere_indices), gl.STATIC_DRAW)
+
+	utils.print_gl_errors()
 }
 
 sphere_clear_from_gpu :: proc(location := #caller_location) {
@@ -114,6 +116,8 @@ sphere_clear_from_gpu :: proc(location := #caller_location) {
 
 	gl.DeleteVertexArrays(1, &vao)
 	vao = 0
+
+	utils.print_gl_errors()
 }
 
 sphere_draw :: proc() {

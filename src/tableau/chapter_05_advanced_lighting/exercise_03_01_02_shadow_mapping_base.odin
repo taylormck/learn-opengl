@@ -1,13 +1,10 @@
 package chapter_05_advanced_lighting
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
-import "core:log"
-import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 
@@ -208,7 +205,7 @@ render_scene :: proc(shader: u32, projection_view: ^types.TransformMatrix) {
 	defer if shader == shaders.shaders[.EmptyDepth] do gl.CullFace(gl.BACK)
 
 	// Draw cubes
-	for &model, i in cube_transforms {
+	for &model in cube_transforms {
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 		transform := projection_view^ * model
 

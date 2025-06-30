@@ -2,11 +2,8 @@ package main
 
 import "base:runtime"
 import "core:log"
-import "core:math/linalg"
 import "input"
-import "render"
 import "types"
-import gl "vendor:OpenGL"
 import glfw "vendor:glfw"
 
 MOUSE_SENSITIVITY :: 0.01

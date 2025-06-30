@@ -1,13 +1,10 @@
 package chapter_01_getting_started
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
 import "../../types"
-import "../../utils"
 import "../../window"
-import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
 

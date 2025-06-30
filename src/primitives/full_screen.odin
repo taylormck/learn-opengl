@@ -1,6 +1,5 @@
 package primitives
 
-import "../render"
 import "../types"
 import "../utils"
 import "core:log"

@@ -3,7 +3,6 @@ package render
 import "../shaders"
 import "../types"
 import "core:fmt"
-import gl "vendor:OpenGL"
 
 PointLight :: struct {
 	position, ambient, diffuse, specular, emissive: types.Vec3,

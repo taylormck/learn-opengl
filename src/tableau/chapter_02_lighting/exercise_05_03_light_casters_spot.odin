@@ -1,6 +1,5 @@
 package chapter_02_lighting
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"

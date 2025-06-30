@@ -6,10 +6,7 @@ import "../../render"
 import "../../shaders"
 import "../../types"
 import "../../window"
-import "core:log"
-import "core:math"
 import "core:math/linalg"
-import "core:math/linalg/glsl"
 import gl "vendor:OpenGL"
 
 @(private = "file", rodata)

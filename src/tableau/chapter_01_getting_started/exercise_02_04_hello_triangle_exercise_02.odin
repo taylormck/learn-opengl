@@ -1,6 +1,5 @@
 package chapter_01_getting_started
 
-import "../../primitives"
 import "../../shaders"
 import "../../types"
 import gl "vendor:OpenGL"

@@ -1,7 +1,5 @@
 package common
 
-import "../../types"
-
 TokenIter :: struct($Token: typeid) {
 	reader:       StringIter,
 	previous:     Token,

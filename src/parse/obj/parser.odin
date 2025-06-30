@@ -22,7 +22,7 @@ load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.
 
 	scene = parse_obj(string(scene_file_data), dir_path) or_return
 
-	for mesh_name, &mesh in scene.meshes {
+	for _, &mesh in scene.meshes {
 		material, has_material := scene.materials[mesh.material_name]
 
 		if !has_material {

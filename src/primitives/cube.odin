@@ -1,9 +1,7 @@
 package primitives
 
 import "../render"
-import "../types"
 import "../utils"
-import "core:fmt"
 import "core:log"
 import gl "vendor:OpenGL"
 
@@ -69,6 +67,8 @@ cube_send_to_gpu :: proc(location := #caller_location) {
 
 	vertices := VERTICES
 	render.send_vertices_to_gpu(vertices[:])
+
+	utils.print_gl_errors()
 }
 
 cube_clear_from_gpu :: proc(location := #caller_location) {
@@ -81,6 +81,8 @@ cube_clear_from_gpu :: proc(location := #caller_location) {
 
 	gl.DeleteVertexArrays(1, &vao)
 	vao = 0
+
+	utils.print_gl_errors()
 }
 
 cube_draw :: proc() {

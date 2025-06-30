@@ -1,6 +1,5 @@
 package chapter_06_pbr
 
-import "../../input"
 import "../../primitives"
 import "../../render"
 import "../../shaders"
@@ -8,7 +7,6 @@ import "../../types"
 import "../../utils"
 import "../../window"
 import "core:fmt"
-import "core:log"
 import "core:math"
 import "core:math/linalg"
 import gl "vendor:OpenGL"
@@ -89,9 +87,12 @@ exercise_01_01_lighting :: types.Tableau {
 		}
 
 		pbr_shader := shaders.shaders[.PBR]
+
 		gl.UseProgram(pbr_shader)
 		shaders.set_float(pbr_shader, "ao", 1)
 		shaders.set_vec3(pbr_shader, "albedo", raw_data(&albedo))
+
+		utils.print_gl_errors()
 	},
 	update = proc(delta: f64) {
 		render.camera_common_update(&camera, delta)

@@ -1,6 +1,5 @@
 package primitives
 
-import "../render"
 import "../types"
 import "core:log"
 import gl "vendor:OpenGL"

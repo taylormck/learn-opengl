@@ -2,7 +2,6 @@ package render
 
 import "../shaders"
 import "../types"
-import gl "vendor:OpenGL"
 
 MaterialCalculated :: struct {
 	ambient, diffuse, specular: types.Vec3,
