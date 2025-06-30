@@ -255,9 +255,6 @@ exercise_07_01_bloom :: types.Tableau {
 		shaders.set_float(scene_shader, "material.shininess", wood_shininess)
 		shaders.set_bool(scene_shader, "invert_normals", false)
 
-		// shaders.set_bool(scene_shader, "gamma", false)
-		// shaders.set_bool(scene_shader, "full_attenuation", false)
-
 		full_screen_shader := shaders.shaders[.HDR]
 		gl.UseProgram(full_screen_shader)
 		shaders.set_bool(full_screen_shader, "hdr", hdr)
