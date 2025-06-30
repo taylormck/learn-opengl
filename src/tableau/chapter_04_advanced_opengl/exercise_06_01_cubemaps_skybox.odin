@@ -63,17 +63,11 @@ exercise_06_01_cubemaps_skybox :: types.Tableau {
 		texture_shader := shaders.shaders[.TransformTexture]
 		skybox_shader := shaders.shaders[.Skybox]
 
-		gl.ActiveTexture(gl.TEXTURE0)
-		gl.UseProgram(texture_shader)
-		shaders.set_int(texture_shader, "diffuse_0", 0)
-
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		gl.Enable(gl.DEPTH_TEST)
-		defer gl.Enable(gl.DEPTH_TEST)
-
-		gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)
@@ -82,6 +76,9 @@ exercise_06_01_cubemaps_skybox :: types.Tableau {
 		transform := pv * model
 		mit := types.SubTransformMatrix(linalg.inverse_transpose(model))
 
+		gl.UseProgram(texture_shader)
+		gl.ActiveTexture(gl.TEXTURE0)
+		shaders.set_int(texture_shader, "diffuse_0", 0)
 		gl.BindTexture(gl.TEXTURE_2D, container_texture.id)
 		shaders.set_mat_4x4(texture_shader, "transform", raw_data(&transform))
 
@@ -89,6 +86,7 @@ exercise_06_01_cubemaps_skybox :: types.Tableau {
 
 		gl.DepthFunc(gl.LEQUAL)
 		gl.UseProgram(skybox_shader)
+		gl.BindTexture(gl.TEXTURE_CUBE_MAP, cubemap)
 
 		cubemap_view := types.TransformMatrix(types.SubTransformMatrix(view))
 		cubemap_pv := projection * cubemap_view

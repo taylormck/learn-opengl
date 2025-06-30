@@ -65,6 +65,7 @@ exercise_09_02_geometry_shader_exploding :: types.Tableau {
 		gl.ClearColor(background_color.x, background_color.y, background_color.z, 1)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 		gl.Enable(gl.DEPTH_TEST)
+		defer gl.Disable(gl.DEPTH_TEST)
 
 		projection := render.camera_get_projection(&camera)
 		view := render.camera_get_view(&camera)

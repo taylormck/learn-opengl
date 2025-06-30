@@ -462,7 +462,7 @@ init_shader :: proc(shader: Shader) {
 			gl.load_shaders_source(
 				#load("../../shaders/vert/pos_transform.vert"),
 				#load("../../shaders/frag/uniform_color.frag"),
-			) or_else panic("Failed to load the uniform color shader")
+			) or_else panic("Failed to load the transform uniform color shader")
 
 	case .BlinnPhongDiffuseSampled:
 		shaders[.BlinnPhongDiffuseSampled] =

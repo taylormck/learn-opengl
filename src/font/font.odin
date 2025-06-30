@@ -29,6 +29,8 @@ CharacterTexture :: struct {
 DRAWABLE_ASCII_RANGE_START :: 32
 DRAWABLE_ASCII_RANGE_END :: 32 + 95
 
+DEFAULT_MARGIN :: types.Vec2{12, 12}
+
 font_init :: proc(name: string, font_data: []u8, font_scale: f32) -> (result: Font) {
 	font: tt.fontinfo
 	tt.InitFont(info = &font, data = raw_data(font_data), offset = 0)
@@ -93,7 +95,7 @@ font_init :: proc(name: string, font_data: []u8, font_scale: f32) -> (result: Fo
 		}
 	}
 
-	shaders.init_shaders(.Text)
+	shaders.init_shaders(.Text, .TransformUniformColor)
 
 	utils.print_gl_errors()
 
@@ -115,12 +117,17 @@ font_deinit :: proc(font: ^Font) {
 font_write :: proc(font: ^Font, text: string, starting_position: types.Vec2, color: types.Vec3) {
 	// Copy color to make it referenceable
 	color := color
+	starting_position := starting_position
 
 	gl.Enable(gl.BLEND)
 	defer gl.Disable(gl.BLEND)
 
-	gl.ActiveTexture(gl.TEXTURE0)
+	gl.Disable(gl.DEPTH_TEST)
+
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
+
+	text_size := get_text_size(font, text)
+	draw_text_box(font, starting_position, text_size)
 
 	text_shader := shaders.shaders[.Text]
 	gl.UseProgram(text_shader)
@@ -132,8 +139,13 @@ font_write :: proc(font: ^Font, text: string, starting_position: types.Vec2, col
 	// This transform moves the quad up so that the bottom left corner is on the origin.
 	base_transform := linalg.matrix4_translate_f32({0.5, 0.5, 0.5})
 
+	margin := DEFAULT_MARGIN / types.Vec2{window_width, -window_height}
+	starting_position += margin
+
 	x: f32 = starting_position.x
 	y: f32 = starting_position.y
+
+	gl.ActiveTexture(gl.TEXTURE0)
 
 	for r in text {
 		tex := font.glyph_textures[r]
@@ -158,5 +170,56 @@ font_write :: proc(font: ^Font, text: string, starting_position: types.Vec2, col
 		x += tex.advance / window_width
 	}
 
+	utils.print_gl_errors()
+}
+
+get_text_size :: proc(font: ^Font, text: string) -> types.Vec3 {
+	// window_width := f32(window.width)
+	window_height := f32(window.height)
+	x: f32 = 0
+	descender_height: f32 = 0
+	line_height: i32 = 0
+
+	for r in text {
+		tex := font.glyph_textures[r]
+		x += tex.advance
+
+		// bbox_y is usually negative, as it goes from the top to the bottom
+		descender_height = max(descender_height, abs(tex.bbox_y))
+		line_height = max(line_height, tex.height)
+	}
+
+	return {x, f32(line_height) + descender_height, descender_height}
+}
+
+draw_text_box :: proc(font: ^Font, starting_position: types.Vec2, size: types.Vec3) {
+	starting_position := starting_position
+	size := size
+
+	window_width := f32(window.width)
+	window_height := f32(window.height)
+
+	box_shader := shaders.shaders[.TransformUniformColor]
+	gl.UseProgram(box_shader)
+
+	margin := DEFAULT_MARGIN
+	size += margin.xyy * 2
+
+	color := types.Vec4{0, 0, 0, 0.5}
+
+	// This transform moves the quad up so that the bottom left corner is on the origin.
+	base_transform := linalg.matrix4_translate_f32({0.5, 0.5, 0.5})
+
+	y_offset := size.z / window_height
+
+	transform :=
+		linalg.matrix4_translate_f32({starting_position.x, starting_position.y - y_offset, 0}) *
+		linalg.matrix4_scale_f32({size.x / window_width, size.y / window_height, 0}) *
+		base_transform
+
+	shaders.set_mat_4x4(box_shader, "transform", raw_data(&transform))
+	shaders.set_vec4(box_shader, "our_color", raw_data(&color))
+
+	primitives.quad_draw()
 	utils.print_gl_errors()
 }
