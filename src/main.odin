@@ -32,7 +32,8 @@ HELP_START_POSITION :: types.Vec2{-0.95, -0.85}
 HELP_COLOR :: types.Vec3{1, 1, 1}
 
 tableau_list := tableau.tableaus
-current_tableau_index := len(tableau_list) - 1
+// current_tableau_index := len(tableau_list) - 1
+current_tableau_index := 0
 
 main :: proc() {
 	when ODIN_DEBUG {
