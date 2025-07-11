@@ -199,9 +199,12 @@ water_01 :: types.Tableau {
 		gl.BindTexture(gl.TEXTURE_3D, turbulence_texture)
 
 		draw_surface(is_above, &pv, &camera.position)
-		draw_floor(is_above, &pv, &camera.position)
 
-		if is_above do draw_skybox(&projection, &view)
+		if is_above {
+			draw_skybox(&projection, &view)
+		} else {
+			draw_floor(is_above, &pv, &camera.position)
+		}
 	},
 	teardown = proc() {
 		primitives.plane_clear_from_gpu()
