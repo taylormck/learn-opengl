@@ -14,7 +14,8 @@ graphics applications. Also, I didn't want to bother with CMake.
 Also unlike the original, rather than creating individual applications for each exercise, I've created a single
 application that can run every exercise.
 
-![Video Preview](docs/pics/learn-opengl-demo-full-size.mp4)
+A video preview, bearing in mind Github's video file size limits:
+https://github.com/user-attachments/assets/25c90dc4-d5f0-4ff2-aa11-8e7ee62d3e52
 
 For more details about my motivations or thought processes, see the [considerations](docs/CONSIDERATIONS.md) document.
 
