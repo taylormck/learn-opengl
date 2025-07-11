@@ -104,3 +104,6 @@ and I can't wait to start going through them.
 My main focus will be on gaining a better understanding of how the GPU works, and how to work with it.
 A Vulkan-based renderer seems to be the ideal battleground for mastering this topic.
 
+After that, I've got another toddler's worth of books to start pulling ideas from, such as the GPU Gems/Pro/Zen series.
+The skies the limit.
+

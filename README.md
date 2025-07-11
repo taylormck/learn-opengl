@@ -14,6 +14,10 @@ graphics applications. Also, I didn't want to bother with CMake.
 Also unlike the original, rather than creating individual applications for each exercise, I've created a single
 application that can run every exercise.
 
+![Video Preview](docs/pics/learn-opengl-demo-full-size.mp4)
+
+For more details about my motivations or thought processes, see the [considerations](docs/CONSIDERATIONS.md) document.
+
 ### Build from source
 
 In order to build the application from source, you'll need to have the
