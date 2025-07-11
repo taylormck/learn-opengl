@@ -86,10 +86,17 @@ Obviously, there were a lot of things that would have been neat to do,
 I have to call this project "done" and move on to something new eventually.
 
 Here's a non exhaustive list of things I thought about doing:
-    - All of the guest chapters from Learn OpenGL.
-    - The rest of the exercises from the textbook, particularly those about compute shaders and ray tracing.
-    - Improve the text rendering engine, such as generating a proper atlas or saving entire strings as textures.
-    - A nicer UI, or perhaps implement Dear Imgui.
+
+- All of the guest chapters from Learn OpenGL.
+- The rest of the exercises from the textbook, particularly those about compute shaders and ray tracing.
+- Improve the text rendering engine, such as generating a proper atlas or saving entire strings as textures.
+- A nicer UI, or perhaps implement Dear Imgui.
+- A landscape tableau to practice tesselaltion, as well as an additional use for random noise generation.
+- A transition effect when changing tableaus.
+- Character animation.
+- Physics.
+- A "pipeline manager" to manage the OpenGL driver state.
+- Just a whole bunch of various performance and debugging QOL improvements.
 
 The main reason I'm willing to cut most of these is that I'm going to end up implementing them as part of
 other projects in the future, so I'll still end up learning them eventually.
