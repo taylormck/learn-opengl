@@ -35,7 +35,7 @@ camera := render.Camera {
 	direction    = linalg.normalize(initial_camera_target - initial_camera_position),
 	up           = {0, 1, 0},
 	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
+	aspect_ratio = 1,
 	near         = 0.1,
 	far          = 1000,
 	speed        = 5,
@@ -136,6 +136,8 @@ water_01 :: types.Tableau {
 
 		init_buffer(&reflect_fbo, &reflect_texture)
 		init_buffer(&refract_fbo, &refract_texture)
+
+		camera.aspect_ratio = window.aspect_ratio()
 	},
 	update = proc(delta: f64) {
 		render.camera_move(&camera, input.input_state.movement, f32(delta))

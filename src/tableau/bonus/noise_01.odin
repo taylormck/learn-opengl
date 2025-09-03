@@ -20,7 +20,7 @@ camera := render.Camera {
 	direction    = {0, 0, -1},
 	up           = {0, 1, 0},
 	fov          = linalg.to_radians(f32(45)),
-	aspect_ratio = window.aspect_ratio(),
+	aspect_ratio = 1,
 	near         = 0.1,
 	far          = 1000,
 	speed        = 5,
@@ -80,6 +80,8 @@ noise_01 :: types.Tableau {
 		} else {
 			create_textures_framebuffer()
 		}
+
+		camera.aspect_ratio = window.aspect_ratio()
 
 		utils.print_gl_errors()
 	},
