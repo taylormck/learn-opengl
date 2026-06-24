@@ -3,6 +3,7 @@ package obj
 import "../../render"
 import "../../types"
 import "../common"
+import "core:os"
 import "core:strings"
 import "core:testing"
 
@@ -342,7 +343,7 @@ load_mock_material_data :: proc(
 	loc := #caller_location,
 ) -> (
 	data: []u8,
-	success: bool,
+	err: os.Error,
 ) {
 	data_string := strings.clone(
 		"newmtl mymat\n" +
@@ -361,5 +362,5 @@ load_mock_material_data :: proc(
 
 	data = transmute([]u8)data_string
 
-	return data, true
+	return data, nil
 }

@@ -17,7 +17,10 @@ load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.
 	log.infof("Loading scene from file: {}/{}", dir_path, file_name)
 
 	path := fmt.tprintf("{}/{}", dir_path, file_name)
-	scene_file_data := os.read_entire_file(path) or_return
+	scene_file_data, err := os.read_entire_file_from_path(path, context.allocator)
+	if err != nil {
+		return
+	}
 	defer delete(scene_file_data)
 
 	scene = parse_obj(string(scene_file_data), dir_path) or_return
@@ -81,7 +84,7 @@ load_scene_from_file_obj :: proc(dir_path, file_name: string) -> (scene: render.
 parse_obj_ref :: proc(
 	s, dir: string,
 	scene: ^render.Scene,
-	load_material_fn: LoadMaterialDataFn = os.read_entire_file_from_filename,
+	load_material_fn: LoadMaterialDataFn = os.read_entire_file_from_path,
 ) -> (
 	ok: bool,
 ) {
@@ -181,7 +184,7 @@ parse_obj_ref :: proc(
 
 parse_obj_val :: proc(
 	s, dir: string,
-	load_material_fn: LoadMaterialDataFn = os.read_entire_file_from_filename,
+	load_material_fn: LoadMaterialDataFn = os.read_entire_file_from_path,
 ) -> (
 	scene: render.Scene,
 	ok: bool,
@@ -193,7 +196,7 @@ parse_obj_val :: proc(
 parse_obj_alloc :: proc(
 	s, dir: string,
 	allocator: mem.Allocator,
-	load_material_fn: LoadMaterialDataFn = os.read_entire_file_from_filename,
+	load_material_fn: LoadMaterialDataFn = os.read_entire_file_from_path,
 ) -> (
 	scene: ^render.Scene,
 	ok: bool,
@@ -337,7 +340,7 @@ LoadMaterialDataFn :: #type proc(
 	loc := #caller_location,
 ) -> (
 	data: []u8,
-	success: bool,
+	err: os.Error,
 )
 
 parse_material :: proc(
@@ -348,9 +351,9 @@ parse_material :: proc(
 	ok: bool,
 ) {
 	log.infof("Loading material from file: {}", material_file_name)
-	mtl_data, loaded_ok := load_material_data(material_file_name)
+	mtl_data, loaded_err := load_material_data(material_file_name)
 
-	if !loaded_ok {
+	if loaded_err != nil {
 		log.error("Failed to load material data: {}", material_file_name)
 		return false
 	}

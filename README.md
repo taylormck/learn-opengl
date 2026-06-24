@@ -14,7 +14,7 @@ graphics applications. Also, I didn't want to bother with CMake.
 Also unlike the original, rather than creating individual applications for each exercise, I've created a single
 application that can run every exercise.
 
-A video preview, bearing in mind Github's video file size limits:
+A video preview, bearing in mind GitHub's video file size limits:
 
 https://github.com/user-attachments/assets/25c90dc4-d5f0-4ff2-aa11-8e7ee62d3e52
 
